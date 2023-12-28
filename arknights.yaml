@@ -1,0 +1,17 @@
+bot:
+  name: PtiIopsis_bot
+  token:
+  owner:
+
+api:
+  wiki: https://prts.wiki/w/
+  bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly
+
+mysql:
+  dsn:
+
+redis:
+  addr: www.google.com:6379
+  pwd: 123456
+  db: 1
+  pool_size: 20
