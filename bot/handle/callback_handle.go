@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func CallBackData(callBack tgbotapi.Update) {
+func CallBackData(callBack tgbotapi.Update) (bool, error) {
 	if callBack.CallbackQuery != nil {
 		callbackQuery := callBack.CallbackQuery
 		data := callBack.CallbackData()
@@ -36,7 +36,7 @@ func CallBackData(callBack tgbotapi.Update) {
 				answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
 				utils.SendCallbackAnswer(answer)
 			}
-			return
+			return true, nil
 		}
 		if d[0] != strconv.FormatInt(callbackQuery.From.ID, 10) {
 			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的验证！")
@@ -55,6 +55,7 @@ func CallBackData(callBack tgbotapi.Update) {
 			}
 		}
 	}
+	return true, nil
 }
 
 func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, text string) string {
