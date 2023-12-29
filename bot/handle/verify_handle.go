@@ -38,7 +38,10 @@ func Verify(message *tgbotapi.Message) {
 		operatorsPool := utils.GetOperators()
 		var operatorMap = make(map[string]struct{})
 		var options []modules.Verify
-		for i := 0; i < 4; i++ { // 随机抽取 4 个干员
+		for i := 0; i < 99; i++ { // 随机抽取 4 个干员
+			if len(operatorMap) == 4 {
+				break
+			}
 			r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(operatorsPool))))
 			ship := operatorsPool[r.Int64()]
 			shipName := ship.Get("name").String()
