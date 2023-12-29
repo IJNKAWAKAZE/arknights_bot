@@ -16,85 +16,91 @@ func Verify(message *tgbotapi.Message) {
 	userId := message.From.ID
 	name := utils.GetFullName(message.From)
 	var operators = make(map[string]modules.Verify)
-	var correct modules.Verify
-	var options []modules.Verify
-	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, m := range message.NewChatMembers {
-		chatPermissions := tgbotapi.ChatPermissions{
-			CanSendMessages: false,
-		}
+
+		// 限制用户发送消息
 		restrictChatMemberConfig := tgbotapi.RestrictChatMemberConfig{
-			Permissions: &chatPermissions,
+			Permissions: &tgbotapi.ChatPermissions{
+				CanSendMessages: false,
+			},
+			ChatMemberConfig: tgbotapi.ChatMemberConfig{
+				ChatID: chatId,
+				UserID: m.ID,
+			},
 		}
-		restrictChatMemberConfig.ChatID = chatId
-		restrictChatMemberConfig.UserID = m.ID
-		utils.SetMemberPermissions(restrictChatMemberConfig)
+		_, err := utils.SetMemberPermissions(restrictChatMemberConfig)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+
+		// 抽取验证信息
 		operatorsPool := utils.GetOperators()
-		for true {
-			if len(operators) == 4 {
-				break
-			}
+		var operatorMap = make(map[string]struct{})
+		var options []modules.Verify
+		for i := 0; i < 4; i++ { // 随机抽取 4 个干员
 			r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(operatorsPool))))
-			random, _ := strconv.Atoi(r.String())
-			ship := operatorsPool[random]
-			name := ship.Get("name").String()
+			ship := operatorsPool[r.Int64()]
+			shipName := ship.Get("name").String()
 			painting := ship.Get("painting").String()
 			if painting != "" {
-				var s = modules.Verify{
-					Name:     name,
-					Painting: painting,
+				if _, has := operatorMap[shipName]; has { // 如果 map 中已存在该干员，则跳过
+					continue
 				}
-				operators[name] = s
+				// 保存干员信息
+				operatorMap[shipName] = struct{}{}
+				options = append(options, modules.Verify{
+					Name:     shipName,
+					Painting: painting,
+				})
 			}
 		}
-		for _, v := range operators {
-			options = append(options, v)
-		}
+
 		r, _ := rand.Int(rand.Reader, big.NewInt(4))
 		random, _ := strconv.Atoi(r.String())
-		correct = options[random]
+		correct := options[random]
+
+		var buttons [][]tgbotapi.InlineKeyboardButton
+		userIdStr := strconv.FormatInt(userId, 10)
 		for _, v := range operators {
-			btn := tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(v.Name, strconv.FormatInt(userId, 10)+","+v.Name+","+correct.Name),
-			)
-			buttons = append(buttons, btn)
+			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(v.Name, userIdStr+","+v.Name+","+correct.Name),
+			))
 		}
-		adminBtn := tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("✅放行", strconv.FormatInt(userId, 10)+",PASS,"+name),
-			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", strconv.FormatInt(userId, 10)+",BAN,"+name),
-		)
-		buttons = append(buttons, adminBtn)
+		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("✅放行", userIdStr+",PASS,"+name),
+			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", userIdStr+",BAN,"+name),
+		))
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,
 		)
 		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
-		sendPhoto.Caption = "欢迎<a href=\"tg://user?id=" + strconv.FormatInt(userId, 10) + "\">" + name + "</a>，请选择上图干员的正确名字，60秒未选择自动踢出。"
+		sendPhoto.Caption = "欢迎<a href=\"tg://user?id=" + userIdStr + "\">" + name + "</a>，请选择上图干员的正确名字，60秒未选择自动踢出。"
 		sendPhoto.ParseMode = tgbotapi.ModeHTML
 		photo, err := utils.SendPhoto(sendPhoto)
 		if err != nil {
 			log.Println(err)
-			chatPermissions = tgbotapi.ChatPermissions{
-				CanSendMessages:       true,
-				CanSendMediaMessages:  true,
-				CanSendPolls:          true,
-				CanSendOtherMessages:  true,
-				CanAddWebPagePreviews: true,
-				CanInviteUsers:        true,
-				CanChangeInfo:         true,
-				CanPinMessages:        true,
-			}
 			restrictChatMemberConfig = tgbotapi.RestrictChatMemberConfig{
-				Permissions: &chatPermissions,
+				Permissions: &tgbotapi.ChatPermissions{
+					CanSendMessages:       true,
+					CanSendMediaMessages:  true,
+					CanSendPolls:          true,
+					CanSendOtherMessages:  true,
+					CanAddWebPagePreviews: true,
+					CanInviteUsers:        true,
+					CanChangeInfo:         true,
+					CanPinMessages:        true,
+				},
+				ChatMemberConfig: tgbotapi.ChatMemberConfig{
+					ChatID: chatId,
+					UserID: userId,
+				},
 			}
-			restrictChatMemberConfig.ChatID = chatId
-			restrictChatMemberConfig.UserID = userId
 			utils.SetMemberPermissions(restrictChatMemberConfig)
 			return
 		}
-		cid := strconv.FormatInt(chatId, 10)
-		uid := strconv.FormatInt(userId, 10)
-		val := "verify" + cid + uid
+		val := "verify" + strconv.FormatInt(chatId, 10) + userIdStr
 		utils.RedisAddSet("verify", val)
 		go verify(val, chatId, userId, photo.MessageID, name)
 	}
@@ -111,24 +117,24 @@ func unban(chatMember tgbotapi.ChatMemberConfig) {
 
 func verify(val string, chatId int64, userId int64, messageId int, name string) {
 	time.Sleep(time.Minute)
-	if utils.RedisSetIsExists("verify", val) {
-		chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-		kickChatMemberConfig := tgbotapi.KickChatMemberConfig{
-			ChatMemberConfig: chatMember,
-		}
-		utils.KickChatMember(kickChatMemberConfig)
-		sendMessage := tgbotapi.NewMessage(chatId, "<a href=\"tg://user?id="+strconv.FormatInt(userId, 10)+"\">"+name+"</a>超时未验证，已被踢出。")
-		sendMessage.ParseMode = tgbotapi.ModeHTML
-		msg, _ := utils.SendMessage(sendMessage)
-		utils.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
-		utils.RedisDelSetItem("verify", val)
-		delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-		utils.DeleteMessage(delMsg)
-		time.Sleep(time.Minute)
-		unbanChatMemberConfig := tgbotapi.UnbanChatMemberConfig{
-			ChatMemberConfig: chatMember,
-			OnlyIfBanned:     true,
-		}
-		utils.UnbanChatMember(unbanChatMemberConfig)
+	if !utils.RedisSetIsExists("verify", val) {
+		return
 	}
+	chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
+	kickChatMemberConfig := tgbotapi.KickChatMemberConfig{
+		ChatMemberConfig: chatMember,
+	}
+	utils.KickChatMember(kickChatMemberConfig)
+	sendMessage := tgbotapi.NewMessage(chatId, "<a href=\"tg://user?id="+strconv.FormatInt(userId, 10)+"\">"+name+"</a>超时未验证，已被踢出。")
+	sendMessage.ParseMode = tgbotapi.ModeHTML
+	msg, _ := utils.SendMessage(sendMessage)
+	utils.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
+	utils.RedisDelSetItem("verify", val)
+	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+	utils.DeleteMessage(delMsg)
+	time.Sleep(time.Minute)
+	utils.UnbanChatMember(tgbotapi.UnbanChatMemberConfig{
+		ChatMemberConfig: chatMember,
+		OnlyIfBanned:     true,
+	})
 }
