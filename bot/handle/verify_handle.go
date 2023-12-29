@@ -37,13 +37,18 @@ func Verify(message *tgbotapi.Message) {
 		// 抽取验证信息
 		operatorsPool := utils.GetOperators()
 		var operatorMap = make(map[string]struct{})
+		var randNumMap = make(map[int64]struct{})
 		var options []modules.Verify
-		for i := 0; i < 99; i++ { // 随机抽取 4 个干员
-			if len(operatorMap) == 4 {
-				break
+		for i := 0; i < 4; i++ { // 随机抽取 4 个干员
+			var operatorIndex int64
+			for { // 抽到重复索引则重新抽取
+				r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(operatorsPool))))
+				if _, has := randNumMap[r.Int64()]; !has {
+					operatorIndex = r.Int64()
+					break
+				}
 			}
-			r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(operatorsPool))))
-			ship := operatorsPool[r.Int64()]
+			ship := operatorsPool[operatorIndex]
 			shipName := ship.Get("name").String()
 			painting := ship.Get("painting").String()
 			if painting != "" {
@@ -59,7 +64,7 @@ func Verify(message *tgbotapi.Message) {
 			}
 		}
 
-		r, _ := rand.Int(rand.Reader, big.NewInt(4))
+		r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
 		random, _ := strconv.Atoi(r.String())
 		correct := options[random]
 
