@@ -28,7 +28,6 @@ func (b *Bot) NewCommandProcessor(command string, processor func(update tgbotapi
 	b.matchProcessorSlice = append(b.matchProcessorSlice,
 		&matchProcessor{
 			MatchFunc: func(update tgbotapi.Update) bool {
-				log.Println(update.Message.IsCommand())
 				return update.Message != nil && update.Message.IsCommand() && update.Message.Command() == command
 			},
 			Processor: processor,
