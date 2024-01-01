@@ -31,22 +31,8 @@ func GetFullName(user *tgbotapi.User) string {
 	return buffer.String()
 }
 
-// GetNewMemberName 获取新用户全名
-func GetNewMemberName(user tgbotapi.User) string {
-	var buffer bytes.Buffer
-	firstName := user.FirstName
-	lastName := user.LastName
-	if firstName != "" {
-		buffer.WriteString(firstName)
-	}
-	if lastName != "" {
-		buffer.WriteString(lastName)
-	}
-	return buffer.String()
-}
-
 // SaveInvite 保存邀请记录
-func SaveInvite(message *tgbotapi.Message, member tgbotapi.User) {
+func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 	id, _ := gonanoid.New(32)
 	groupMessage := modules.GroupInvite{
 		Id:           id,
@@ -54,7 +40,7 @@ func SaveInvite(message *tgbotapi.Message, member tgbotapi.User) {
 		GroupNumber:  strconv.FormatInt(message.Chat.ID, 10),
 		UserName:     GetFullName(message.From),
 		UserNumber:   strconv.FormatInt(message.From.ID, 10),
-		MemberName:   GetNewMemberName(member),
+		MemberName:   GetFullName(member),
 		MemberNumber: strconv.FormatInt(member.ID, 10),
 		Deleted:      0,
 	}
@@ -67,13 +53,6 @@ func GetJoinedGroups() []string {
 	var groups []string
 	initDB.DBEngine.Raw("select group_number from group_message where chat_type = 'supergroup' group by group_number").Scan(&groups)
 	return groups
-}
-
-// GetSubscribeList 获取用户订阅列表
-func GetSubscribeList(userNumber string) []string {
-	var SubscribeList []string
-	initDB.DBEngine.Raw("select subscribe_id from group_subscribe where user_number = ? group by subscribe_id", userNumber).Scan(&SubscribeList)
-	return SubscribeList
 }
 
 // RedisSet redis存值

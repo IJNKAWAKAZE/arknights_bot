@@ -13,8 +13,8 @@ import (
 )
 
 func GetOperators() []gjson.Result {
-	shipsJson := RedisGet("data_source")
-	return gjson.Parse(shipsJson).Array()
+	operatorsJson := RedisGet("data_source")
+	return gjson.Parse(operatorsJson).Array()
 }
 
 // UpdateDataSource 更新数据源

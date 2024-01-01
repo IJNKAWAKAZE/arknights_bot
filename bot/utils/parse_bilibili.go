@@ -54,7 +54,7 @@ func ParseBilibiliDynamic() (string, []string) {
 				for _, pic := range item.Get("modules.module_dynamic.major.opus.pics").Array() {
 					pics = append(pics, pic.Get("url").String())
 				}
-				text = strings.ReplaceAll(summary, "[图片] ", "") + "\n\n专栏地址：https:" + item.Get("modules.module_dynamic.major.opus.jump_url").String()
+				text = strings.ReplaceAll(summary, "[图片]", "") + "\n\n专栏地址：https:" + item.Get("modules.module_dynamic.major.opus.jump_url").String()
 			}
 			if RedisSetIsExists("tg_azurlane", link) {
 				return "", nil
