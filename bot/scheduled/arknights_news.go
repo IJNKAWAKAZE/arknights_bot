@@ -1,6 +1,7 @@
 package scheduled
 
 import (
+	bot "arknights_bot/bot/init"
 	"arknights_bot/bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strconv"
@@ -17,7 +18,7 @@ func BilibiliNews() func() {
 			for _, group := range groups {
 				groupNumber, _ := strconv.ParseInt(group, 10, 64)
 				sendMessage := tgbotapi.NewMessage(groupNumber, text)
-				utils.SendMessage(sendMessage)
+				bot.Arknights.Send(sendMessage)
 			}
 			return
 		}
@@ -27,7 +28,7 @@ func BilibiliNews() func() {
 				groupNumber, _ := strconv.ParseInt(group, 10, 64)
 				sendPhoto := tgbotapi.NewPhoto(groupNumber, tgbotapi.FileURL(pics[0]))
 				sendPhoto.Caption = text
-				utils.SendPhoto(sendPhoto)
+				bot.Arknights.Send(sendPhoto)
 			}
 			return
 		}
@@ -47,7 +48,7 @@ func BilibiliNews() func() {
 				media = append(media, inputPhoto)
 			}
 			mediaGroup.Media = media
-			utils.SendMediaGroup(mediaGroup)
+			bot.Arknights.SendMediaGroup(mediaGroup)
 		}
 	}
 }

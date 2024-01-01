@@ -18,12 +18,13 @@ func init() {
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && update.Message.LeftChatMember != nil
 	}, LeftMemberHandle)
+	bot.TeleBot.NewCommandProcessor("ping", PingHandle)
 }
 
 func Processor() {
 	log.Println("机器人启动成功")
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-	updates := bot.Kawakaze.GetUpdatesChan(u)
+	updates := bot.Arknights.GetUpdatesChan(u)
 	bot.TeleBot.Run(updates)
 }

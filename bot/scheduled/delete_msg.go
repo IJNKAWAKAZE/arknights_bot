@@ -1,6 +1,7 @@
 package scheduled
 
 import (
+	bot "arknights_bot/bot/init"
 	"arknights_bot/bot/modules"
 	"arknights_bot/bot/utils"
 	"encoding/json"
@@ -23,7 +24,7 @@ func DelMsg() func() {
 			t := time.Now()
 			if t.Sub(msgObject.CreateTime).Minutes() > msgObject.DelTime {
 				delMsg := tgbotapi.NewDeleteMessage(msgObject.ChatId, msgObject.MessageId)
-				utils.DeleteMessage(delMsg)
+				bot.Arknights.Send(delMsg)
 				m, _ := json.Marshal(msgObject)
 				utils.RedisDelListItem("msgObjects", string(m))
 			}

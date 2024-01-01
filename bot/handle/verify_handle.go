@@ -1,9 +1,11 @@
 package handle
 
 import (
+	bot "arknights_bot/bot/init"
 	"arknights_bot/bot/modules"
 	"arknights_bot/bot/utils"
 	"crypto/rand"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"math/big"
@@ -15,7 +17,6 @@ func Verify(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
 	name := utils.GetFullName(message.From)
-	var operators = make(map[string]modules.Verify)
 	for _, m := range message.NewChatMembers {
 
 		// 限制用户发送消息
@@ -28,7 +29,7 @@ func Verify(message *tgbotapi.Message) {
 				UserID: m.ID,
 			},
 		}
-		_, err := utils.SetMemberPermissions(restrictChatMemberConfig)
+		_, err := bot.Arknights.Request(restrictChatMemberConfig)
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -48,9 +49,9 @@ func Verify(message *tgbotapi.Message) {
 					break
 				}
 			}
-			ship := operatorsPool[operatorIndex]
-			shipName := ship.Get("name").String()
-			painting := ship.Get("painting").String()
+			operator := operatorsPool[operatorIndex]
+			shipName := operator.Get("name").String()
+			painting := operator.Get("painting").String()
 			if painting != "" {
 				if _, has := operatorMap[shipName]; has { // 如果 map 中已存在该干员，则跳过
 					continue
@@ -70,7 +71,7 @@ func Verify(message *tgbotapi.Message) {
 
 		var buttons [][]tgbotapi.InlineKeyboardButton
 		userIdStr := strconv.FormatInt(userId, 10)
-		for _, v := range operators {
+		for _, v := range options {
 			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(v.Name, userIdStr+","+v.Name+","+correct.Name),
 			))
@@ -86,7 +87,7 @@ func Verify(message *tgbotapi.Message) {
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 		sendPhoto.Caption = "欢迎<a href=\"tg://user?id=" + userIdStr + "\">" + name + "</a>，请选择上图干员的正确名字，60秒未选择自动踢出。"
 		sendPhoto.ParseMode = tgbotapi.ModeHTML
-		photo, err := utils.SendPhoto(sendPhoto)
+		photo, err := bot.Arknights.Send(sendPhoto)
 		if err != nil {
 			log.Println(err)
 			restrictChatMemberConfig = tgbotapi.RestrictChatMemberConfig{
@@ -105,10 +106,10 @@ func Verify(message *tgbotapi.Message) {
 					UserID: userId,
 				},
 			}
-			utils.SetMemberPermissions(restrictChatMemberConfig)
+			bot.Arknights.Send(restrictChatMemberConfig)
 			return
 		}
-		val := "verify" + strconv.FormatInt(chatId, 10) + userIdStr
+		val := fmt.Sprintf("verify%d%d", chatId, userId)
 		utils.RedisAddSet("verify", val)
 		go verify(val, chatId, userId, photo.MessageID, name)
 	}
@@ -120,7 +121,7 @@ func unban(chatMember tgbotapi.ChatMemberConfig) {
 		ChatMemberConfig: chatMember,
 		OnlyIfBanned:     true,
 	}
-	utils.UnbanChatMember(unbanChatMemberConfig)
+	bot.Arknights.Send(unbanChatMemberConfig)
 }
 
 func verify(val string, chatId int64, userId int64, messageId int, name string) {
@@ -132,16 +133,16 @@ func verify(val string, chatId int64, userId int64, messageId int, name string) 
 	kickChatMemberConfig := tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: chatMember,
 	}
-	utils.KickChatMember(kickChatMemberConfig)
-	sendMessage := tgbotapi.NewMessage(chatId, "<a href=\"tg://user?id="+strconv.FormatInt(userId, 10)+"\">"+name+"</a>超时未验证，已被踢出。")
+	bot.Arknights.Send(kickChatMemberConfig)
+	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("<a href=\"tg://user?id=%d\">%s</a>超时未验证，已被踢出。", userId, name))
 	sendMessage.ParseMode = tgbotapi.ModeHTML
-	msg, _ := utils.SendMessage(sendMessage)
+	msg, _ := bot.Arknights.Send(sendMessage)
 	utils.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
 	utils.RedisDelSetItem("verify", val)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	utils.DeleteMessage(delMsg)
+	bot.Arknights.Send(delMsg)
 	time.Sleep(time.Minute)
-	utils.UnbanChatMember(tgbotapi.UnbanChatMemberConfig{
+	bot.Arknights.Send(tgbotapi.UnbanChatMemberConfig{
 		ChatMemberConfig: chatMember,
 		OnlyIfBanned:     true,
 	})

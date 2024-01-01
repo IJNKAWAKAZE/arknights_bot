@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-var Kawakaze *tgbotapi.BotAPI
+var Arknights *tgbotapi.BotAPI
 
 var TeleBot *telebot.Bot
 
@@ -18,6 +18,6 @@ func Bot() {
 		log.Println(err)
 		return
 	}
-	Kawakaze = bot
+	Arknights = bot
 	log.Println("机器人初始化完成")
 }

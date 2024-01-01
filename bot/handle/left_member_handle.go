@@ -1,7 +1,7 @@
 package handle
 
 import (
-	"arknights_bot/bot/utils"
+	bot "arknights_bot/bot/init"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -10,6 +10,6 @@ func LeftMemberHandle(update tgbotapi.Update) (bool, error) {
 	chatId := message.Chat.ID
 	messageId := message.MessageID
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	utils.DeleteMessage(delMsg)
+	bot.Arknights.Send(delMsg)
 	return true, nil
 }

@@ -28,6 +28,7 @@ func (b *Bot) NewCommandProcessor(command string, processor func(update tgbotapi
 	b.matchProcessorSlice = append(b.matchProcessorSlice,
 		&matchProcessor{
 			MatchFunc: func(update tgbotapi.Update) bool {
+				log.Println(update.Message.IsCommand())
 				return update.Message != nil && update.Message.IsCommand() && update.Message.Command() == command
 			},
 			Processor: processor,
@@ -42,7 +43,7 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 	for {
 		select {
 		case msg := <-updates:
-			log.Println("Bot.Run", msg)
+			log.Printf("Bot.Run%#v\n", msg)
 			for i := range b.matchProcessorSlice {
 				if b.matchProcessorSlice[i].MatchFunc(msg) {
 					log.Println("Bot.Match", i)
