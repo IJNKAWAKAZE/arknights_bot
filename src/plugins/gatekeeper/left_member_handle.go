@@ -1,7 +1,7 @@
-package handle
+package gatekeeper
 
 import (
-	bot "arknights_bot/bot/init"
+	bot "arknights_bot/config"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 

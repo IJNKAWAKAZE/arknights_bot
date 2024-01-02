@@ -1,8 +1,8 @@
-package handle
+package gatekeeper
 
 import (
-	bot "arknights_bot/bot/init"
-	"arknights_bot/bot/utils"
+	bot "arknights_bot/config"
+	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -13,7 +13,7 @@ func NewMemberHandle(update tgbotapi.Update) (bool, error) {
 	bot.Arknights.Send(delMsg)
 	for _, member := range message.NewChatMembers {
 		if member.ID == message.From.ID { // 自己加入群组
-			go Verify(message)
+			go VerifyMember(message)
 			continue
 		}
 		// 邀请加入群组，无需进行验证

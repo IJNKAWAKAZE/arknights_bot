@@ -1,9 +1,8 @@
-package scheduled
+package cron
 
 import (
-	bot "arknights_bot/bot/init"
-	"arknights_bot/bot/modules"
-	"arknights_bot/bot/utils"
+	bot "arknights_bot/config"
+	"arknights_bot/utils"
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
@@ -13,7 +12,7 @@ import (
 // DelMsg 删除消息
 func DelMsg() func() {
 	delMsg := func() {
-		var msgObject modules.MsgObject
+		var msgObject MsgObject
 		msgList := utils.RedisGetList("msgObjects")
 		for _, msg := range msgList {
 			err := json.Unmarshal([]byte(msg), &msgObject)

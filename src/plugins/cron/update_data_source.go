@@ -1,6 +1,6 @@
-package scheduled
+package cron
 
-import "arknights_bot/bot/utils"
+import "arknights_bot/utils"
 
 // UpdateDataSource 更新数据源
 func UpdateDataSource() func() {

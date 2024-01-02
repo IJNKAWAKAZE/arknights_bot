@@ -1,8 +1,8 @@
-package handle
+package gatekeeper
 
 import (
-	bot "arknights_bot/bot/init"
-	"arknights_bot/bot/utils"
+	bot "arknights_bot/config"
+	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strconv"

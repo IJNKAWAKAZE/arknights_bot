@@ -1,8 +1,7 @@
-package init
+package config
 
 import (
-	"arknights_bot/bot/config"
-	"arknights_bot/pkg/telebot"
+	"arknights_bot/utils/telebot"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 )
@@ -12,7 +11,7 @@ var Arknights *tgbotapi.BotAPI
 var TeleBot *telebot.Bot
 
 func Bot() {
-	token := config.GetString("bot.token")
+	token := GetString("bot.token")
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Println(err)

@@ -1,8 +1,7 @@
 package utils
 
 import (
-	"arknights_bot/bot/config"
-	"arknights_bot/bot/modules"
+	"arknights_bot/config"
 	"encoding/json"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/playwright-community/playwright-go"
@@ -20,7 +19,7 @@ func GetOperators() []gjson.Result {
 // UpdateDataSource 更新数据源
 func UpdateDataSource() {
 	log.Println("开始更新数据源...")
-	var operatorJson []modules.Verify
+	var operatorJson []Verify
 	var operatorList []string
 	response, _ := http.Get(config.GetString("api.wiki") + "干员一览")
 	doc, _ := goquery.NewDocumentFromReader(response.Body)
@@ -28,7 +27,7 @@ func UpdateDataSource() {
 		operatorList = append(operatorList, selection.Nodes[0].Attr[0].Val)
 	})
 	for _, name := range operatorList {
-		var operator modules.Verify
+		var operator Verify
 		operator.Name = name
 		pw, _ := playwright.Run()
 		browser, _ := pw.Chromium.Launch()

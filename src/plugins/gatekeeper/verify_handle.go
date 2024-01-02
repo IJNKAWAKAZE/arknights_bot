@@ -1,9 +1,8 @@
-package handle
+package gatekeeper
 
 import (
-	bot "arknights_bot/bot/init"
-	"arknights_bot/bot/modules"
-	"arknights_bot/bot/utils"
+	bot "arknights_bot/config"
+	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -13,7 +12,7 @@ import (
 	"time"
 )
 
-func Verify(message *tgbotapi.Message) {
+func VerifyMember(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
 	name := utils.GetFullName(message.From)
@@ -39,7 +38,7 @@ func Verify(message *tgbotapi.Message) {
 		operatorsPool := utils.GetOperators()
 		var operatorMap = make(map[string]struct{})
 		var randNumMap = make(map[int64]struct{})
-		var options []modules.Verify
+		var options []Verify
 		for i := 0; i < 4; i++ { // 随机抽取 4 个干员
 			var operatorIndex int64
 			for { // 抽到重复索引则重新抽取
@@ -58,7 +57,7 @@ func Verify(message *tgbotapi.Message) {
 				}
 				// 保存干员信息
 				operatorMap[shipName] = struct{}{}
-				options = append(options, modules.Verify{
+				options = append(options, Verify{
 					Name:     shipName,
 					Painting: painting,
 				})

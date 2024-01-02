@@ -1,7 +1,6 @@
-package init
+package config
 
 import (
-	"arknights_bot/bot/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -11,7 +10,7 @@ import (
 var DBEngine *gorm.DB
 
 func DB() {
-	dsn := config.GetString("mysql.dsn")
+	dsn := GetString("mysql.dsn")
 	engine, err := gorm.Open(
 		mysql.Open(dsn),
 		&gorm.Config{Logger: logger.New(nil, logger.Config{LogLevel: logger.Silent})},

@@ -1,4 +1,4 @@
-package modules
+package gatekeeper
 
 type Verify struct {
 	Name     string `json:"name"`

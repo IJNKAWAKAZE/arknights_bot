@@ -1,11 +1,16 @@
-package bot
+package main
 
 import (
-	"arknights_bot/bot/handle"
-	initConfig "arknights_bot/bot/init"
-	"arknights_bot/bot/scheduled"
+	"arknights_bot/config"
+	"arknights_bot/plugins/cron"
+	"arknights_bot/plugins/gatekeeper"
 	"log"
 )
+
+func main() {
+	//启动
+	Launch()
+}
 
 // 设置日志格式
 func init() {
@@ -14,13 +19,13 @@ func init() {
 
 func Launch() {
 	//初始化数据库连接
-	initConfig.DB()
+	config.DB()
 	//初始化redis连接
-	initConfig.Redis()
+	config.Redis()
 	//初始化机器人
-	initConfig.Bot()
+	config.Bot()
 	//开启定时任务
-	scheduled.StartCron()
+	cron.StartCron()
 	//开始消息监听
-	handle.Processor()
+	gatekeeper.Processor()
 }

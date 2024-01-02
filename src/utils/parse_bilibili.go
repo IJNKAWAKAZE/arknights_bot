@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"arknights_bot/bot/config"
+	"arknights_bot/config"
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
