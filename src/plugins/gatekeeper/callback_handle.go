@@ -30,9 +30,8 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 				UserID: callbackQuery.From.ID,
 			},
 		}
-		memberInfo, _ := bot.Arknights.GetChatMember(getChatMemberConfig)
 
-		if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
+		if !utils.IsAdmin(getChatMemberConfig) {
 			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
 			bot.Arknights.Send(answer)
 			return true, nil

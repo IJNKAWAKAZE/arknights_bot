@@ -1,9 +1,8 @@
 package telebot
 
 import (
-	"log"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"log"
 )
 
 type Bot struct {
@@ -30,6 +29,26 @@ func (b *Bot) NewCommandProcessor(command string, processor func(update tgbotapi
 			MatchFunc: func(update tgbotapi.Update) bool {
 				return update.Message != nil && update.Message.IsCommand() && update.Message.Command() == command
 			},
+			Processor: processor,
+		},
+	)
+}
+
+func (b *Bot) NewPrivateCommandProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
+	b.matchProcessorSlice = append(b.matchProcessorSlice,
+		&matchProcessor{
+			MatchFunc: func(update tgbotapi.Update) bool {
+				return update.Message != nil && update.Message.IsCommand() && update.Message.Command() == command && update.Message.Chat.IsPrivate()
+			},
+			Processor: processor,
+		},
+	)
+}
+
+func (b *Bot) NewAdminCommandProcessor(match func(tgbotapi.Update) bool, processor func(update tgbotapi.Update) (bool, error)) {
+	b.matchProcessorSlice = append(b.matchProcessorSlice,
+		&matchProcessor{
+			MatchFunc: match,
 			Processor: processor,
 		},
 	)

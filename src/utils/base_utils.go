@@ -59,6 +59,15 @@ func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 	config.DBEngine.Table("group_invite").Create(&groupMessage)
 }
 
+// IsAdmin 是否管理员
+func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
+	memberInfo, _ := config.Arknights.GetChatMember(getChatMemberConfig)
+	if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
+		return false
+	}
+	return true
+}
+
 // GetJoinedGroups 获取加入的群组
 func GetJoinedGroups() []string {
 	var groups []string
