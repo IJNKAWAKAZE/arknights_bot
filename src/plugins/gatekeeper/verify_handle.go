@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/tidwall/gjson"
 	"log"
 	"math/big"
 	"strconv"
@@ -146,4 +147,9 @@ func verify(val string, chatId int64, userId int64, messageId int, name string) 
 		ChatMemberConfig: chatMember,
 		OnlyIfBanned:     true,
 	})
+}
+
+func GetOperators() []gjson.Result {
+	operatorsJson := utils.RedisGet("data_source")
+	return gjson.Parse(operatorsJson).Array()
 }
