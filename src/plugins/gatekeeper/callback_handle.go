@@ -2,6 +2,7 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -95,7 +96,7 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, tex
 	sendMessage := tgbotapi.NewMessage(chatId, text)
 	sendMessage.ParseMode = tgbotapi.ModeHTML
 	msg, _ := bot.Arknights.Send(sendMessage)
-	utils.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
 	return val
 }
 
@@ -111,5 +112,5 @@ func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chat
 	sendMessage := tgbotapi.NewMessage(chatId, text)
 	sendMessage.ParseMode = tgbotapi.ModeHTML
 	msg, _ := bot.Arknights.Send(sendMessage)
-	utils.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
 }

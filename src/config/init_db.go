@@ -9,7 +9,7 @@ import (
 
 var DBEngine *gorm.DB
 
-func DB() {
+func DB() error {
 	dsn := GetString("mysql.dsn")
 	engine, err := gorm.Open(
 		mysql.Open(dsn),
@@ -17,9 +17,10 @@ func DB() {
 	)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 	engine.Logger.LogMode(logger.Silent)
 	DBEngine = engine
 	log.Println("数据库连接成功")
+	return nil
 }

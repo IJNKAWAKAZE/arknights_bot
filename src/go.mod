@@ -9,6 +9,7 @@ require (
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/playwright-community/playwright-go v0.2000.1
 	github.com/robfig/cron/v3 v3.0.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.14.0
 	github.com/tidwall/gjson v1.14.4
 	gorm.io/driver/mysql v1.4.5
@@ -24,6 +25,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect

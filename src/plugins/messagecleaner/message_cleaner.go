@@ -1,4 +1,4 @@
-package cron
+package messagecleaner
 
 import (
 	bot "arknights_bot/config"
@@ -30,4 +30,16 @@ func DelMsg() func() {
 		}
 	}
 	return delMsg
+}
+
+// AddDelQueue 添加到删除队列
+func AddDelQueue(chatId int64, messageId int, delTime float64) {
+	var msgObject = MsgObject{
+		ChatId:     chatId,
+		MessageId:  messageId,
+		CreateTime: time.Now(),
+		DelTime:    delTime,
+	}
+	m, _ := json.Marshal(msgObject)
+	utils.RedisSetList("msgObjects", string(m))
 }

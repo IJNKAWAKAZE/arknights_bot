@@ -2,6 +2,7 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
@@ -136,7 +137,7 @@ func verify(val string, chatId int64, userId int64, messageId int, name string) 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("<a href=\"tg://user?id=%d\">%s</a>超时未验证，已被踢出。", userId, name))
 	sendMessage.ParseMode = tgbotapi.ModeHTML
 	msg, _ := bot.Arknights.Send(sendMessage)
-	utils.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
 	utils.RedisDelSetItem("verify", val)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)

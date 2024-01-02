@@ -1,4 +1,4 @@
-package cron
+package arknightsnews
 
 import (
 	bot "arknights_bot/config"

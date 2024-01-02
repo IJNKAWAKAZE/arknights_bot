@@ -4,7 +4,6 @@ import (
 	"arknights_bot/config"
 	"bytes"
 	"context"
-	"encoding/json"
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -146,16 +145,4 @@ func RedisDelSetItem(key string, val string) {
 	if err != nil {
 		log.Println(err)
 	}
-}
-
-// AddDelQueue 添加到删除队列
-func AddDelQueue(chatId int64, messageId int, delTime float64) {
-	var msgObject = MsgObject{
-		ChatId:     chatId,
-		MessageId:  messageId,
-		CreateTime: time.Now(),
-		DelTime:    delTime,
-	}
-	m, _ := json.Marshal(msgObject)
-	RedisSetList("msgObjects", string(m))
 }

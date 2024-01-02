@@ -2,6 +2,7 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -25,7 +26,7 @@ func NewMemberHandle(update tgbotapi.Update) (bool, error) {
 				name, message.From.ID, newName, member.ID))
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		msg, _ := bot.Arknights.Send(sendMessage)
-		utils.AddDelQueue(msg.Chat.ID, msg.MessageID, 2)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 2)
 	}
 	return true, nil
 }
