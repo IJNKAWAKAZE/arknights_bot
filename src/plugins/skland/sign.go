@@ -74,27 +74,23 @@ func SignGame(account Account) (SignGameRecords, error) {
 	if err != nil {
 		return nil, err
 	}
-	players, err := ListPlayer(account.Skland)
+	players, err := ArknihghtsPlayers(account.Skland)
 	if err != nil {
 		return nil, fmt.Errorf("list player error: %w", err)
 	}
-	return signGameByApp(players.List, account)
+	return signGameByApp(players, account)
 }
 
-func signGameByApp(apps []*PlayersByApp, account Account) (SignGameRecords, error) {
+func signGameByApp(players []*Player, account Account) (SignGameRecords, error) {
 	var records []SignGameRecord
-	for _, app := range apps {
-		if app.AppCode == "arknights" {
-			for _, player := range app.BindingList {
-				record, err := signGamePlayer(app, player, account)
-				log.Printf("sign game record: %+v", record)
-				if err != nil {
-					log.Printf("sign game error: %v", err)
-					continue
-				}
-				records = append(records, record)
-			}
+	for _, player := range players {
+		record, err := signGamePlayer(player, account)
+		log.Printf("sign game record: %+v", record)
+		if err != nil {
+			log.Printf("sign game error: %v", err)
+			continue
 		}
+		records = append(records, record)
 	}
 	slices.SortFunc(records, func(a, b SignGameRecord) int {
 		if a.GameId == b.GameId {
@@ -105,17 +101,13 @@ func signGameByApp(apps []*PlayersByApp, account Account) (SignGameRecords, erro
 	return records, nil
 }
 
-func signGamePlayer(app *PlayersByApp, player *Player, account Account) (record SignGameRecord, err error) {
-	record.GameName = app.AppName
+func signGamePlayer(player *Player, account Account) (record SignGameRecord, err error) {
+	record.GameName = "明日方舟"
 	record.PlayerName = player.NickName
 	record.PlayerUid = player.Uid
 	record.PlayerChannel = player.ChannelName
 
-	gameId := signGameCodeByAppCode[app.AppCode]
-	if gameId == "" {
-		err = fmt.Errorf("game code %s not supported", app.AppCode)
-		return
-	}
+	gameId := signGameCodeByAppCode["arknights"]
 
 	record.GameId = gameId
 

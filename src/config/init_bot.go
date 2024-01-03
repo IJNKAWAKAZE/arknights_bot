@@ -3,6 +3,7 @@ package config
 import (
 	"arknights_bot/utils/telebot"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 	"log"
 )
 
@@ -11,7 +12,7 @@ var Arknights *tgbotapi.BotAPI
 var TeleBot *telebot.Bot
 
 func Bot() error {
-	token := GetString("bot.token")
+	token := viper.GetString("bot.token")
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Println(err)

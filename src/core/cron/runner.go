@@ -3,7 +3,6 @@ package cron
 import (
 	"arknights_bot/plugins/arknightsnews"
 	"arknights_bot/plugins/datasource"
-	"arknights_bot/plugins/messagecleaner"
 	"github.com/robfig/cron/v3"
 	"log"
 )
@@ -19,12 +18,6 @@ func StartCron() error {
 
 	//每周五凌晨2点33更新数据源 0 33 02 ? * FRI
 	_, err = crontab.AddFunc("0 33 02 ? * FRI", datasource.UpdateDataSource())
-	if err != nil {
-		return err
-	}
-
-	//清理消息 0 0/1 * * * ?
-	_, err = crontab.AddFunc("0 0/1 * * * ?", messagecleaner.DelMsg())
 	if err != nil {
 		return err
 	}

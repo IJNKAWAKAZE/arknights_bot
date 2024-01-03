@@ -1,11 +1,11 @@
 package datasource
 
 import (
-	"arknights_bot/config"
 	"arknights_bot/utils"
 	"encoding/json"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/playwright-community/playwright-go"
+	"github.com/spf13/viper"
 	"log"
 	"net/http"
 	"strings"
@@ -24,7 +24,8 @@ func UpdateDataSourceRunner() {
 	log.Println("开始更新数据源...")
 	var operatorJson []Verify
 	var operatorList []string
-	response, _ := http.Get(config.GetString("api.wiki") + "干员一览")
+	api := viper.GetString("api.wiki")
+	response, _ := http.Get(api + "干员一览")
 	doc, _ := goquery.NewDocumentFromReader(response.Body)
 	doc.Find("#filter-data div").Each(func(i int, selection *goquery.Selection) {
 		operatorList = append(operatorList, selection.Nodes[0].Attr[0].Val)
@@ -35,7 +36,7 @@ func UpdateDataSourceRunner() {
 		pw, _ := playwright.Run()
 		browser, _ := pw.Chromium.Launch()
 		page, _ := browser.NewPage()
-		page.Goto(config.GetString("api.wiki")+name, playwright.PageGotoOptions{
+		page.Goto(api+name, playwright.PageGotoOptions{
 			WaitUntil: playwright.WaitUntilStateNetworkidle,
 		})
 		locator, _ := page.Locator("#charimg")

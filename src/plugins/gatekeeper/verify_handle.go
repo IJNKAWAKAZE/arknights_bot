@@ -2,11 +2,11 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 	"log"
 	"math/big"
 	"strconv"
@@ -73,12 +73,12 @@ func VerifyMember(message *tgbotapi.Message) {
 		userIdStr := strconv.FormatInt(userId, 10)
 		for _, v := range options {
 			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(v.Name, userIdStr+","+v.Name+","+correct.Name),
+				tgbotapi.NewInlineKeyboardButtonData(v.Name, "verify,"+userIdStr+","+v.Name+","+correct.Name),
 			))
 		}
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("✅放行", userIdStr+",PASS,"+name),
-			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", userIdStr+",BAN,"+name),
+			tgbotapi.NewInlineKeyboardButtonData("✅放行", "verify,"+userIdStr+",PASS,"+name),
+			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", "verify,"+userIdStr+",BAN,"+name),
 		))
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,
@@ -137,7 +137,7 @@ func verify(val string, chatId int64, userId int64, messageId int, name string) 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("<a href=\"tg://user?id=%d\">%s</a>超时未验证，已被踢出。", userId, name))
 	sendMessage.ParseMode = tgbotapi.ModeHTML
 	msg, _ := bot.Arknights.Send(sendMessage)
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
+	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
 	utils.RedisDelSetItem("verify", val)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -10,7 +11,7 @@ import (
 var DBEngine *gorm.DB
 
 func DB() error {
-	dsn := GetString("mysql.dsn")
+	dsn := viper.GetString("mysql.dsn")
 	engine, err := gorm.Open(
 		mysql.Open(dsn),
 		&gorm.Config{Logger: logger.New(nil, logger.Config{LogLevel: logger.Silent})},

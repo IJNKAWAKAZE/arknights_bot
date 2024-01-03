@@ -2,6 +2,7 @@ bot:
   name: PtiIopsis_bot
   token:
   owner:
+  msg_del_delay: 10
 
 api:
   wiki: https://prts.wiki/w/

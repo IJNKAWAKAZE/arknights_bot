@@ -127,7 +127,22 @@ func authRefresh(cred string) (*AuthRefreshData, error) {
 	return SklandRequest[*AuthRefreshData](req, "GET", "/api/v1/auth/refresh")
 }
 
-// ListPlayer 获取绑定用户列表
-func ListPlayer(skland AccountSkland) (*ListPlayerData, error) {
+// 获取绑定用户列表
+func listPlayer(skland AccountSkland) (*ListPlayerData, error) {
 	return SklandRequest[*ListPlayerData](SKR(), "GET", "/api/v1/game/player/binding", skland)
+}
+
+// ArknihghtsPlayers 获取明日方舟绑定角色
+func ArknihghtsPlayers(skland AccountSkland) ([]*Player, error) {
+	var players []*Player
+	playerList, err := listPlayer(skland)
+	if err != nil {
+		return players, err
+	}
+	for _, player := range playerList.List {
+		if player.AppCode == "arknights" {
+			players = player.BindingList
+		}
+	}
+	return players, nil
 }

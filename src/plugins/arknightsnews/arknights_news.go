@@ -4,6 +4,7 @@ import (
 	"arknights_bot/config"
 	"arknights_bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
@@ -60,7 +61,7 @@ func BilibiliNews() func() {
 func ParseBilibiliDynamic() (string, []string) {
 	var text string
 	var pics []string
-	url := config.GetString("api.bilibili_dynamic")
+	url := viper.GetString("api.bilibili_dynamic")
 	request, _ := http.NewRequest("GET", url, nil)
 	request.Header.Add("user-agent", "Mozilla/5.0")
 	resp, _ := http.DefaultClient.Do(request)

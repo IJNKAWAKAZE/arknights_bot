@@ -2,10 +2,11 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -15,15 +16,15 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
-	if len(d) < 3 {
+	if len(d) < 4 {
 		return true, nil
 	}
 
-	userId, _ := strconv.ParseInt(d[0], 10, 64)
+	userId, _ := strconv.ParseInt(d[1], 10, 64)
 	chatId := callbackQuery.Message.Chat.ID
 	name := utils.GetFullName(callbackQuery.From)
 
-	if d[1] == "PASS" || d[1] == "BAN" {
+	if d[2] == "PASS" || d[2] == "BAN" {
 		getChatMemberConfig := tgbotapi.GetChatMemberConfig{
 			ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
 				ChatID: chatId,
@@ -37,13 +38,13 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 			return true, nil
 		}
 
-		if d[1] == "PASS" {
-			pass(chatId, userId, callbackQuery, fmt.Sprintf("管理员通过了<a href=\"tg://user?id=%d\">%s</a>的验证", userId, d[2]))
+		if d[2] == "PASS" {
+			pass(chatId, userId, callbackQuery, fmt.Sprintf("管理员通过了<a href=\"tg://user?id=%d\">%s</a>的验证", userId, d[3]))
 		}
 
-		if d[1] == "BAN" {
+		if d[2] == "BAN" {
 			chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-			ban(chatId, userId, callbackQuery, chatMember, fmt.Sprintf("管理员封禁了<a href=\"tg://user?id=%d\">%s</a>", userId, d[2]))
+			ban(chatId, userId, callbackQuery, chatMember, fmt.Sprintf("管理员封禁了<a href=\"tg://user?id=%d\">%s</a>", userId, d[3]))
 		}
 
 		return true, nil
@@ -55,7 +56,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 		return true, nil
 	}
 
-	if d[1] != d[2] {
+	if d[2] != d[3] {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证未通过，请一分钟后再试！")
 		bot.Arknights.Send(answer)
 		chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
@@ -95,7 +96,7 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, tex
 	sendMessage := tgbotapi.NewMessage(chatId, text)
 	sendMessage.ParseMode = tgbotapi.ModeHTML
 	msg, _ := bot.Arknights.Send(sendMessage)
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
+	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
 	return val
 }
 
@@ -111,5 +112,12 @@ func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chat
 	sendMessage := tgbotapi.NewMessage(chatId, text)
 	sendMessage.ParseMode = tgbotapi.ModeHTML
 	msg, _ := bot.Arknights.Send(sendMessage)
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 1)
+	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+}
+
+func ChoosePlayer(update tgbotapi.Update) (bool, error) {
+	data := update.CallbackData()
+	d := strings.Split(data, ",")
+	log.Println(d[1], ",", d[2])
+	return true, nil
 }

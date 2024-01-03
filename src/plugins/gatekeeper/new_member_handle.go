@@ -2,10 +2,10 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 )
 
 func NewMemberHandle(update tgbotapi.Update) (bool, error) {
@@ -26,7 +26,7 @@ func NewMemberHandle(update tgbotapi.Update) (bool, error) {
 				name, message.From.ID, newName, member.ID))
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 2)
+		go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
 	}
 	return true, nil
 }

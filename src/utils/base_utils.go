@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"arknights_bot/config"
+	bot "arknights_bot/config"
 	"bytes"
 	"context"
 	"github.com/go-redis/redis/v8"
@@ -56,28 +56,35 @@ func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 		Deleted:      0,
 	}
 
-	config.DBEngine.Table("group_invite").Create(&groupMessage)
+	bot.DBEngine.Table("group_invite").Create(&groupMessage)
 }
 
 // IsAdmin 是否管理员
 func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
-	memberInfo, _ := config.Arknights.GetChatMember(getChatMemberConfig)
+	memberInfo, _ := bot.Arknights.GetChatMember(getChatMemberConfig)
 	if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
 		return false
 	}
 	return true
 }
 
+// DelayDelMsg 延迟删除消息
+func DelayDelMsg(chatId int64, messageId int, seconds time.Duration) {
+	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+	time.Sleep(time.Second * seconds)
+	bot.Arknights.Send(delMsg)
+}
+
 // GetJoinedGroups 获取加入的群组
 func GetJoinedGroups() []string {
 	var groups []string
-	config.DBEngine.Raw("select group_number from group_message where chat_type = 'supergroup' group by group_number").Scan(&groups)
+	bot.DBEngine.Raw("select group_number from group_message where chat_type = 'supergroup' group by group_number").Scan(&groups)
 	return groups
 }
 
 // RedisSet redis存值
 func RedisSet(key string, val interface{}, expiration time.Duration) {
-	err := config.GoRedis.Set(ctx, key, val, expiration).Err()
+	err := bot.GoRedis.Set(ctx, key, val, expiration).Err()
 	if err != nil {
 		log.Println(err)
 	}
@@ -85,7 +92,7 @@ func RedisSet(key string, val interface{}, expiration time.Duration) {
 
 // RedisGet redis取值
 func RedisGet(key string) string {
-	val, err := config.GoRedis.Get(ctx, key).Result()
+	val, err := bot.GoRedis.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return ""
@@ -106,7 +113,7 @@ func RedisIsExists(key string) bool {
 
 // RedisDel redis根据key删除
 func RedisDel(key string) {
-	err := config.GoRedis.Del(ctx, key).Err()
+	err := bot.GoRedis.Del(ctx, key).Err()
 	if err != nil {
 		log.Println(err)
 	}
@@ -114,12 +121,12 @@ func RedisDel(key string) {
 
 // RedisScanKeys 扫描匹配keys
 func RedisScanKeys(match string) (*redis.ScanIterator, context.Context) {
-	return config.GoRedis.Scan(ctx, 0, match, 0).Iterator(), ctx
+	return bot.GoRedis.Scan(ctx, 0, match, 0).Iterator(), ctx
 }
 
 // RedisSetList redis添加链表元素
 func RedisSetList(key string, val interface{}) {
-	err := config.GoRedis.RPush(ctx, key, val).Err()
+	err := bot.GoRedis.RPush(ctx, key, val).Err()
 	if err != nil {
 		log.Println(err)
 	}
@@ -127,7 +134,7 @@ func RedisSetList(key string, val interface{}) {
 
 // RedisGetList redis获取所有链表元素
 func RedisGetList(key string) []string {
-	val, err := config.GoRedis.LRange(ctx, key, 0, -1).Result()
+	val, err := bot.GoRedis.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return nil
@@ -139,7 +146,7 @@ func RedisGetList(key string) []string {
 
 // RedisDelListItem redis移除链表元素
 func RedisDelListItem(key string, val string) {
-	err := config.GoRedis.LRem(ctx, key, 0, val).Err()
+	err := bot.GoRedis.LRem(ctx, key, 0, val).Err()
 	if err != nil {
 		log.Println(err)
 	}
@@ -147,7 +154,7 @@ func RedisDelListItem(key string, val string) {
 
 // RedisAddSet redis集合添加元素
 func RedisAddSet(key string, val string) {
-	err := config.GoRedis.SAdd(ctx, key, val).Err()
+	err := bot.GoRedis.SAdd(ctx, key, val).Err()
 	if err != nil {
 		log.Println(err)
 	}
@@ -155,7 +162,7 @@ func RedisAddSet(key string, val string) {
 
 // RedisSetIsExists redis集合是否包含元素
 func RedisSetIsExists(key string, val string) bool {
-	exists, err := config.GoRedis.SIsMember(ctx, key, val).Result()
+	exists, err := bot.GoRedis.SIsMember(ctx, key, val).Result()
 	if err != nil {
 		log.Println(err)
 	}
@@ -164,7 +171,7 @@ func RedisSetIsExists(key string, val string) bool {
 
 // RedisDelSetItem redis移除集合元素
 func RedisDelSetItem(key string, val string) {
-	err := config.GoRedis.SRem(ctx, key, val).Err()
+	err := bot.GoRedis.SRem(ctx, key, val).Err()
 	if err != nil {
 		log.Println(err)
 	}
