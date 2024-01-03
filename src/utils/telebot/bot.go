@@ -63,7 +63,7 @@ func (b *Bot) NewWaitMessageProcessor(waitMessage string, processor func(update 
 	b.matchProcessorSlice = append(b.matchProcessorSlice,
 		&matchProcessor{
 			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.Message != nil && update.Message.Chat.IsPrivate() && WaitMessage[update.Message.From.ID] != "" && WaitMessage[update.Message.From.ID] == waitMessage
+				return update.Message != nil && update.Message.Chat.IsPrivate() && WaitMessage[update.Message.From.ID] == waitMessage
 			},
 			Processor: processor,
 		},

@@ -28,9 +28,9 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 		bot.Arknights.Send(sendMessage)
 		return true, err
 	}
-	var userAccount UserAccount
 	// 查查询账户是否存在
-	res := bot.DBEngine.Raw("select * from user_account where user_number = ?", userId).Scan(&userAccount)
+	var userAccount UserAccount
+	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
@@ -62,7 +62,7 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.NickName, player.ChannelName), fmt.Sprintf("%s,%s,%s", "bind", player.Uid, player.ChannelName)),
+			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.NickName, player.ChannelName), fmt.Sprintf("%s,%s,%s,%s", "bind", player.Uid, player.ChannelName, player.NickName)),
 		))
 	}
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(

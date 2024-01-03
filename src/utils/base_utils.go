@@ -7,8 +7,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"gorm.io/gorm"
 	"log"
-	"strconv"
 	"time"
 )
 
@@ -31,15 +31,14 @@ func GetFullName(user *tgbotapi.User) string {
 type GroupInvite struct {
 	Id           string    `json:"id" gorm:"primaryKey"`
 	GroupName    string    `json:"groupName"`
-	GroupNumber  string    `json:"groupNumber"`
+	GroupNumber  int64     `json:"groupNumber"`
 	UserName     string    `json:"userName"`
-	UserNumber   string    `json:"userNumber"`
+	UserNumber   int64     `json:"userNumber"`
 	MemberName   string    `json:"memberName"`
-	MemberNumber string    `json:"memberNumber"`
+	MemberNumber int64     `json:"memberNumber"`
 	CreateTime   time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime   time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark       string    `json:"remark"`
-	Deleted      int64     `json:"deleted"`
 }
 
 // SaveInvite 保存邀请记录
@@ -48,12 +47,11 @@ func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 	groupMessage := GroupInvite{
 		Id:           id,
 		GroupName:    message.Chat.Title,
-		GroupNumber:  strconv.FormatInt(message.Chat.ID, 10),
+		GroupNumber:  message.Chat.ID,
 		UserName:     GetFullName(message.From),
-		UserNumber:   strconv.FormatInt(message.From.ID, 10),
+		UserNumber:   message.From.ID,
 		MemberName:   GetFullName(member),
-		MemberNumber: strconv.FormatInt(member.ID, 10),
-		Deleted:      0,
+		MemberNumber: member.ID,
 	}
 
 	bot.DBEngine.Table("group_invite").Create(&groupMessage)
@@ -73,6 +71,11 @@ func DelayDelMsg(chatId int64, messageId int, seconds time.Duration) {
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	time.Sleep(time.Second * seconds)
 	bot.Arknights.Send(delMsg)
+}
+
+// GetAccountByUserId 查询账号信息
+func GetAccountByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_account where user_number = ?", userId)
 }
 
 // GetJoinedGroups 获取加入的群组

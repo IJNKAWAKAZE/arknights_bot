@@ -4,6 +4,9 @@ bot:
   owner:
   msg_del_delay: 10
 
+sticker:
+  ping: CAACAgUAAxkBAAPBZYTpA2TK3cnNG1CfXiLG_9Yo7t8AAiYEAAML4FddSAYCSfeu2jME
+
 api:
   wiki: https://prts.wiki/w/
   bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly

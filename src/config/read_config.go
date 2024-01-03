@@ -11,7 +11,7 @@ func init() {
 	// 设置配置文件的类型
 	viper.SetConfigType("yaml")
 	// 添加配置文件的路径
-	viper.AddConfigPath("../")
+	viper.AddConfigPath("./")
 	// 寻找配置文件并读取
 	err := viper.ReadInConfig()
 	if err != nil {

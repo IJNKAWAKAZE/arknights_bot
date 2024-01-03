@@ -2,11 +2,12 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/account"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/spf13/viper"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -115,9 +116,65 @@ func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chat
 	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
 }
 
-func ChoosePlayer(update tgbotapi.Update) (bool, error) {
-	data := update.CallbackData()
+func ChoosePlayer(callBack tgbotapi.Update) (bool, error) {
+	callbackQuery := callBack.CallbackQuery
+	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
-	log.Println(d[1], ",", d[2])
+
+	if len(d) < 4 {
+		return true, nil
+	}
+
+	userId := callbackQuery.From.ID
+	chatId := callbackQuery.Message.Chat.ID
+	messageId := callbackQuery.Message.MessageID
+
+	uid := d[1]
+	serverName := d[2]
+	playerName := d[3]
+
+	var userAccount account.UserAccount
+	var userPlayer account.UserPlayer
+	utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := bot.DBEngine.Raw("select * from user_player where user_number = ? and uid = ?", userId, uid).Scan(&userPlayer)
+	if res.RowsAffected == 0 {
+		id, _ := gonanoid.New(32)
+		userPlayer = account.UserPlayer{
+			Id:         id,
+			AccountId:  userAccount.Id,
+			UserName:   userAccount.UserName,
+			UserNumber: userAccount.UserNumber,
+			Uid:        uid,
+			ServerName: serverName,
+			PlayerName: playerName,
+		}
+		bot.DBEngine.Table("user_player").Save(&userPlayer)
+	}
+	sendMessage := tgbotapi.NewMessage(chatId, "角色绑定成功！")
+	bot.Arknights.Send(sendMessage)
+	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+	bot.Arknights.Send(delMsg)
+	return true, nil
+}
+
+func UnbindPlayer(callBack tgbotapi.Update) (bool, error) {
+	callbackQuery := callBack.CallbackQuery
+	data := callBack.CallbackData()
+	d := strings.Split(data, ",")
+
+	if len(d) < 2 {
+		return true, nil
+	}
+
+	userId := callbackQuery.From.ID
+	chatId := callbackQuery.Message.Chat.ID
+	messageId := callbackQuery.Message.MessageID
+
+	uid := d[1]
+	bot.DBEngine.Exec("delete from user_player where user_number = ? and uid = ?", userId, uid)
+	sendMessage := tgbotapi.NewMessage(chatId, "角色解绑成功！")
+	bot.Arknights.Send(sendMessage)
+	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+	bot.Arknights.Send(delMsg)
 	return true, nil
 }
