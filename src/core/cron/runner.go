@@ -3,6 +3,7 @@ package cron
 import (
 	"arknights_bot/plugins/arknightsnews"
 	"arknights_bot/plugins/datasource"
+	"arknights_bot/plugins/sign"
 	"github.com/robfig/cron/v3"
 	"log"
 )
@@ -21,6 +22,9 @@ func StartCron() error {
 	if err != nil {
 		return err
 	}
+
+	//每日1点执行自动签到 0 0 1 * * ?
+	crontab.AddFunc("0 0 1 * * ?", sign.AutoSign())
 
 	//启动定时任务
 	crontab.Start()

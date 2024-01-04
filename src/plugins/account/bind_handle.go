@@ -8,20 +8,29 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"net/url"
 )
 
+// BindHandle 账号绑定
 func BindHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
-	// TODO 发送获取token教程
+	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
+	bot.Arknights.Send(sendMessage)
+	sendMessage.Text = "如何获取token\n\n" +
+		"1\\.前往明日方舟 [官网](https://ak.hypergryph.com) 登录\n" +
+		"2\\.打开网址复制 token  [官服](https://web-api.hypergryph.com/account/info/hg)  [B服](https://web-api.hypergryph.com/account/info/ak-b)"
+	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
+	bot.Arknights.Send(sendMessage)
 	telebot.WaitMessage[chatId] = "setToken"
 	return true, nil
 }
 
+// SetToken 设置token
 func SetToken(update tgbotapi.Update) (bool, error) {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
-	token := message.Text
+	token := url.QueryEscape(message.Text)
 	account, err := skland.Login(token)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
@@ -68,8 +77,17 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
-	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的账号")
+	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
+	bot.Arknights.Send(sendMessage)
+	return true, nil
+}
+
+// CancelHandle 取消操作
+func CancelHandle(update tgbotapi.Update) (bool, error) {
+	chatId := update.Message.Chat.ID
+	delete(telebot.WaitMessage, chatId)
+	sendMessage := tgbotapi.NewMessage(chatId, "已取消操作")
 	bot.Arknights.Send(sendMessage)
 	return true, nil
 }

@@ -47,19 +47,6 @@ func (t *SKBaseResp[T]) IsSuccess() bool {
 	return t != nil && t.Code != nil && *t.Code == 0
 }
 
-func IsMessage(err error, msg string) bool {
-	if err == nil {
-		return false
-	}
-	e, ok1 := resty.AsRespErr(err)
-	if ok1 {
-		t1, ok2 := e.Response.Error().(interface{ GetMessage() string })
-		t2, ok3 := e.Response.Result().(interface{ GetMessage() string })
-		return (ok2 && t1.GetMessage() == msg) || (ok3 && t2.GetMessage() == msg)
-	}
-	return false
-}
-
 func (t *HBaseResp[T]) String() string {
 	if t != nil && t.StatusCode != nil {
 		return fmt.Sprintf("status: %d, error: %s, message: %s", *t.StatusCode, t.Error, t.Message)

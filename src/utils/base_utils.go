@@ -44,7 +44,7 @@ type GroupInvite struct {
 // SaveInvite 保存邀请记录
 func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 	id, _ := gonanoid.New(32)
-	groupMessage := GroupInvite{
+	groupInvite := GroupInvite{
 		Id:           id,
 		GroupName:    message.Chat.Title,
 		GroupNumber:  message.Chat.ID,
@@ -54,7 +54,7 @@ func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 		MemberNumber: member.ID,
 	}
 
-	bot.DBEngine.Table("group_invite").Create(&groupMessage)
+	bot.DBEngine.Table("group_invite").Create(&groupInvite)
 }
 
 // IsAdmin 是否管理员
@@ -76,6 +76,26 @@ func DelayDelMsg(chatId int64, messageId int, seconds time.Duration) {
 // GetAccountByUserId 查询账号信息
 func GetAccountByUserId(userId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_account where user_number = ?", userId)
+}
+
+// GetPlayersByUserId 查询绑定角色列表
+func GetPlayersByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_player where user_number = ?", userId)
+}
+
+// GetPlayerByUserId 查询绑定角色
+func GetPlayerByUserId(userId int64, uid string) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_player where user_number = ? and uid = ?", userId, uid)
+}
+
+// GetAutoSign 查询自动签到用户
+func GetAutoSign() *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_sign")
+}
+
+// GetAutoSignByUserId 查询自动签到用户
+func GetAutoSignByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_sign where user_number = ?", userId)
 }
 
 // GetJoinedGroups 获取加入的群组

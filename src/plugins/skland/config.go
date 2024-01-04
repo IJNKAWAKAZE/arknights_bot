@@ -17,5 +17,4 @@ const (
 	GameCodePopucom      = "4"   // 泡姆泡姆
 	GameCodeNest         = "100" // 纳斯特港
 	GameAppCodeArknights = "arknights"
-	MessageGameHasSigned = "请勿重复签到！"
 )

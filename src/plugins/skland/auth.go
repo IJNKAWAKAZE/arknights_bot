@@ -1,6 +1,7 @@
 package skland
 
 import (
+	bot "arknights_bot/config"
 	"fmt"
 	"github.com/starudream/go-lib/core/v2/gh"
 )
@@ -113,6 +114,8 @@ func RefreshToken(account Account) (Account, error) {
 		}
 	}
 
+	// 更新token
+	bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred)
 	return account, nil
 }
 

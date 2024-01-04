@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+type Verify struct {
+	Name     string `json:"name"`
+	Painting string `json:"painting"`
+}
+
 func VerifyMember(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -85,8 +90,8 @@ func VerifyMember(message *tgbotapi.Message) {
 		)
 		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
-		sendPhoto.Caption = "欢迎<a href=\"tg://user?id=" + userIdStr + "\">" + name + "</a>，请选择上图干员的正确名字，60秒未选择自动踢出。"
-		sendPhoto.ParseMode = tgbotapi.ModeHTML
+		sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", name, userId)
+		sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
 		photo, err := bot.Arknights.Send(sendPhoto)
 		if err != nil {
 			log.Println(err)
@@ -134,8 +139,8 @@ func verify(val string, chatId int64, userId int64, messageId int, name string) 
 		ChatMemberConfig: chatMember,
 	}
 	bot.Arknights.Send(kickChatMemberConfig)
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("<a href=\"tg://user?id=%d\">%s</a>超时未验证，已被踢出。", userId, name))
-	sendMessage.ParseMode = tgbotapi.ModeHTML
+	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("[%s](tg://user?id=%d)超时未验证，已被踢出。", name, userId))
+	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	msg, _ := bot.Arknights.Send(sendMessage)
 	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
 	utils.RedisDelSetItem("verify", val)

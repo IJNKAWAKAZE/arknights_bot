@@ -1,11 +1,8 @@
 package skland
 
 import (
-	"cmp"
 	"fmt"
 	"github.com/starudream/go-lib/core/v2/gh"
-	"golang.org/x/exp/slices"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -66,42 +63,13 @@ type Calendar struct {
 }
 
 type CalendarRecords []*CalendarRecord
-type SignGameRecords []SignGameRecord
 type SignGameAwards []*SignGameAward
 
-func SignGame(account Account) (SignGameRecords, error) {
-	account, err := RefreshToken(account)
+func SignGamePlayer(player *Player, account Account) (record SignGameRecord, err error) {
+	account, err = RefreshToken(account)
 	if err != nil {
-		return nil, err
+		return
 	}
-	players, err := ArknihghtsPlayers(account.Skland)
-	if err != nil {
-		return nil, fmt.Errorf("list player error: %w", err)
-	}
-	return signGameByApp(players, account)
-}
-
-func signGameByApp(players []*Player, account Account) (SignGameRecords, error) {
-	var records []SignGameRecord
-	for _, player := range players {
-		record, err := signGamePlayer(player, account)
-		log.Printf("sign game record: %+v", record)
-		if err != nil {
-			log.Printf("sign game error: %v", err)
-			continue
-		}
-		records = append(records, record)
-	}
-	slices.SortFunc(records, func(a, b SignGameRecord) int {
-		if a.GameId == b.GameId {
-			return cmp.Compare(a.PlayerUid, b.PlayerUid)
-		}
-		return cmp.Compare(a.GameId, b.GameId)
-	})
-	return records, nil
-}
-
-func signGamePlayer(player *Player, account Account) (record SignGameRecord, err error) {
 	record.GameName = "明日方舟"
 	record.PlayerName = player.NickName
 	record.PlayerUid = player.Uid
@@ -126,7 +94,8 @@ func signGamePlayer(player *Player, account Account) (record SignGameRecord, err
 
 	signGameData, err := signGame(gameId, player.Uid, account.Skland)
 	if err != nil {
-		if IsMessage(err, MessageGameHasSigned) {
+		if err.Error() == "[skland] response status: 403 Forbidden, error: code: 10001, message: 请勿重复签到！" {
+			err = nil
 			record.HasSigned = true
 		} else {
 			err = fmt.Errorf("sign game error: %w", err)

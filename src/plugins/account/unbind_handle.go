@@ -2,6 +2,7 @@ package account
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -10,7 +11,7 @@ func UnbindHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	var players []UserPlayer
-	res := bot.DBEngine.Raw("select * from user_player where user_number = ?", userId).Scan(&players)
+	res := utils.GetPlayersByUserId(userId).Scan(&players)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
 		bot.Arknights.Send(sendMessage)
@@ -25,7 +26,7 @@ func UnbindHandle(update tgbotapi.Update) (bool, error) {
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
-	sendMessage := tgbotapi.NewMessage(chatId, "请选择要解绑的账号")
+	sendMessage := tgbotapi.NewMessage(chatId, "请选择要解绑的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
 	return true, nil
