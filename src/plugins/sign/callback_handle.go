@@ -3,11 +3,11 @@ package sign
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/spf13/viper"
 	"strconv"
 	"strings"
 )
@@ -51,12 +51,12 @@ func SignPlayer(callBack tgbotapi.Update) (bool, error) {
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
 		msg, _ := bot.Arknights.Send(sendMessage)
-		go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return true, nil
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, record.Award))
 	msg, _ := bot.Arknights.Send(sendMessage)
-	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	return true, nil
 }

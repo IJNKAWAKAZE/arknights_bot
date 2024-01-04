@@ -2,7 +2,7 @@ package system
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/plugins/messagecleaner"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
 )
@@ -14,7 +14,7 @@ func PingHandle(update tgbotapi.Update) (bool, error) {
 	sendSticker := tgbotapi.NewSticker(chatId, tgbotapi.FileID(viper.GetString("sticker.ping")))
 	sendSticker.ReplyToMessageID = messageId
 	msg, _ := bot.Arknights.Send(sendSticker)
-	utils.DelayDelMsg(chatId, messageId, 2)
-	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+	messagecleaner.AddDelQueue(chatId, messageId, 5)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	return true, nil
 }

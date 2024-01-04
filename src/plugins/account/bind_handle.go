@@ -17,7 +17,7 @@ func BindHandle(update tgbotapi.Update) (bool, error) {
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
 	bot.Arknights.Send(sendMessage)
 	sendMessage.Text = "如何获取token\n\n" +
-		"1\\.前往明日方舟 [官网](https://ak.hypergryph.com) 登录\n" +
+		"1\\.前往明日方舟 [官网](https://ak.hypergryph.com/user/login) 登录\n" +
 		"2\\.打开网址复制 token  [官服](https://web-api.hypergryph.com/account/info/hg)  [B服](https://web-api.hypergryph.com/account/info/ak-b)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)

@@ -2,11 +2,11 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/spf13/viper"
 	"log"
 	"math/big"
 	"strconv"
@@ -142,7 +142,7 @@ func verify(val string, chatId int64, userId int64, messageId int, name string) 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("[%s](tg://user?id=%d)超时未验证，已被踢出。", name, userId))
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	msg, _ := bot.Arknights.Send(sendMessage)
-	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	utils.RedisDelSetItem("verify", val)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)

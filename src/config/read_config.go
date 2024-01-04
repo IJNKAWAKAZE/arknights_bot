@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+var MsgDelDelay float64
+
 func init() {
 	// 设置配置文件的名字
 	viper.SetConfigName("arknights")
@@ -18,4 +20,5 @@ func init() {
 		log.Println(err)
 		return
 	}
+	MsgDelDelay = viper.GetFloat64("bot.msg_del_delay")
 }

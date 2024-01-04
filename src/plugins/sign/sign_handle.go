@@ -3,6 +3,7 @@ package sign
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"fmt"
@@ -19,7 +20,22 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 
-	utils.DelayDelMsg(chatId, messageId, 2)
+	messagecleaner.AddDelQueue(chatId, messageId, 5)
+
+	var userAccount account.UserAccount
+	var players []account.UserPlayer
+	var skPlayer skland.Player
+	var skAccount skland.Account
+
+	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	if res.RowsAffected == 0 {
+		// 未绑定账号
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
+		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
 
 	if len(cmd) > 1 {
 		param := cmd[1]
@@ -30,17 +46,6 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 			// 关闭自动签到
 			stopSign(update)
 		}
-		return true, nil
-	}
-
-	var userAccount account.UserAccount
-	var players []account.UserPlayer
-	var skPlayer skland.Player
-	var skAccount skland.Account
-
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
-	if res.RowsAffected == 0 {
-		// 未绑定账号
 		return true, nil
 	}
 
@@ -66,7 +71,7 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage := tgbotapi.NewMessage(chatId, "请选择要签到的角色")
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
 		msg, _ := bot.Arknights.Send(sendMessage)
-		go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	} else {
 		// 绑定单个角色执行签到
 		skPlayer.NickName = players[0].PlayerName
@@ -83,13 +88,13 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		if record.HasSigned {
 			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", players[0].PlayerName))
 			msg, _ := bot.Arknights.Send(sendMessage)
-			go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return true, nil
 		}
 		// 签到成功
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", players[0].PlayerName, record.Award))
 		msg, _ := bot.Arknights.Send(sendMessage)
-		go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	}
 	return true, nil
 }
@@ -104,7 +109,7 @@ func autoSign(update tgbotapi.Update) {
 	if res.RowsAffected > 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "已开启自动签到！")
 		msg, _ := bot.Arknights.Send(sendMessage)
-		go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return
 	}
 	id, _ := gonanoid.New(32)
@@ -118,7 +123,7 @@ func autoSign(update tgbotapi.Update) {
 
 	sendMessage := tgbotapi.NewMessage(chatId, "开启自动签到成功！")
 	msg, _ := bot.Arknights.Send(sendMessage)
-	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 }
 
 // 关闭自动签到
@@ -131,5 +136,5 @@ func stopSign(update tgbotapi.Update) {
 
 	sendMessage := tgbotapi.NewMessage(chatId, "已关闭自动签到！")
 	msg, _ := bot.Arknights.Send(sendMessage)
-	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 }

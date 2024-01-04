@@ -66,13 +66,6 @@ func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
 	return true
 }
 
-// DelayDelMsg 延迟删除消息
-func DelayDelMsg(chatId int64, messageId int, seconds time.Duration) {
-	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	time.Sleep(time.Second * seconds)
-	bot.Arknights.Send(delMsg)
-}
-
 // GetAccountByUserId 查询账号信息
 func GetAccountByUserId(userId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_account where user_number = ?", userId)

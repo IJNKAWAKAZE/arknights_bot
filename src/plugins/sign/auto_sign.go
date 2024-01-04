@@ -5,9 +5,13 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
+	"crypto/rand"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+	"math/big"
+	"strconv"
+	"time"
 )
 
 // AutoSign 森空岛自动签到
@@ -19,7 +23,10 @@ func AutoSign() func() {
 			log.Println("开始执行自动签到...")
 			// 遍历所有自动签到用户
 			for _, user := range users {
-				go sign(user)
+				r, _ := rand.Int(rand.Reader, big.NewInt(60))
+				random, _ := strconv.Atoi(r.String())
+				time.Sleep(time.Second * time.Duration(random))
+				sign(user)
 			}
 			log.Println("自动签到执行完毕...")
 		}

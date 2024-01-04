@@ -2,10 +2,10 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/spf13/viper"
 	"strconv"
 	"strings"
 )
@@ -95,7 +95,7 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, tex
 	sendMessage := tgbotapi.NewMessage(chatId, text)
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	msg, _ := bot.Arknights.Send(sendMessage)
-	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	return val
 }
 
@@ -111,5 +111,5 @@ func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chat
 	sendMessage := tgbotapi.NewMessage(chatId, text)
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	msg, _ := bot.Arknights.Send(sendMessage)
-	go utils.DelayDelMsg(msg.Chat.ID, msg.MessageID, viper.GetDuration("bot.msg_del_delay"))
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 }
