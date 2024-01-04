@@ -30,7 +30,7 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
-	token := url.QueryEscape(message.Text)
+	token := url.PathEscape(message.Text)
 	account, err := skland.Login(token)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
