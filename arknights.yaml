@@ -2,6 +2,10 @@ bot:
   name: PtiIopsis_bot
   token:
   owner:
+  msg_del_delay: 10
+
+sticker:
+  ping: CAACAgUAAxkBAAPBZYTpA2TK3cnNG1CfXiLG_9Yo7t8AAiYEAAML4FddSAYCSfeu2jME
 
 api:
   wiki: https://prts.wiki/w/
@@ -15,3 +19,6 @@ redis:
   pwd: 123456
   db: 1
   pool_size: 20
+
+http:
+  port: 23333

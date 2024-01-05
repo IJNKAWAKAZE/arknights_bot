@@ -1,0 +1,241 @@
+package utils
+
+import (
+	bot "arknights_bot/config"
+	"bytes"
+	"context"
+	"github.com/go-redis/redis/v8"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	gonanoid "github.com/matoous/go-nanoid/v2"
+	"github.com/playwright-community/playwright-go"
+	"gorm.io/gorm"
+	"log"
+	"time"
+)
+
+var ctx = context.Background()
+
+// GetFullName 获取用户全名
+func GetFullName(user *tgbotapi.User) string {
+	var buffer bytes.Buffer
+	firstName := user.FirstName
+	lastName := user.LastName
+	if firstName != "" {
+		buffer.WriteString(firstName)
+	}
+	if lastName != "" {
+		buffer.WriteString(lastName)
+	}
+	return buffer.String()
+}
+
+type GroupInvite struct {
+	Id           string    `json:"id" gorm:"primaryKey"`
+	GroupName    string    `json:"groupName"`
+	GroupNumber  int64     `json:"groupNumber"`
+	UserName     string    `json:"userName"`
+	UserNumber   int64     `json:"userNumber"`
+	MemberName   string    `json:"memberName"`
+	MemberNumber int64     `json:"memberNumber"`
+	CreateTime   time.Time `json:"createTime" gorm:"autoCreateTime"`
+	UpdateTime   time.Time `json:"updateTime" gorm:"autoUpdateTime"`
+	Remark       string    `json:"remark"`
+}
+
+type GroupJoined struct {
+	Id          string    `json:"id" gorm:"primaryKey"`
+	GroupName   string    `json:"groupName"`
+	GroupNumber int64     `json:"groupNumber"`
+	CreateTime  time.Time `json:"createTime" gorm:"autoCreateTime"`
+	UpdateTime  time.Time `json:"updateTime" gorm:"autoUpdateTime"`
+	Remark      string    `json:"remark"`
+}
+
+// SaveInvite 保存邀请记录
+func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
+	id, _ := gonanoid.New(32)
+	groupInvite := GroupInvite{
+		Id:           id,
+		GroupName:    message.Chat.Title,
+		GroupNumber:  message.Chat.ID,
+		UserName:     GetFullName(message.From),
+		UserNumber:   message.From.ID,
+		MemberName:   GetFullName(member),
+		MemberNumber: member.ID,
+	}
+
+	bot.DBEngine.Table("group_invite").Create(&groupInvite)
+}
+
+// SaveJoined 保存入群记录
+func SaveJoined(message *tgbotapi.Message) {
+	id, _ := gonanoid.New(32)
+	groupJoined := GroupJoined{
+		Id:          id,
+		GroupName:   message.Chat.Title,
+		GroupNumber: message.Chat.ID,
+	}
+
+	bot.DBEngine.Table("group_joined").Create(&groupJoined)
+}
+
+// IsAdmin 是否管理员
+func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
+	memberInfo, _ := bot.Arknights.GetChatMember(getChatMemberConfig)
+	if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
+		return false
+	}
+	return true
+}
+
+// GetAccountByUserId 查询账号信息
+func GetAccountByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_account where user_number = ?", userId)
+}
+
+// GetPlayersByUserId 查询绑定角色列表
+func GetPlayersByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_player where user_number = ?", userId)
+}
+
+// GetPlayerByUserId 查询绑定角色
+func GetPlayerByUserId(userId int64, uid string) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_player where user_number = ? and uid = ?", userId, uid)
+}
+
+// GetAutoSign 查询自动签到用户
+func GetAutoSign() *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_sign")
+}
+
+// GetAutoSignByUserId 查询自动签到用户
+func GetAutoSignByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_sign where user_number = ?", userId)
+}
+
+// GetJoinedGroups 获取加入的群组
+func GetJoinedGroups() []int64 {
+	var groups []int64
+	bot.DBEngine.Raw("select group_number from group_joined group by group_number").Scan(&groups)
+	return groups
+}
+
+// RedisSet redis存值
+func RedisSet(key string, val interface{}, expiration time.Duration) {
+	err := bot.GoRedis.Set(ctx, key, val, expiration).Err()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// RedisGet redis取值
+func RedisGet(key string) string {
+	val, err := bot.GoRedis.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return ""
+		}
+		log.Println(err)
+	}
+	return val
+}
+
+// RedisIsExists 判断redis值是否存在
+func RedisIsExists(key string) bool {
+	val := RedisGet(key)
+	if val == "" {
+		return false
+	}
+	return true
+}
+
+// RedisDel redis根据key删除
+func RedisDel(key string) {
+	err := bot.GoRedis.Del(ctx, key).Err()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// RedisScanKeys 扫描匹配keys
+func RedisScanKeys(match string) (*redis.ScanIterator, context.Context) {
+	return bot.GoRedis.Scan(ctx, 0, match, 0).Iterator(), ctx
+}
+
+// RedisSetList redis添加链表元素
+func RedisSetList(key string, val interface{}) {
+	err := bot.GoRedis.RPush(ctx, key, val).Err()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// RedisGetList redis获取所有链表元素
+func RedisGetList(key string) []string {
+	val, err := bot.GoRedis.LRange(ctx, key, 0, -1).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil
+		}
+		log.Println(err)
+	}
+	return val
+}
+
+// RedisDelListItem redis移除链表元素
+func RedisDelListItem(key string, val string) {
+	err := bot.GoRedis.LRem(ctx, key, 0, val).Err()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// RedisAddSet redis集合添加元素
+func RedisAddSet(key string, val string) {
+	err := bot.GoRedis.SAdd(ctx, key, val).Err()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// RedisSetIsExists redis集合是否包含元素
+func RedisSetIsExists(key string, val string) bool {
+	exists, err := bot.GoRedis.SIsMember(ctx, key, val).Result()
+	if err != nil {
+		log.Println(err)
+	}
+	return exists
+}
+
+// RedisDelSetItem redis移除集合元素
+func RedisDelSetItem(key string, val string) {
+	err := bot.GoRedis.SRem(ctx, key, val).Err()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// Screenshot 屏幕截图
+func Screenshot(url string) []byte {
+	pw, _ := playwright.Run()
+	browser, _ := pw.Chromium.Launch()
+	page, _ := browser.NewPage()
+	log.Println("开始进行截图...")
+	page.Goto(url, playwright.PageGotoOptions{
+		WaitUntil: playwright.WaitUntilStateNetworkidle,
+	})
+	locator, _ := page.Locator(".main")
+	screenshot, err := locator.Screenshot()
+	if err != nil {
+		log.Println(err)
+		page.Close()
+		browser.Close()
+		pw.Stop()
+		return nil
+	}
+	page.Close()
+	browser.Close()
+	pw.Stop()
+	log.Println("截图完成...")
+	return screenshot
+}
