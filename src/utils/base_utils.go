@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"github.com/playwright-community/playwright-go"
 	"gorm.io/gorm"
 	"log"
 	"time"
@@ -41,6 +42,15 @@ type GroupInvite struct {
 	Remark       string    `json:"remark"`
 }
 
+type GroupJoined struct {
+	Id          string    `json:"id" gorm:"primaryKey"`
+	GroupName   string    `json:"groupName"`
+	GroupNumber int64     `json:"groupNumber"`
+	CreateTime  time.Time `json:"createTime" gorm:"autoCreateTime"`
+	UpdateTime  time.Time `json:"updateTime" gorm:"autoUpdateTime"`
+	Remark      string    `json:"remark"`
+}
+
 // SaveInvite 保存邀请记录
 func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 	id, _ := gonanoid.New(32)
@@ -55,6 +65,18 @@ func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 	}
 
 	bot.DBEngine.Table("group_invite").Create(&groupInvite)
+}
+
+// SaveJoined 保存入群记录
+func SaveJoined(message *tgbotapi.Message) {
+	id, _ := gonanoid.New(32)
+	groupJoined := GroupJoined{
+		Id:          id,
+		GroupName:   message.Chat.Title,
+		GroupNumber: message.Chat.ID,
+	}
+
+	bot.DBEngine.Table("group_joined").Create(&groupJoined)
 }
 
 // IsAdmin 是否管理员
@@ -92,9 +114,9 @@ func GetAutoSignByUserId(userId int64) *gorm.DB {
 }
 
 // GetJoinedGroups 获取加入的群组
-func GetJoinedGroups() []string {
-	var groups []string
-	bot.DBEngine.Raw("select group_number from group_message where chat_type = 'supergroup' group by group_number").Scan(&groups)
+func GetJoinedGroups() []int64 {
+	var groups []int64
+	bot.DBEngine.Raw("select group_number from group_joined group by group_number").Scan(&groups)
 	return groups
 }
 
@@ -191,4 +213,29 @@ func RedisDelSetItem(key string, val string) {
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+// Screenshot 屏幕截图
+func Screenshot(url string) []byte {
+	pw, _ := playwright.Run()
+	browser, _ := pw.Chromium.Launch()
+	page, _ := browser.NewPage()
+	log.Println("开始进行截图...")
+	page.Goto(url, playwright.PageGotoOptions{
+		WaitUntil: playwright.WaitUntilStateNetworkidle,
+	})
+	locator, _ := page.Locator(".main")
+	screenshot, err := locator.Screenshot()
+	if err != nil {
+		log.Println(err)
+		page.Close()
+		browser.Close()
+		pw.Stop()
+		return nil
+	}
+	page.Close()
+	browser.Close()
+	pw.Stop()
+	log.Println("截图完成...")
+	return screenshot
 }

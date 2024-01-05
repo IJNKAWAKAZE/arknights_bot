@@ -8,7 +8,6 @@ import (
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -21,8 +20,7 @@ func BilibiliNews() func() {
 		groups := utils.GetJoinedGroups()
 		if pics == nil {
 			for _, group := range groups {
-				groupNumber, _ := strconv.ParseInt(group, 10, 64)
-				sendMessage := tgbotapi.NewMessage(groupNumber, text)
+				sendMessage := tgbotapi.NewMessage(group, text)
 				config.Arknights.Send(sendMessage)
 			}
 			return
@@ -30,8 +28,7 @@ func BilibiliNews() func() {
 
 		if len(pics) == 1 {
 			for _, group := range groups {
-				groupNumber, _ := strconv.ParseInt(group, 10, 64)
-				sendPhoto := tgbotapi.NewPhoto(groupNumber, tgbotapi.FileURL(pics[0]))
+				sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileURL(pics[0]))
 				sendPhoto.Caption = text
 				config.Arknights.Send(sendPhoto)
 			}
@@ -39,10 +36,9 @@ func BilibiliNews() func() {
 		}
 
 		for _, group := range groups {
-			groupNumber, _ := strconv.ParseInt(group, 10, 64)
 			var mediaGroup tgbotapi.MediaGroupConfig
 			var media []interface{}
-			mediaGroup.ChatID = groupNumber
+			mediaGroup.ChatID = group
 			for i, pic := range pics {
 				var inputPhoto tgbotapi.InputMediaPhoto
 				inputPhoto.Media = tgbotapi.FileURL(pic)

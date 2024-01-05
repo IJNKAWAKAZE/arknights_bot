@@ -3,10 +3,7 @@ package sign
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strconv"
 	"strings"
@@ -34,29 +31,10 @@ func SignPlayer(callBack tgbotapi.Update) (bool, error) {
 	}
 
 	var userAccount account.UserAccount
-	var skPlayer *skland.Player
 	var player account.UserPlayer
-	var skAccount skland.Account
 
 	utils.GetAccountByUserId(userId).Scan(&userAccount)
 	utils.GetPlayerByUserId(userId, uid).Scan(&player)
 
-	skPlayer.NickName = player.PlayerName
-	skPlayer.ChannelName = player.ServerName
-	skPlayer.Uid = player.Uid
-	skAccount.Hypergryph.Token = userAccount.HypergryphToken
-	skAccount.Skland.Token = userAccount.SklandToken
-	skAccount.Skland.Cred = userAccount.SklandCred
-	record, err := skland.SignGamePlayer(skPlayer, skAccount)
-	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
-	}
-
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, record.Award))
-	msg, _ := bot.Arknights.Send(sendMessage)
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	return true, nil
+	return Sign(player, userAccount, chatId)
 }

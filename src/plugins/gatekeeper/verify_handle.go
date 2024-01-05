@@ -2,7 +2,6 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
@@ -22,6 +21,7 @@ func VerifyMember(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
 	name := utils.GetFullName(message.From)
+	messageId := message.MessageID
 	for _, m := range message.NewChatMembers {
 
 		// 限制用户发送消息
@@ -75,15 +75,14 @@ func VerifyMember(message *tgbotapi.Message) {
 		correct := options[random]
 
 		var buttons [][]tgbotapi.InlineKeyboardButton
-		userIdStr := strconv.FormatInt(userId, 10)
 		for _, v := range options {
 			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(v.Name, "verify,"+userIdStr+","+v.Name+","+correct.Name),
+				tgbotapi.NewInlineKeyboardButtonData(v.Name, fmt.Sprintf("verify,%d,%s,%s,%d", userId, v.Name, correct.Name, messageId)),
 			))
 		}
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("✅放行", "verify,"+userIdStr+",PASS,"+name),
-			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", "verify,"+userIdStr+",BAN,"+name),
+			tgbotapi.NewInlineKeyboardButtonData("✅放行", fmt.Sprintf("verify,%d,PASS,%s,%d", userId, name, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("verify,%d,BAN,%s,%d", userId, name, messageId)),
 		))
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,
@@ -116,7 +115,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		}
 		val := fmt.Sprintf("verify%d%d", chatId, userId)
 		utils.RedisAddSet("verify", val)
-		go verify(val, chatId, userId, photo.MessageID, name)
+		go verify(val, chatId, userId, photo.MessageID, messageId)
 	}
 }
 
@@ -129,24 +128,26 @@ func unban(chatMember tgbotapi.ChatMemberConfig) {
 	bot.Arknights.Send(unbanChatMemberConfig)
 }
 
-func verify(val string, chatId int64, userId int64, messageId int, name string) {
+func verify(val string, chatId int64, userId int64, messageId int, joinMessageId int) {
 	time.Sleep(time.Minute)
 	if !utils.RedisSetIsExists("verify", val) {
 		return
 	}
+	// 踢出超时未验证用户
 	chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
 	kickChatMemberConfig := tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: chatMember,
 	}
 	bot.Arknights.Send(kickChatMemberConfig)
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("[%s](tg://user?id=%d)超时未验证，已被踢出。", name, userId))
-	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	msg, _ := bot.Arknights.Send(sendMessage)
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	// 删除用户入群体醒
+	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
+	bot.Arknights.Send(delJoinMessage)
 	utils.RedisDelSetItem("verify", val)
+	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)
 	time.Sleep(time.Minute)
+	// 解除用户封禁
 	bot.Arknights.Send(tgbotapi.UnbanChatMemberConfig{
 		ChatMemberConfig: chatMember,
 		OnlyIfBanned:     true,

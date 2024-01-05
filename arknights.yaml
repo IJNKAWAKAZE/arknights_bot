@@ -19,3 +19,6 @@ redis:
   pwd: 123456
   db: 1
   pool_size: 20
+
+http:
+  port: 23333

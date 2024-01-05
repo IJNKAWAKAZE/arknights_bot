@@ -62,6 +62,7 @@ func sign(user UserSign) {
 					// 签到失败
 					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!", player.PlayerName))
 					bot.Arknights.Send(sendMessage)
+					log.Println(err)
 					return
 				}
 				// 今日已完成签到

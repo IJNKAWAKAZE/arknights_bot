@@ -4,6 +4,7 @@ import (
 	"arknights_bot/config"
 	"arknights_bot/core/bot"
 	"arknights_bot/core/cron"
+	"arknights_bot/core/web"
 )
 
 func Execute() {
@@ -28,6 +29,8 @@ func Launch() {
 	if err != nil {
 		panic(err)
 	}
+	//开启http服务
+	go web.Start()
 	//开始消息监听
 	bot.Serve()
 }

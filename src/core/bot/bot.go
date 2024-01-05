@@ -36,6 +36,7 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 
+	bot.TeleBot.NewCommandProcessor("help", system.HelpHandle)
 	bot.TeleBot.NewCommandProcessor("ping", system.PingHandle)
 	bot.TeleBot.NewCommandProcessor("sign", sign.SignHandle)
 
