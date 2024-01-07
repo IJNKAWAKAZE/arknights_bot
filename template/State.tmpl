@@ -1,0 +1,57 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>当前状态</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            position: absolute;
+            width: 1092px;
+            height: 510px;
+            background-image: url("/assets/state/bg.png");
+        }
+        #avatar {
+            width: 54px;
+            margin-top: 34px;
+            margin-left: 34px;
+        }
+        #name {
+            color: white;
+            font-size: 30px;
+            position: absolute;
+            margin-left: 10px;
+            margin-top: 45px;
+        }
+        #ap_icon {
+            margin-top: 146px;
+            position: absolute;
+            margin-left: -52px;
+        }
+        #ap {
+            font-size: 30px;
+            color: white;
+            margin-left: 146px;
+            margin-top: 53px;
+        }
+        #complete {
+            font-size: 21px;
+            color: white;
+            margin-left: 145px;
+            margin-top: -18px;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Status.Secretary.SkinID}}.png"/>
+    <span id="name">Dr {{.Status.Name}}</span>
+    <img id="ap_icon" src="/assets/state/ap.png">
+    <p id="ap">{{.Status.Ap.Current}}/{{.Status.Ap.Max}}</p>
+    <p id="complete">{{.Status.Ap.CompleteRecoveryTime}}</p>
+</div>
+<script charset="utf-8" src="/template/js/State.js"></script>
+</body>
+</html>

@@ -90,6 +90,10 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	skAccount.Hypergryph.Token = account.HypergryphToken
 	skAccount.Skland.Token = account.SklandToken
 	skAccount.Skland.Cred = account.SklandCred
+
+	sendAction := tgbotapi.NewChatAction(chatId, "typing")
+	bot.Arknights.Send(sendAction)
+
 	record, err := skland.SignGamePlayer(&skPlayer, skAccount)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败", playerName))

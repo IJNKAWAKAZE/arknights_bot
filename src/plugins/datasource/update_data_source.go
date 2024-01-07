@@ -33,7 +33,12 @@ func UpdateDataSourceRunner() {
 	for _, name := range operatorList {
 		var operator Verify
 		operator.Name = name
-		pw, _ := playwright.Run()
+		pw, err := playwright.Run()
+		if err != nil {
+			log.Println("未检测到playwright，开始自动安装...")
+			playwright.Install()
+			pw, _ = playwright.Run()
+		}
 		browser, _ := pw.Chromium.Launch()
 		page, _ := browser.NewPage()
 		page.Goto(api+name, playwright.PageGotoOptions{

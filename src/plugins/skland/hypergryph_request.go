@@ -93,15 +93,7 @@ func SklandRequest[T any](r *resty.Request, method, path string, vs ...any) (t T
 			addSign(r, method, path, v)
 		}
 	}
-	// 测试用
-	/*if path == "/api/v1/game/player/info" {
-		res, err := r.Execute(method, SklandAddr+path)
-		if err != nil {
-			return t, fmt.Errorf("[skland] %w", err)
-		}
-		log.Println(res)
-		return
-	}*/
+
 	res, err := resty.ParseResp[*SKBaseResp[any], *SKBaseResp[T]](
 		r.SetError(&SKBaseResp[any]{}).SetResult(&SKBaseResp[T]{}).Execute(method, SklandAddr+path),
 	)
@@ -109,6 +101,21 @@ func SklandRequest[T any](r *resty.Request, method, path string, vs ...any) (t T
 		return t, fmt.Errorf("[skland] %w", err)
 	}
 	return res.Data, nil
+}
+
+func SklandRequestPlayerData(r *resty.Request, method, path string, vs ...any) (d string, _ error) {
+	for i := 0; i < len(vs); i++ {
+		switch v := vs[i].(type) {
+		case AccountSkland:
+			addSign(r, method, path, v)
+		}
+	}
+
+	res, err := r.Execute(method, SklandAddr+path)
+	if err != nil {
+		return d, fmt.Errorf("[skland] %w", err)
+	}
+	return string(res.Body()), nil
 }
 
 func addSign(r *resty.Request, method, path string, skland AccountSkland) {

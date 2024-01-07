@@ -5,24 +5,21 @@ import (
 	"log"
 )
 
-type PlayerInfo struct {
-}
-
-func GetPlayerInfo(uid string, account Account) (PlayerInfo, error) {
-	playerInfo := PlayerInfo{}
+func GetPlayerInfo(uid string, account Account) (*PlayerData, error) {
+	var playerData *PlayerData
 	account, err := RefreshToken(account)
 	if err != nil {
 		log.Println(err.Error())
-		return playerInfo, err
+		return playerData, err
 	}
-	_, err = getPlayerInfo(uid, account.Skland)
+	playerData, err = getPlayerInfo(uid, account.Skland)
 	if err != nil {
-		return playerInfo, err
+		return playerData, err
 	}
-	return playerInfo, nil
+	return playerData, nil
 }
 
-func getPlayerInfo(uid string, skland AccountSkland) (*PlayerInfo, error) {
+func getPlayerInfo(uid string, skland AccountSkland) (*PlayerData, error) {
 	req := SKR().SetQueryParams(gh.MS{"uid": uid})
-	return SklandRequest[*PlayerInfo](req, "GET", "/api/v1/game/player/info", skland)
+	return SklandRequest[*PlayerData](req, "GET", "/api/v1/game/player/info", skland)
 }

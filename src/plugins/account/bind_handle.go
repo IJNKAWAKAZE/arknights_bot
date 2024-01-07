@@ -31,6 +31,10 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
 	token := url.PathEscape(message.Text)
+
+	sendAction := tgbotapi.NewChatAction(chatId, "typing")
+	bot.Arknights.Send(sendAction)
+
 	account, err := skland.Login(token)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")

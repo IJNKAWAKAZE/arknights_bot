@@ -9,8 +9,14 @@ func Start() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Static("/assets", "./assets")
+	r.Static("/template/js", "./template/js")
 	Help(r)
-	r.LoadHTMLFiles("./template/Help.tmpl")
+	State(r)
+	templates := []string{
+		"./template/Help.tmpl",
+		"./template/State.tmpl",
+	}
+	r.LoadHTMLFiles(templates...)
 	port := viper.GetString("http.port")
 	err := r.Run(":" + port)
 	if err != nil {
