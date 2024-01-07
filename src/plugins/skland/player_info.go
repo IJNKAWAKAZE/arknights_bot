@@ -7,7 +7,7 @@ import (
 
 func GetPlayerInfo(uid string, account Account) (*PlayerData, error) {
 	var playerData *PlayerData
-	account, err := RefreshToken(account)
+	account, err := RefreshToken(uid, account)
 	if err != nil {
 		log.Println(err.Error())
 		return playerData, err

@@ -88,7 +88,7 @@ func authLoginByCode(code string) (*GenCredByCodeData, error) {
 }
 
 // RefreshToken 刷新 token
-func RefreshToken(account Account) (Account, error) {
+func RefreshToken(uid string, account Account) (Account, error) {
 	_, err := getUser(account.Skland)
 	if err == nil {
 		return account, nil
@@ -113,9 +113,14 @@ func RefreshToken(account Account) (Account, error) {
 			return account, err
 		}
 	}
+	// 查询更新用户
+	var userNumber string
+	result := bot.DBEngine.Raw("select user_number from user_player where uid = ?", uid).Scan(&userNumber)
 
-	// 更新token
-	bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred)
+	if result.RowsAffected > 0 {
+		// 更新token
+		bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where user_number = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, userNumber)
+	}
 	return account, nil
 }
 
