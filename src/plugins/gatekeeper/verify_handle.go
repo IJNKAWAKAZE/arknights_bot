@@ -81,8 +81,8 @@ func VerifyMember(message *tgbotapi.Message) {
 			))
 		}
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("✅放行", fmt.Sprintf("verify,%d,PASS,%s,%d", userId, name, messageId)),
-			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("verify,%d,BAN,%s,%d", userId, name, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData("✅放行", fmt.Sprintf("verify,%d,PASS,%s,%d", userId, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("verify,%d,BAN,%s,%d", userId, messageId)),
 		))
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,

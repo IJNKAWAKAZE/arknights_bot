@@ -91,6 +91,12 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery) str
 	utils.RedisDelSetItem("verify", val)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, callbackQuery.Message.MessageID)
 	bot.Arknights.Send(delMsg)
+
+	// 新人发送box提醒
+	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。", utils.GetFullName(callbackQuery.From), callbackQuery.From.ID))
+	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
+
+	bot.Arknights.Send(sendMessage)
 	return val
 }
 
