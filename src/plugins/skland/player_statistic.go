@@ -3,6 +3,7 @@ package skland
 type PlayerStatistic struct {
 	CurrentTs  string `json:"currentTs"`
 	PlayerName string `json:"playerName"`
+	Avatar     string `json:"avatar"`
 	Ap         struct {
 		Current   int    `json:"current"`
 		Max       int    `json:"max"`

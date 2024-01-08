@@ -5,7 +5,6 @@ import (
 	"github.com/starudream/go-lib/core/v2/gh"
 	"github.com/tidwall/gjson"
 	"log"
-	"time"
 )
 
 var Weight map[string]int
@@ -41,34 +40,6 @@ func GetPlayerInfo(uid string, account Account) (*PlayerData, error) {
 	}
 
 	json.Unmarshal([]byte(gjson.Get(playerDatastr, "data").String()), &playerData)
-	finished := 0
-	for _, r := range playerData.Recruit {
-		if r.State == 2 && time.Now().Unix() > int64(r.FinishTs) {
-			finished += 1
-		}
-	}
-	playerData.RecruitTotal = len(playerData.Recruit)
-	playerData.RecruitFinished = finished
-
-	playerData.Building.TiredCharsCount = len(playerData.Building.TiredChars)
-
-	tradingsCurrent := 0
-	tradingsTotal := 0
-	for _, t := range playerData.Building.Tradings {
-		tradingsTotal += t.StockLimit
-		tradingsCurrent += t.StockLimit - len(t.Stock)
-	}
-	playerData.Building.TradingsCurrent = tradingsCurrent
-	playerData.Building.TradingsTotal = tradingsTotal
-
-	manufacturesCurrent := 0
-	manufacturesTotal := 0
-	for _, m := range playerData.Building.Manufactures {
-		manufacturesCurrent += m.Complete
-		manufacturesTotal += m.Capacity / Weight[m.FormulaID]
-	}
-	playerData.Building.ManufacturesCurrent = manufacturesCurrent
-	playerData.Building.ManufacturesTotal = manufacturesTotal
 
 	return playerData, nil
 }

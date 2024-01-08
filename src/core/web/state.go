@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 func State(r *gin.Engine) {
@@ -25,10 +24,17 @@ func State(r *gin.Engine) {
 			return
 		}
 
-		playerData.Status.Ap.Current = playStatistic.Ap.Current
-		playerData.Status.Ap.Max = playStatistic.Ap.Max
-		completeRecoveryTimes, _ := strconv.Atoi(playStatistic.Ap.RecoverTs)
-		playerData.Status.Ap.CompleteRecoveryTime = completeRecoveryTimes
-		c.HTML(http.StatusOK, "State.tmpl", playerData)
+		playStatistic.Avatar = playerData.Status.Secretary.SkinID
+
+		/*open, err := os.Open("player_info.txt")
+		if err != nil {
+			return
+		}
+		var aaa skland.PlayerStatistic
+		readAll, _ := io.ReadAll(open)
+		playerData := string(readAll)
+		json.Unmarshal([]byte(playerData), &aaa)*/
+
+		c.HTML(http.StatusOK, "State.tmpl", playStatistic)
 	})
 }

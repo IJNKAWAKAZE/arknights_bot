@@ -97,7 +97,7 @@
             margin-top: -25px;
         }
         #recruit_icon {
-            margin-top: 58px;
+            margin-top: 65px;
             margin-left: 49px;
         }
         .title {
@@ -105,43 +105,43 @@
             color: white;
         }
         #recruit_title {
-            margin-left: 15px;
+            margin-left: 120px;
             margin-top: 62px;
             position: absolute;
         }
         #recruit {
             position: absolute;
-            margin-left: 225px;
-            margin-top: 64px;
+            margin-left: 330px;
+            margin-top: 62px;
         }
         #tired_chars_icon {
             margin-top: 55px;
             margin-left: 49px;
         }
         #tired_chars_title {
-            margin-left: 15px;
+            margin-left: 115px;
             margin-top: 58px;
             position: absolute;
         }
         #tired_chars {
             position: absolute;
-            margin-left: 225px;
-            margin-top: 60px;
+            margin-left: 325px;
+            margin-top: 58px;
         }
         #tradings_icon {
             margin-left: 460px;
-            margin-top: -137px;
+            margin-top: -234px;
             position: absolute;
         }
         #tradings_title {
             position: absolute;
             margin-left: 520px;
-            margin-top: -135px;
+            margin-top: -234px;
         }
         #tradings {
             position: absolute;
-            margin-left: 750px;
-            margin-top: -135px;
+            margin-left: 780px;
+            margin-top: -234px;
         }
         #manufactures_icon {
             margin-left: 460px;
@@ -155,7 +155,7 @@
         }
         #manufactures {
             position: absolute;
-            margin-left: 750px;
+            margin-left: 780px;
             margin-top: -39px;
         }
         #trainee {
@@ -175,7 +175,7 @@
         }
         #remain_secs {
             position: absolute;
-            margin-left: 970px;
+            margin-left: 960px;
             color: white;
             display: flex;
             align-items: center;
@@ -192,15 +192,15 @@
 </head>
 <body>
 <div class="main">
-    <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Status.Secretary.SkinID}}.png"/>
-    <span id="name">Dr {{.Status.Name}}</span>
+    <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+    <span id="name">Dr {{.PlayerName}}</span>
     <img id="ap_icon" src="/assets/state/ap.png">
-    <P id="ap">{{.Status.Ap.Current}}/{{.Status.Ap.Max}}</P>
+    <P id="ap">{{.Ap.Current}}/{{.Ap.Max}}</P>
     <P id="complete">
-        {{if ge .Status.Ap.Current .Status.Ap.Max}}
+        {{if ge .Ap.Current .Ap.Max}}
         理智已全部恢复
         {{else}}
-        {{.Status.Ap.CompleteRecoveryTime}}
+        {{.Ap.RecoverTs}}
         {{end}}
     </P>
     <p id="lower_item">
@@ -209,51 +209,53 @@
             <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
             <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
         </svg>
-        <span id="lower_item_term_time">{{.Tower.Reward.TermTs}}</span>
-        <span class="reward">{{.Tower.Reward.LowerItem.Current}}/{{.Tower.Reward.LowerItem.Total}}</span>
+        <span id="lower_item_term_time">{{.TowerLower.RecoverTs}}</span>
+        <span class="reward">{{.TowerLower.Current}}/{{.TowerLower.Max}}</span>
     </p>
-    <progress id="lower_progress" max="{{.Tower.Reward.LowerItem.Total}}" value="{{.Tower.Reward.LowerItem.Current}}"></progress>
+    <progress id="lower_progress" max="{{.TowerLower.Max}}" value="{{.TowerLower.Current}}"></progress>
     <p id="higher_item">
         <span>数据增补仪</span>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
             <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
             <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
         </svg>
-        <span id="higher_item_term_time">{{.Tower.Reward.TermTs}}</span>
-        <span class="reward">{{.Tower.Reward.HigherItem.Current}}/{{.Tower.Reward.HigherItem.Total}}</span>
+        <span id="higher_item_term_time">{{.TowerHigher.RecoverTs}}</span>
+        <span class="reward">{{.TowerHigher.Current}}/{{.TowerHigher.Max}}</span>
     </p>
-    <progress id="higher_progress" max="{{.Tower.Reward.HigherItem.Total}}" value="{{.Tower.Reward.HigherItem.Current}}"></progress>
-    <img id="campaign_icon" src="/assets/state/campaign.png">
-    <span id="campaign">{{.Campaign.Reward.Current}}/{{.Campaign.Reward.Total}}</span>
-    <div>
+    <progress id="higher_progress" max="{{.TowerHigher.Max}}" value="{{.TowerHigher.Current}}"></progress>
+    <div style="display: flex;justify-content: space-around;margin-left: 810px;">
+        <img id="campaign_icon" src="/assets/state/campaign.png">
+        <span id="campaign">{{.Reward.Current}}/{{.Reward.Max}}</span>
+    </div>
+    <div style="display: flex; align-items: center">
         <img id="recruit_icon" src="/assets/state/recruit.png"/>
         <span id="recruit_title" class="title">公开招募</span>
-        <span id="recruit" class="title">{{.RecruitFinished}}/{{.RecruitTotal}}</span>
+        <span id="recruit" class="title">{{.Recruitment.Current}}/{{.Recruitment.Max}}</span>
     </div>
-    <div>
+    <div style="display: flex; align-items: center">
         <img id="tired_chars_icon" src="/assets/state/tired_chars.png"/>
         <span id="tired_chars_title" class="title">干员疲劳</span>
-        <span id="tired_chars" class="title">{{.Building.TiredCharsCount}}</span>
+        <span id="tired_chars" class="title">{{.TiredChars}}</span>
     </div>
-    <div>
+    <div style="display: flex; align-items: center">
         <img id="tradings_icon" src="/assets/state/tradings.png"/>
         <span id="tradings_title" class="title">订单进度</span>
-        <span id="tradings" class="title">{{.Building.TradingsCurrent}}/{{.Building.TradingsTotal}}</span>
+        <span id="tradings" class="title">{{.Trading.Current}}/{{.Trading.Max}}</span>
     </div>
-    <div>
+    <div style="display: flex; align-items: center">
         <img id="manufactures_icon" src="/assets/state/manufactures.png"/>
         <span id="manufactures_title" class="title">制造进度</span>
-        <span id="manufactures" class="title">{{.Building.ManufacturesCurrent}}/{{.Building.ManufacturesTotal}}</span>
+        <span id="manufactures" class="title">{{.Manufacture.Current}}/{{.Manufacture.Max}}</span>
     </div>
-    {{if .Building.Training.Trainee.CharID}}
-        <img id="trainee" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Building.Training.Trainee.CharID}}%231.png"/>
+    {{if .Training.CharIcon}}
+        <img id="trainee" src="{{.Training.CharIcon}}"/>
         <p id="remain_secs_bg"></p>
         <p id="remain_secs">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
                 <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
                 <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
             </svg>
-            {{.Building.Training.RemainSecs}}
+            {{.Training.LeftSeconds}}
         </p>
         <p id="building_name">训练室</p>
     {{end}}
