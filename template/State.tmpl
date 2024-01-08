@@ -11,6 +11,7 @@
             width: 1092px;
             height: 510px;
             background-image: url("/assets/state/bg.png");
+            background-color: #2e3031;
         }
         #avatar {
             width: 54px;
@@ -33,14 +34,159 @@
             font-size: 30px;
             color: white;
             margin-left: 146px;
-            margin-top: 53px;
+            margin-top: 50px;
         }
         #complete {
             font-size: 21px;
             color: white;
             margin-left: 145px;
-            margin-top: -18px;
+            margin-top: -20px;
             position: absolute;
+        }
+        progress {
+            width: 410px;
+            height: 11px;
+            border-radius: 1px;
+        }
+        progress::-webkit-progress-value{
+            background: white;
+        }
+        #lower_item {
+            display: flex;
+            align-items: center;
+            margin-left: 460px;
+            margin-top: -100px;
+            font-size: 25px;
+            color: white;
+        }
+        #lower_item svg {
+            margin-left: 30px;
+        }
+        #lower_progress {
+            margin-left: 460px;
+            margin-top: -18px;
+        }
+        #higher_item {
+            display: flex;
+            align-items: center;
+            margin-left: 460px;
+            margin-top: 28px;
+            font-size: 25px;
+            color: white;
+        }
+        #higher_item svg {
+            margin-left: 30px;
+        }
+        #higher_progress {
+            margin-left: 460px;
+            margin-top: -18px;
+        }
+        .reward {
+            margin-left: 130px;
+        }
+        #campaign_icon {
+            position: absolute;
+            margin-top: -140px;
+            margin-left: 65px;
+        }
+        #campaign {
+            color: white;
+            font-size: 20px;
+            position: absolute;
+            margin-left: 75px;
+            margin-top: -25px;
+        }
+        #recruit_icon {
+            margin-top: 58px;
+            margin-left: 49px;
+        }
+        .title {
+            font-size: 25px;
+            color: white;
+        }
+        #recruit_title {
+            margin-left: 15px;
+            margin-top: 62px;
+            position: absolute;
+        }
+        #recruit {
+            position: absolute;
+            margin-left: 225px;
+            margin-top: 64px;
+        }
+        #tired_chars_icon {
+            margin-top: 55px;
+            margin-left: 49px;
+        }
+        #tired_chars_title {
+            margin-left: 15px;
+            margin-top: 58px;
+            position: absolute;
+        }
+        #tired_chars {
+            position: absolute;
+            margin-left: 225px;
+            margin-top: 60px;
+        }
+        #tradings_icon {
+            margin-left: 460px;
+            margin-top: -137px;
+            position: absolute;
+        }
+        #tradings_title {
+            position: absolute;
+            margin-left: 520px;
+            margin-top: -135px;
+        }
+        #tradings {
+            position: absolute;
+            margin-left: 750px;
+            margin-top: -135px;
+        }
+        #manufactures_icon {
+            margin-left: 460px;
+            margin-top: -42px;
+            position: absolute;
+        }
+        #manufactures_title {
+            position: absolute;
+            margin-left: 520px;
+            margin-top: -39px;
+        }
+        #manufactures {
+            position: absolute;
+            margin-left: 750px;
+            margin-top: -39px;
+        }
+        #trainee {
+            position: absolute;
+            margin-left: 922px;
+            margin-top: -164px;
+            width: 130px;
+        }
+        #remain_secs_bg {
+            position: absolute;
+            margin-left: 923px;
+            width: 133px;
+            height: 25px;
+            margin-top: -55px;
+            background: black;
+            opacity: 0.5;
+        }
+        #remain_secs {
+            position: absolute;
+            margin-left: 970px;
+            color: white;
+            display: flex;
+            align-items: center;
+            margin-top: -53px;
+        }
+        #building_name {
+            position: absolute;
+            margin-left: 945px;
+            color: white;
+            font-size: 30px;
+            margin-top: -23px;
         }
     </style>
 </head>
@@ -49,8 +195,68 @@
     <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Status.Secretary.SkinID}}.png"/>
     <span id="name">Dr {{.Status.Name}}</span>
     <img id="ap_icon" src="/assets/state/ap.png">
-    <p id="ap">{{.Status.Ap.Current}}/{{.Status.Ap.Max}}</p>
-    <p id="complete">{{.Status.Ap.CompleteRecoveryTime}}</p>
+    <P id="ap">{{.Status.Ap.Current}}/{{.Status.Ap.Max}}</P>
+    <P id="complete">
+        {{if ge .Status.Ap.Current .Status.Ap.Max}}
+        理智已全部恢复
+        {{else}}
+        {{.Status.Ap.CompleteRecoveryTime}}
+        {{end}}
+    </P>
+    <p id="lower_item">
+        <span>数据增补条</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+        </svg>
+        <span id="lower_item_term_time">{{.Tower.Reward.TermTs}}</span>
+        <span class="reward">{{.Tower.Reward.LowerItem.Current}}/{{.Tower.Reward.LowerItem.Total}}</span>
+    </p>
+    <progress id="lower_progress" max="{{.Tower.Reward.LowerItem.Total}}" value="{{.Tower.Reward.LowerItem.Current}}"></progress>
+    <p id="higher_item">
+        <span>数据增补仪</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+        </svg>
+        <span id="higher_item_term_time">{{.Tower.Reward.TermTs}}</span>
+        <span class="reward">{{.Tower.Reward.HigherItem.Current}}/{{.Tower.Reward.HigherItem.Total}}</span>
+    </p>
+    <progress id="higher_progress" max="{{.Tower.Reward.HigherItem.Total}}" value="{{.Tower.Reward.HigherItem.Current}}"></progress>
+    <img id="campaign_icon" src="/assets/state/campaign.png">
+    <span id="campaign">{{.Campaign.Reward.Current}}/{{.Campaign.Reward.Total}}</span>
+    <div>
+        <img id="recruit_icon" src="/assets/state/recruit.png"/>
+        <span id="recruit_title" class="title">公开招募</span>
+        <span id="recruit" class="title">{{.RecruitFinished}}/{{.RecruitTotal}}</span>
+    </div>
+    <div>
+        <img id="tired_chars_icon" src="/assets/state/tired_chars.png"/>
+        <span id="tired_chars_title" class="title">干员疲劳</span>
+        <span id="tired_chars" class="title">{{.Building.TiredCharsCount}}</span>
+    </div>
+    <div>
+        <img id="tradings_icon" src="/assets/state/tradings.png"/>
+        <span id="tradings_title" class="title">订单进度</span>
+        <span id="tradings" class="title">{{.Building.TradingsCurrent}}/{{.Building.TradingsTotal}}</span>
+    </div>
+    <div>
+        <img id="manufactures_icon" src="/assets/state/manufactures.png"/>
+        <span id="manufactures_title" class="title">制造进度</span>
+        <span id="manufactures" class="title">{{.Building.ManufacturesCurrent}}/{{.Building.ManufacturesTotal}}</span>
+    </div>
+    {{if .Building.Training.Trainee.CharID}}
+        <img id="trainee" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Building.Training.Trainee.CharID}}%231.png"/>
+        <p id="remain_secs_bg"></p>
+        <p id="remain_secs">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+            </svg>
+            {{.Building.Training.RemainSecs}}
+        </p>
+        <p id="building_name">训练室</p>
+    {{end}}
 </div>
 <script charset="utf-8" src="/template/js/State.js"></script>
 </body>

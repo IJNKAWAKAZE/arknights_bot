@@ -4,29 +4,31 @@ import (
 	"arknights_bot/plugins/skland"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"io"
+	"log"
 	"net/http"
-	"os"
+	"strconv"
 )
 
 func State(r *gin.Engine) {
 	r.GET("/state/:data/:uid", func(c *gin.Context) {
-		/*var account skland.Account
+		var account skland.Account
 		uid := c.Param("uid")
 		json.Unmarshal([]byte(c.Param("data")), &account)
 		playerData, err := skland.GetPlayerInfo(uid, account)
 		if err != nil {
 			log.Println(err)
 			return
-		}*/
-		open, err := os.Open("player_info.txt")
+		}
+		playStatistic, err := skland.GetPlayerStatistic(uid, account)
 		if err != nil {
+			log.Println(err)
 			return
 		}
-		var aaa skland.PlayerData
-		readAll, _ := io.ReadAll(open)
-		playerData := string(readAll)
-		json.Unmarshal([]byte(playerData), &aaa)
-		c.HTML(http.StatusOK, "State.tmpl", aaa)
+
+		playerData.Status.Ap.Current = playStatistic.Ap.Current
+		playerData.Status.Ap.Max = playStatistic.Ap.Max
+		completeRecoveryTimes, _ := strconv.Atoi(playStatistic.Ap.RecoverTs)
+		playerData.Status.Ap.CompleteRecoveryTime = completeRecoveryTimes
+		c.HTML(http.StatusOK, "State.tmpl", playerData)
 	})
 }

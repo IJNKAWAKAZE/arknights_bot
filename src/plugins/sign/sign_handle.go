@@ -105,14 +105,12 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	// 今日已完成签到
 	if record.HasSigned {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", playerName))
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
 	// 签到成功
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, record.Award))
-	msg, _ := bot.Arknights.Send(sendMessage)
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	bot.Arknights.Send(sendMessage)
 	return true, nil
 }
 

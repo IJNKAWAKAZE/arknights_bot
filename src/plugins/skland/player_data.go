@@ -88,10 +88,27 @@ type PlayerData struct {
 			} `json:"bubble"`
 			WorkTime int `json:"workTime"`
 		} `json:"tiredChars"`
-		Powers []struct {
-			SlotID string        `json:"slotId"`
-			Level  int           `json:"level"`
-			Chars  []interface{} `json:"chars"`
+		TiredCharsCount int `json:"tiredCharsCount"`
+		Powers          []struct {
+			SlotID string `json:"slotId"`
+			Level  int    `json:"level"`
+			Chars  []struct {
+				CharID        string `json:"charId"`
+				Ap            int    `json:"ap"`
+				LastApAddTime int    `json:"lastApAddTime"`
+				Index         int    `json:"index"`
+				Bubble        struct {
+					Normal struct {
+						Add int `json:"add"`
+						Ts  int `json:"ts"`
+					} `json:"normal"`
+					Assist struct {
+						Add int `json:"add"`
+						Ts  int `json:"ts"`
+					} `json:"assist"`
+				} `json:"bubble"`
+				WorkTime int `json:"workTime"`
+			} `json:"chars"`
 		} `json:"powers"`
 		Manufactures []struct {
 			SlotID string `json:"slotId"`
@@ -122,7 +139,9 @@ type PlayerData struct {
 			Remain           int    `json:"remain"`
 			Speed            int    `json:"speed"`
 		} `json:"manufactures"`
-		Tradings []struct {
+		ManufacturesCurrent int `json:"manufacturesCurrent"`
+		ManufacturesTotal   int `json:"manufacturesTotal"`
+		Tradings            []struct {
 			SlotID string `json:"slotId"`
 			Level  int    `json:"level"`
 			Chars  []struct {
@@ -142,13 +161,29 @@ type PlayerData struct {
 				} `json:"bubble"`
 				WorkTime int `json:"workTime"`
 			} `json:"chars"`
-			CompleteWorkTime int           `json:"completeWorkTime"`
-			LastUpdateTime   int           `json:"lastUpdateTime"`
-			Strategy         string        `json:"strategy"`
-			Stock            []interface{} `json:"stock"`
-			StockLimit       int           `json:"stockLimit"`
+			CompleteWorkTime int    `json:"completeWorkTime"`
+			LastUpdateTime   int    `json:"lastUpdateTime"`
+			Strategy         string `json:"strategy"`
+			Stock            []struct {
+				Delivery []struct {
+					Count int    `json:"count"`
+					ID    string `json:"id"`
+					Type  string `json:"type"`
+				} `json:"delivery"`
+				Gain struct {
+					Count int    `json:"count"`
+					ID    string `json:"id"`
+					Type  string `json:"type"`
+				} `json:"gain"`
+				InstID     int    `json:"instId"`
+				IsViolated bool   `json:"isViolated"`
+				Type       string `json:"type"`
+			} `json:"stock"`
+			StockLimit int `json:"stockLimit"`
 		} `json:"tradings"`
-		Dormitories []struct {
+		TradingsCurrent int `json:"tradingsCurrent"`
+		TradingsTotal   int `json:"tradingsTotal"`
+		Dormitories     []struct {
 			SlotID string `json:"slotId"`
 			Level  int    `json:"level"`
 			Chars  []struct {
@@ -228,9 +263,14 @@ type PlayerData struct {
 			SlotState        int `json:"slotState"`
 		} `json:"hire"`
 		Training struct {
-			SlotID  string      `json:"slotId"`
-			Level   int         `json:"level"`
-			Trainee interface{} `json:"trainee"`
+			SlotID  string `json:"slotId"`
+			Level   int    `json:"level"`
+			Trainee struct {
+				Ap            int    `json:"ap"`
+				CharID        string `json:"charId"`
+				LastApAddTime int    `json:"lastApAddTime"`
+				TargetSkill   int    `json:"targetSkill"`
+			} `json:"trainee"`
 			Trainer struct {
 				CharID        string `json:"charId"`
 				Ap            int    `json:"ap"`
@@ -289,7 +329,9 @@ type PlayerData struct {
 		FinishTs int `json:"finishTs"`
 		State    int `json:"state"`
 	} `json:"recruit"`
-	Campaign struct {
+	RecruitFinished int `json:"recruitFinished"`
+	RecruitTotal    int `json:"recruitTotal"`
+	Campaign        struct {
 		Records []struct {
 			CampaignID string `json:"campaignId"`
 			MaxKills   int    `json:"maxKills"`
@@ -300,8 +342,11 @@ type PlayerData struct {
 		} `json:"reward"`
 	} `json:"campaign"`
 	Tower struct {
-		Records []interface{} `json:"records"`
-		Reward  struct {
+		Records []struct {
+			TowerID string `json:"towerId"`
+			Best    int    `json:"best"`
+		} `json:"records"`
+		Reward struct {
 			HigherItem struct {
 				Current int `json:"current"`
 				Total   int `json:"total"`

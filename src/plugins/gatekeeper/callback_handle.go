@@ -14,7 +14,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
-	if len(d) < 5 {
+	if len(d) < 4 {
 		return true, nil
 	}
 
@@ -23,6 +23,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 	joinMessageId, _ := strconv.Atoi(d[4])
 
 	if d[2] == "PASS" || d[2] == "BAN" {
+		joinMessageId, _ = strconv.Atoi(d[3])
 		getChatMemberConfig := tgbotapi.GetChatMemberConfig{
 			ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
 				ChatID: chatId,
