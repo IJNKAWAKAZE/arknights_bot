@@ -12,9 +12,11 @@ func Start() {
 	r.Static("/template/js", "./template/js")
 	Help(r)
 	State(r)
+	Box(r)
 	templates := []string{
 		"./template/Help.tmpl",
 		"./template/State.tmpl",
+		"./template/Box.tmpl",
 	}
 	r.LoadHTMLFiles(templates...)
 	port := viper.GetString("http.port")

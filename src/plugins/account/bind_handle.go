@@ -8,7 +8,6 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
-	"net/url"
 )
 
 // BindHandle 账号绑定
@@ -30,7 +29,7 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
-	token := url.PathEscape(message.Text)
+	token := message.Text
 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)

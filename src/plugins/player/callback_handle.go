@@ -11,6 +11,7 @@ import (
 
 const (
 	OP_STATE = "state"
+	OP_BOX   = "box"
 )
 
 // PlayerData 角色数据
@@ -19,7 +20,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
-	if len(d) < 4 {
+	if len(d) < 5 {
 		return true, nil
 	}
 
@@ -28,6 +29,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	operate := d[1]
 	clickUserId, _ := strconv.ParseInt(d[2], 10, 64)
 	uid := d[3]
+	messageId, _ := strconv.Atoi(d[4])
 
 	if userId != clickUserId {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
@@ -42,7 +44,9 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	// 判断操作类型
 	switch operate {
 	case OP_STATE:
-		return State(uid, userAccount, chatId)
+		return State(uid, userAccount, chatId, messageId)
+	case OP_BOX:
+		return Box(uid, userAccount, chatId, messageId)
 	}
 
 	return true, nil

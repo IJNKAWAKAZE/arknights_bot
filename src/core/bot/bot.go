@@ -43,7 +43,8 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("help", system.HelpHandle)
 	bot.TeleBot.NewCommandProcessor("ping", system.PingHandle)
 	bot.TeleBot.NewCommandProcessor("sign", sign.SignHandle)
-	bot.TeleBot.NewCommandProcessor("state", player.StateHandle)
+	bot.TeleBot.NewCommandProcessor("state", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
 
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }

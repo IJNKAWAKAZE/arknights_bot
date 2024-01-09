@@ -26,15 +26,6 @@ func State(r *gin.Engine) {
 
 		playStatistic.Avatar = playerData.Status.Secretary.SkinID
 
-		/*open, err := os.Open("player_info.txt")
-		if err != nil {
-			return
-		}
-		var aaa skland.PlayerStatistic
-		readAll, _ := io.ReadAll(open)
-		playerData := string(readAll)
-		json.Unmarshal([]byte(playerData), &aaa)*/
-
 		c.HTML(http.StatusOK, "State.tmpl", playStatistic)
 	})
 }
