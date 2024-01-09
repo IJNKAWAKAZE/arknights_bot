@@ -61,6 +61,7 @@
         }
         #lower_item svg {
             margin-left: 30px;
+            margin-right: 10px;
         }
         #lower_progress {
             margin-left: 460px;
@@ -76,6 +77,7 @@
         }
         #higher_item svg {
             margin-left: 30px;
+            margin-right: 10px;
         }
         #higher_progress {
             margin-left: 460px;
@@ -83,6 +85,12 @@
         }
         .reward {
             margin-left: 130px;
+        }
+        .checked_in {
+            position: absolute;
+            margin-left: 75px;
+            margin-top: -220px;
+            font-size: 25px;
         }
         #campaign_icon {
             position: absolute;
@@ -95,6 +103,23 @@
             position: absolute;
             margin-left: 75px;
             margin-top: -25px;
+        }
+        #campaign_recover_bg {
+            position: absolute;
+            margin-left: 60px;
+            width: 110px;
+            height: 25px;
+            margin-top: -55px;
+            background: black;
+            opacity: 0.5;
+        }
+        #campaign_recover_time {
+            position: absolute;
+            margin-left: 55px;
+            color: white;
+            display: flex;
+            align-items: center;
+            margin-top: -53px;
         }
         #recruit_icon {
             margin-top: 65px;
@@ -175,7 +200,7 @@
         }
         #remain_secs {
             position: absolute;
-            margin-left: 960px;
+            margin-left: 950px;
             color: white;
             display: flex;
             align-items: center;
@@ -223,9 +248,22 @@
         <span class="reward">{{.TowerHigher.Current}}/{{.TowerHigher.Max}}</span>
     </p>
     <progress id="higher_progress" max="{{.TowerHigher.Max}}" value="{{.TowerHigher.Current}}"></progress>
+    {{if .CheckedIn}}
+    <span style="color: #5d9a00;"  class="checked_in">已签到</span>
+    {{else}}
+    <span style="color: #cd2828;" class="checked_in">未签到</span>
+    {{end}}
     <div style="display: flex;justify-content: space-around;margin-left: 810px;">
         <img id="campaign_icon" src="/assets/state/campaign.png">
         <span id="campaign">{{.Reward.Current}}/{{.Reward.Max}}</span>
+        <p id="campaign_recover_bg"></p>
+        <p id="campaign_recover_time">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+            </svg>
+            <span id="campaign_recover_time_item">{{.Reward.RecoverTs}}</span>
+        </p>
     </div>
     <div style="display: flex; align-items: center">
         <img id="recruit_icon" src="/assets/state/recruit.png"/>
@@ -255,7 +293,7 @@
                 <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
                 <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
             </svg>
-            {{.Training.LeftSeconds}}
+            <span id="remain_secs_item">{{.Training.LeftSeconds}}</span>
         </p>
         <p id="building_name">训练室</p>
     {{end}}

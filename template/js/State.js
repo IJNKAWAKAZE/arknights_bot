@@ -2,33 +2,32 @@ window.onload = function(){
     const complete = document.getElementById("complete");
     var completeTime = complete.textContent;
     if(!isNaN(Number(completeTime,10))){
-        var date = countDown(completeTime);
+        var date = completeRecoveryTime(completeTime);
         complete.textContent = date.hour + '时' + date.minute + '分后恢复';
     }
 
     const lowerItemTermTime = document.getElementById("lower_item_term_time");
     const higherItemTermTime = document.getElementById("higher_item_term_time");
     var termTime = lowerItemTermTime.textContent;
-    var d = countDown(termTime);
-    lowerItemTermTime.textContent = d.day + '天';
-    higherItemTermTime.textContent = d.day + '天';
+    var d = recoverTime(termTime);
+    lowerItemTermTime.textContent = d + '天';
+    higherItemTermTime.textContent = d + '天';
 
-    const remainSecs = document.getElementById("remain_secs");
+    const campaignRecoverTime = document.getElementById("campaign_recover_time_item");
+    var campaignRecover = recoverTime(campaignRecoverTime.textContent);
+    campaignRecoverTime.textContent = campaignRecover + '天';
+
+    const remainSecs = document.getElementById("remain_secs_item");
     remainSecs.textContent = formatTime(remainSecs.textContent)
 }
 
-function countDown(time) {
+function completeRecoveryTime(time) {
     var nowTime = parseInt(new Date().getTime() / 1000);
-    var inputTime  = time;
-    var times = (inputTime - nowTime);
+    var times = (time - nowTime);
     var d = parseInt(times / 60 / 60 / 24);
-    d = d < 10 ? '0' + d : d;
     var h = parseInt(times / 60 / 60 % 24);
-    h = h < 10 ? '0' + h : h;
     var m = parseInt(times / 60 % 60);
-    m = m < 10 ? '0' + m : m;
     var s = parseInt(times % 60);
-    s = s < 10 ? '0' + s : s;
     return {
         day: d,
         hour: h,
@@ -36,6 +35,12 @@ function countDown(time) {
     };
 }
 
+function recoverTime(time) {
+    var nowTime = parseInt(new Date().getTime() / 1000);
+    var times = (time - nowTime);
+    var d = Math.ceil(times / 60 / 60 / 24);
+    return d;
+}
 
 const formatTime = (seconds)=>{
     let result = [];

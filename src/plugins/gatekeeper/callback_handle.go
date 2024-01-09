@@ -20,7 +20,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 
 	userId, _ := strconv.ParseInt(d[1], 10, 64)
 	chatId := callbackQuery.Message.Chat.ID
-	joinMessageId, _ := strconv.Atoi(d[4])
+	var joinMessageId int
 
 	if d[2] == "PASS" || d[2] == "BAN" {
 		joinMessageId, _ = strconv.Atoi(d[3])
@@ -48,6 +48,8 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 
 		return true, nil
 	}
+
+	joinMessageId, _ = strconv.Atoi(d[4])
 
 	if userId != callbackQuery.From.ID {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的验证！")
