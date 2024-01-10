@@ -9,10 +9,10 @@ import (
 )
 
 func State(r *gin.Engine) {
-	r.GET("/state/:data/:uid", func(c *gin.Context) {
+	r.GET("/state", func(c *gin.Context) {
 		var account skland.Account
-		uid := c.Param("uid")
-		json.Unmarshal([]byte(c.Param("data")), &account)
+		uid := c.Query("uid")
+		json.Unmarshal([]byte(c.Query("data")), &account)
 		playerData, account, err := skland.GetPlayerInfo(uid, account)
 		if err != nil {
 			log.Println(err)

@@ -49,7 +49,7 @@ func Box(uid string, account account.UserAccount, chatId int64, messageId int) (
 
 	data, _ := json.Marshal(skAccount)
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/box/%s/%s", port, data, uid))
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/box?data=%s&uid=%s", port, data, uid))
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重新绑定角色。")
 		sendMessage.ReplyToMessageID = messageId

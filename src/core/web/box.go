@@ -27,11 +27,11 @@ type Char struct {
 }
 
 func Box(r *gin.Engine) {
-	r.GET("/box/:data/:uid", func(c *gin.Context) {
+	r.GET("/box", func(c *gin.Context) {
 		var box BoxInfo
 		var account skland.Account
-		uid := c.Param("uid")
-		json.Unmarshal([]byte(c.Param("data")), &account)
+		uid := c.Query("uid")
+		json.Unmarshal([]byte(c.Query("data")), &account)
 		playerData, _, err := skland.GetPlayerInfo(uid, account)
 		if err != nil {
 			log.Println(err)
