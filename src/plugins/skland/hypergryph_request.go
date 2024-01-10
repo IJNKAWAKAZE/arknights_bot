@@ -86,6 +86,14 @@ func HypergryphRequest[T any](r *resty.Request, method, path string) (t T, _ err
 	return res.Data, nil
 }
 
+func HypergryphGacheRequest(r *resty.Request, method, path string) (d string, _ error) {
+	res, err := r.Execute(method, "https://ak.hypergryph.com/user/api/inquiry/gacha")
+	if err != nil {
+		return d, fmt.Errorf("[hypergryph] %w", err)
+	}
+	return string(res.Body()), nil
+}
+
 func SklandRequest[T any](r *resty.Request, method, path string, vs ...any) (t T, _ error) {
 	for i := 0; i < len(vs); i++ {
 		switch v := vs[i].(type) {

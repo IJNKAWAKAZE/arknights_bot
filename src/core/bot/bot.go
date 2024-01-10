@@ -33,6 +33,7 @@ func Serve() {
 		return update.Message != nil && update.Message.LeftChatMember != nil
 	}, gatekeeper.LeftMemberHandle)
 	// 私聊
+	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
