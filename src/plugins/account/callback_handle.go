@@ -20,7 +20,6 @@ func ChoosePlayer(callBack tgbotapi.Update) (bool, error) {
 
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
-	messageId := callbackQuery.Message.MessageID
 
 	uid := d[1]
 	serverName := d[2]
@@ -41,16 +40,16 @@ func ChoosePlayer(callBack tgbotapi.Update) (bool, error) {
 			ServerName: serverName,
 			PlayerName: playerName,
 		}
-		bot.DBEngine.Table("user_player").Save(&userPlayer)
+		bot.DBEngine.Table("user_player").Create(&userPlayer)
 	} else {
-		sendMessage := tgbotapi.NewMessage(chatId, "此角色已绑定！")
+		userPlayer.PlayerName = playerName
+		bot.DBEngine.Table("user_player").Save(&userPlayer)
+		sendMessage := tgbotapi.NewMessage(chatId, "此角色已绑定，更新角色信息。")
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
 	sendMessage := tgbotapi.NewMessage(chatId, "角色绑定成功！")
 	bot.Arknights.Send(sendMessage)
-	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	bot.Arknights.Send(delMsg)
 	return true, nil
 }
 

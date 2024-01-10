@@ -27,21 +27,21 @@ func init() {
 	weight["14"] = 3
 	Weight = weight
 }
-func GetPlayerInfo(uid string, account Account) (*PlayerData, error) {
+func GetPlayerInfo(uid string, account Account) (*PlayerData, Account, error) {
 	var playerData *PlayerData
 	account, err := RefreshToken(uid, account)
 	if err != nil {
 		log.Println(err.Error())
-		return playerData, err
+		return playerData, account, err
 	}
 	playerDatastr, err := getPlayerInfoStr(uid, account.Skland)
 	if err != nil {
-		return playerData, err
+		return playerData, account, err
 	}
 
 	json.Unmarshal([]byte(gjson.Get(playerDatastr, "data").String()), &playerData)
 
-	return playerData, nil
+	return playerData, account, nil
 }
 
 func getPlayerInfo(uid string, skland AccountSkland) (*PlayerData, error) {
@@ -54,19 +54,19 @@ func getPlayerInfoStr(uid string, skland AccountSkland) (string, error) {
 	return SklandRequestPlayerData(req, "GET", "/api/v1/game/player/info", skland)
 }
 
-func GetPlayerStatistic(uid string, account Account) (*PlayerStatistic, error) {
+func GetPlayerStatistic(uid string, account Account) (*PlayerStatistic, Account, error) {
 	var playerStatistic *PlayerStatistic
 	account, err := RefreshToken(uid, account)
 	if err != nil {
 		log.Println(err.Error())
-		return playerStatistic, err
+		return playerStatistic, account, err
 	}
 	playerStatistic, err = getPlayerStatistic(uid, account.Skland)
 	if err != nil {
-		return playerStatistic, err
+		return playerStatistic, account, err
 	}
 
-	return playerStatistic, nil
+	return playerStatistic, account, nil
 }
 
 func getPlayerStatistic(uid string, skland AccountSkland) (*PlayerStatistic, error) {

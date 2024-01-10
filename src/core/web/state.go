@@ -13,12 +13,12 @@ func State(r *gin.Engine) {
 		var account skland.Account
 		uid := c.Param("uid")
 		json.Unmarshal([]byte(c.Param("data")), &account)
-		playerData, err := skland.GetPlayerInfo(uid, account)
+		playerData, account, err := skland.GetPlayerInfo(uid, account)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		playStatistic, err := skland.GetPlayerStatistic(uid, account)
+		playStatistic, _, err := skland.GetPlayerStatistic(uid, account)
 		if err != nil {
 			log.Println(err)
 			return

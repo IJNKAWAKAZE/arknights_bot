@@ -50,7 +50,7 @@ func State(uid string, account account.UserAccount, chatId int64, messageId int)
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/state/%s/%s", port, data, uid))
 	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败！")
+		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重新绑定角色。")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
 		return true, nil

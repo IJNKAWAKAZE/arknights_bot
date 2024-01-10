@@ -108,6 +108,10 @@ func RefreshToken(uid string, account Account) (Account, error) {
 		if !IsUnauthorized(err) {
 			return account, fmt.Errorf("get user error: %w", err)
 		}
+		err = checkToken(account.Hypergryph.Token)
+		if err != nil {
+			return account, err
+		}
 		account, err = Login(account.Hypergryph.Token)
 		if err != nil {
 			return account, err
@@ -127,6 +131,16 @@ func RefreshToken(uid string, account Account) (Account, error) {
 // 获取用户信息
 func getUser(skland AccountSkland) (*User, error) {
 	return SklandRequest[*User](SKR(), "GET", "/api/v1/user", skland)
+}
+
+// 检查token有效性
+func checkToken(token string) error {
+	req := SKR().SetQueryParam("token", token)
+	_, err := HypergryphRequest[any](req, "GET", "/user/info/v1/basic")
+	if err != nil && err.Error() == "[hypergryph] response status: 401 Unauthorized, error: status: 3, type: A, msg: 登录已过期，请重新登录" {
+		return fmt.Errorf("token已失效请重新登录！")
+	}
+	return err
 }
 
 // 刷新 auth
