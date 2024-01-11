@@ -60,6 +60,8 @@ func ParseBilibiliDynamic() (string, []string) {
 	url := viper.GetString("api.bilibili_dynamic")
 	request, _ := http.NewRequest("GET", url, nil)
 	request.Header.Add("user-agent", "Mozilla/5.0")
+  request.Header.Add("Cookie", "buvid3=4BCEC5AA-D998-B5AA-7869-5C38389B6F3338331infoc;buvid4=891E0F8F-21A6-2816-285B-DC05A009D61538331-024011112-ojR14xwcWnZIblFyUE6/cLQdGDJg2ZsOVAhfgVvhVv8vC3DWjzJwtgXMtg1ADDmT")
+  request.Header.Add("Referer", "https://www.bilibili.com")
 	resp, _ := http.DefaultClient.Do(request)
 	readAll, _ := io.ReadAll(resp.Body)
 	result := gjson.ParseBytes(readAll)
