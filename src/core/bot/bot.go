@@ -38,6 +38,7 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.SyncGachaHandle)
 
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
@@ -48,6 +49,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("sign", sign.SignHandle)
 	bot.TeleBot.NewCommandProcessor("state", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }

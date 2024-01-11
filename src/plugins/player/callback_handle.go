@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	OP_STATE = "state"
-	OP_BOX   = "box"
+	OP_STATE = "state" // 实时数据
+	OP_BOX   = "box"   // 我的干员
+	OP_GACHA = "gacha" // 抽卡记录
 )
 
 // PlayerData 角色数据
@@ -47,6 +48,8 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 		return State(uid, userAccount, chatId, messageId)
 	case OP_BOX:
 		return Box(uid, userAccount, chatId, messageId)
+	case OP_GACHA:
+		return Gacha(uid, userAccount, chatId, messageId)
 	}
 
 	return true, nil

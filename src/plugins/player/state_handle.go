@@ -10,6 +10,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"net/url"
 )
 
 // StateHandle 当前状态
@@ -48,7 +49,7 @@ func State(uid string, account account.UserAccount, chatId int64, messageId int)
 
 	data, _ := json.Marshal(skAccount)
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/state?data=%s&uid=%s", port, data, uid))
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/state?data=%s&uid=%s", port, url.QueryEscape(string(data)), uid), 0)
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重设token。")
 		sendMessage.ReplyToMessageID = messageId

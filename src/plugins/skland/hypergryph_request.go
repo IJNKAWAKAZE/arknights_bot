@@ -87,7 +87,7 @@ func HypergryphRequest[T any](r *resty.Request, method, path string) (t T, _ err
 }
 
 func HypergryphGacheRequest(r *resty.Request, method, path string) (d string, _ error) {
-	res, err := r.Execute(method, "https://ak.hypergryph.com/user/api/inquiry/gacha")
+	res, err := r.Execute(method, path)
 	if err != nil {
 		return d, fmt.Errorf("[hypergryph] %w", err)
 	}

@@ -28,6 +28,7 @@ func Help(r *gin.Engine) {
 		privateCmds = append(privateCmds, Cmd{Cmd: "/unbind", Desc: "解绑角色", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/cancel", Desc: "取消操作", Param: "", IsBind: false})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/reset_token", Desc: "重设token", Param: "", IsBind: true})
+		privateCmds = append(privateCmds, Cmd{Cmd: "/sync_gacha", Desc: "同步抽卡记录", Param: "", IsBind: true})
 
 		// 普通指令
 		publicCmds = append(publicCmds, Cmd{Cmd: "/help", Desc: "使用说明", Param: "", IsBind: false})
@@ -37,6 +38,7 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/sign", Desc: "关闭自动签到", Param: "stop", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/state", Desc: "当前状态", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "我的干员", Param: "", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/gacha", Desc: "抽卡记录", Param: "", IsBind: true})
 
 		helpCmd.PrivateCmds = privateCmds
 		helpCmd.PublicCmds = publicCmds

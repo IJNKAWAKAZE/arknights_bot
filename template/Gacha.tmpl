@@ -1,0 +1,128 @@
+<html>
+<head>
+    <title>抽卡记录</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            position: absolute;
+            width: 600px;
+            background-color: blanchedalmond;
+        }
+        #total {
+            display: flex;
+            justify-content: center;
+        }
+        #chart {
+            width: 600px;
+            height: 400px;
+        }
+        td {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <h3 id="total">总计<span style="color: red">{{.Total}}</span>抽</h3>
+    <div id="chart"></div>
+    <table style="width: 600px;border-spacing: 0">
+        <tr>
+            <th style="width: 40%">时间</th>
+            <th style="width: 40%">名字</th>
+            <th style="width: 20%">抽数</th>
+        </tr>
+        {{range .Star6Info}}
+        <tr>
+            <td class="ts">{{.Ts}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.Count}}</td>
+        </tr>
+        {{end}}
+    </table>
+</div>
+</body>
+<script>
+    window.onload = function () {
+        option = {
+            title: {
+                text: '各星级概率分布',
+                left: 'center',
+                top: '5%'
+            },
+            legend: {
+                orient: 'horizontal',
+                left: 'center',
+                top: '15%',
+                itemGap: 20
+            },
+            series: [
+                {
+                    type: 'pie',
+                    radius: '50%',
+                    top: '10%',
+                    data: [
+                        {
+                            value: {{.Star6}},
+                            name: '6星',
+                            itemStyle: {
+                                color: "rgba(244,110,30,1)"
+                            }
+                        },
+                        {
+                            value: {{.Star5}},
+                            name: '5星',
+                            itemStyle: {
+                                color: "rgba(247,171,55,1)"
+                            }
+                        },
+                        {
+                            value: {{.Star4}},
+                            name: '4星',
+                            itemStyle: {
+                                color: "rgba(161,53,246,1)"
+                            }
+                        },
+                        {
+                            value: {{.Star3}},
+                            name: '3星',
+                            itemStyle: {
+                                color: "rgba(109,116,126,1)"
+                            }
+                        }
+                    ],
+                    label: {
+                        normal: {
+                            formatter: '{b} : {c}个 ({d}%)'
+                        }
+                    },
+                    labelLine:{
+                        normal:{
+                            length: 20
+                        }
+                    }
+                }]
+        }
+        var chart = echarts.init(document.getElementById('chart'));
+        chart.setOption(option);
+        const items = document.getElementsByClassName("ts");
+        for (let i = 0; i < items.length; i++) {
+            var item = items[i]
+            item.textContent = timestampToTime(item.textContent)
+        }
+    }
+    function timestampToTime(timestamp) {
+        timestamp = timestamp ? timestamp : null;
+        let date = new Date(timestamp*1000);
+        let Y = date.getFullYear() + '-';
+        let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+        let D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
+        let h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+        let m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+        let s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
+        return Y + M + D + h + m + s;
+    }
+</script>
+<script charset="utf-8" src="/template/js/echarts.min.js"></script>
+</html>

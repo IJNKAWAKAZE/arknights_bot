@@ -16,7 +16,7 @@ func HelpHandle(update tgbotapi.Update) (bool, error) {
 	bot.Arknights.Send(sendAction)
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot("http://localhost:" + port + "/help")
+	pic := utils.Screenshot("http://localhost:"+port+"/help", 0)
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败！")
 		sendMessage.ReplyToMessageID = messageId
