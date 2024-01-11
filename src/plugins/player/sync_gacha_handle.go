@@ -69,7 +69,7 @@ func SyncGachaHandle(update tgbotapi.Update) (bool, error) {
 		}
 
 		// 获取角色抽卡记录
-		chars, err := skland.GetPlayerGacha("+TNw2ZwzhXNfTN5mNjXFhRYL")
+		chars, err := skland.GetPlayerGacha(userAccount.HypergryphToken)
 		if err != nil {
 			log.Println(err)
 			sendMessage := tgbotapi.NewMessage(chatId, "token可能已失效请重设token。")
