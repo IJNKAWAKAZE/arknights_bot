@@ -14,7 +14,6 @@ import (
 
 // BoxHandle 我的干员
 func BoxHandle(players []account.UserPlayer, userAccount account.UserAccount, chatId int64, userId int64, messageId int) (bool, error) {
-
 	if len(players) > 1 {
 		// 绑定多个角色进行选择
 		var buttons [][]tgbotapi.InlineKeyboardButton
@@ -51,7 +50,7 @@ func Box(uid string, account account.UserAccount, chatId int64, messageId int) (
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/box?data=%s&uid=%s", port, data, uid))
 	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重新绑定角色。")
+		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重设token。")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
 		return true, nil

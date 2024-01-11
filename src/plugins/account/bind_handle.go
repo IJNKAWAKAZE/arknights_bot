@@ -10,7 +10,7 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
-// BindHandle 账号绑定
+// BindHandle 绑定角色
 func BindHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")

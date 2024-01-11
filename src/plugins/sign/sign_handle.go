@@ -36,6 +36,16 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		return true, nil
 	}
 
+	// 获取绑定角色
+	res = utils.GetPlayersByUserId(userId).Scan(&players)
+	if res.RowsAffected == 0 {
+		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
+
 	if len(cmd) > 1 {
 		param := cmd[1]
 		if param == "auto" {
@@ -45,16 +55,6 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 			// 关闭自动签到
 			stopSign(update)
 		}
-		return true, nil
-	}
-
-	// 获取绑定角色
-	res = utils.GetPlayersByUserId(userId).Scan(&players)
-	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(chatId, messageId, 5)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return true, nil
 	}
 

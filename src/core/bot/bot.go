@@ -37,8 +37,10 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
 
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
+	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
 
 	// 普通
 	bot.TeleBot.NewCommandProcessor("help", system.HelpHandle)

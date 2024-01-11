@@ -7,6 +7,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+// UnbindHandle 解绑角色
 func UnbindHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
