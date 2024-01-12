@@ -8,7 +8,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"math/big"
-	"strconv"
 	"time"
 )
 
@@ -62,12 +61,13 @@ func VerifyMember(message *tgbotapi.Message) {
 					Name:     shipName,
 					Painting: painting,
 				})
+			} else {
+				i--
 			}
 		}
 
 		r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
-		random, _ := strconv.Atoi(r.String())
-		correct := options[random+1]
+		correct := options[r.Int64()+1]
 
 		var buttons [][]tgbotapi.InlineKeyboardButton
 		for i := 0; i < len(options); i += 2 {
