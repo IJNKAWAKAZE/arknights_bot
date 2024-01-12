@@ -4,6 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/gatekeeper"
+	"arknights_bot/plugins/operator"
 	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/sign"
 	"arknights_bot/plugins/system"
@@ -32,6 +33,9 @@ func Serve() {
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && update.Message.LeftChatMember != nil
 	}, gatekeeper.LeftMemberHandle)
+	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
+		return update.InlineQuery != nil
+	}, gatekeeper.InlineQueryHandle)
 	// 私聊
 	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
@@ -50,6 +54,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("state", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
 
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }
