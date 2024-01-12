@@ -36,6 +36,16 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		return true, nil
 	}
 
+	// 获取绑定角色
+	res = utils.GetPlayersByUserId(userId).Scan(&players)
+	if res.RowsAffected == 0 {
+		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
+
 	if len(cmd) > 1 {
 		param := cmd[1]
 		if param == "auto" {
@@ -45,16 +55,6 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 			// 关闭自动签到
 			stopSign(update)
 		}
-		return true, nil
-	}
-
-	// 获取绑定角色
-	res = utils.GetPlayersByUserId(userId).Scan(&players)
-	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(chatId, messageId, 5)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return true, nil
 	}
 
@@ -90,6 +90,10 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	skAccount.Hypergryph.Token = account.HypergryphToken
 	skAccount.Skland.Token = account.SklandToken
 	skAccount.Skland.Cred = account.SklandCred
+
+	sendAction := tgbotapi.NewChatAction(chatId, "typing")
+	bot.Arknights.Send(sendAction)
+
 	record, err := skland.SignGamePlayer(&skPlayer, skAccount)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败", playerName))
@@ -101,14 +105,12 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	// 今日已完成签到
 	if record.HasSigned {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", playerName))
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
 	// 签到成功
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, record.Award))
-	msg, _ := bot.Arknights.Send(sendMessage)
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	bot.Arknights.Send(sendMessage)
 	return true, nil
 }
 

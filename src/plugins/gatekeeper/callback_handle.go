@@ -14,15 +14,16 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
-	if len(d) < 5 {
+	if len(d) < 4 {
 		return true, nil
 	}
 
 	userId, _ := strconv.ParseInt(d[1], 10, 64)
 	chatId := callbackQuery.Message.Chat.ID
-	joinMessageId, _ := strconv.Atoi(d[4])
+	var joinMessageId int
 
 	if d[2] == "PASS" || d[2] == "BAN" {
+		joinMessageId, _ = strconv.Atoi(d[3])
 		getChatMemberConfig := tgbotapi.GetChatMemberConfig{
 			ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
 				ChatID: chatId,
@@ -37,7 +38,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 		}
 
 		if d[2] == "PASS" {
-			pass(chatId, userId, callbackQuery)
+			pass(chatId, userId, callbackQuery, true)
 		}
 
 		if d[2] == "BAN" {
@@ -47,6 +48,8 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 
 		return true, nil
 	}
+
+	joinMessageId, _ = strconv.Atoi(d[4])
 
 	if userId != callbackQuery.From.ID {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的验证！")
@@ -65,12 +68,12 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 
 	answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
 	bot.Arknights.Send(answer)
-	pass(chatId, userId, callbackQuery)
+	pass(chatId, userId, callbackQuery, false)
 
 	return true, nil
 }
 
-func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery) string {
+func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) string {
 	bot.Arknights.Send(tgbotapi.RestrictChatMemberConfig{
 		Permissions: &tgbotapi.ChatPermissions{
 			CanSendMessages:       true,
@@ -91,6 +94,13 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery) str
 	utils.RedisDelSetItem("verify", val)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, callbackQuery.Message.MessageID)
 	bot.Arknights.Send(delMsg)
+
+	if !adminPass {
+		// 新人发送box提醒
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。", utils.GetFullName(callbackQuery.From), callbackQuery.From.ID))
+		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
+		bot.Arknights.Send(sendMessage)
+	}
 	return val
 }
 

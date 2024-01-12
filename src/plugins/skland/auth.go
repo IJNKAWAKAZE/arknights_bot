@@ -88,7 +88,7 @@ func authLoginByCode(code string) (*GenCredByCodeData, error) {
 }
 
 // RefreshToken 刷新 token
-func RefreshToken(account Account) (Account, error) {
+func RefreshToken(uid string, account Account) (Account, error) {
 	_, err := getUser(account.Skland)
 	if err == nil {
 		return account, nil
@@ -108,20 +108,39 @@ func RefreshToken(account Account) (Account, error) {
 		if !IsUnauthorized(err) {
 			return account, fmt.Errorf("get user error: %w", err)
 		}
+		err = checkToken(account.Hypergryph.Token)
+		if err != nil {
+			return account, err
+		}
 		account, err = Login(account.Hypergryph.Token)
 		if err != nil {
 			return account, err
 		}
 	}
+	// 查询更新用户
+	var userNumber string
+	result := bot.DBEngine.Raw("select user_number from user_player where uid = ?", uid).Scan(&userNumber)
 
-	// 更新token
-	bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred)
+	if result.RowsAffected > 0 {
+		// 更新token
+		bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where user_number = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, userNumber)
+	}
 	return account, nil
 }
 
 // 获取用户信息
 func getUser(skland AccountSkland) (*User, error) {
 	return SklandRequest[*User](SKR(), "GET", "/api/v1/user", skland)
+}
+
+// 检查token有效性
+func checkToken(token string) error {
+	req := SKR().SetQueryParam("token", token)
+	_, err := HypergryphRequest[any](req, "GET", "/user/info/v1/basic")
+	if err != nil && err.Error() == "[hypergryph] response status: 401 Unauthorized, error: status: 3, type: A, msg: 登录已过期，请重新登录" {
+		return fmt.Errorf("token已失效请重新登录！")
+	}
+	return err
 }
 
 // 刷新 auth

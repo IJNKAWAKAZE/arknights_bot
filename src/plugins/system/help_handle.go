@@ -11,8 +11,18 @@ import (
 func HelpHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
+
+	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
+	bot.Arknights.Send(sendAction)
+
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot("http://localhost:" + port + "/help")
+	pic := utils.Screenshot("http://localhost:"+port+"/help", 0)
+	if pic == nil {
+		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败！")
+		sendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendMessage)
+		return true, nil
+	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendPhoto)

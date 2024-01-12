@@ -8,17 +8,16 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
-	"net/url"
 )
 
-// BindHandle 账号绑定
+// BindHandle 绑定角色
 func BindHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
 	bot.Arknights.Send(sendMessage)
 	sendMessage.Text = "如何获取token\n\n" +
-		"1\\.前往明日方舟 [官网](https://ak.hypergryph.com/user/login) 登录\n" +
-		"2\\.打开网址复制 token  [官服](https://web-api.hypergryph.com/account/info/hg)  [B服](https://web-api.hypergryph.com/account/info/ak-b)"
+		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
+		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
 	telebot.WaitMessage[chatId] = "setToken"
@@ -30,7 +29,11 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
-	token := url.PathEscape(message.Text)
+	token := message.Text
+
+	sendAction := tgbotapi.NewChatAction(chatId, "typing")
+	bot.Arknights.Send(sendAction)
+
 	account, err := skland.Login(token)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")

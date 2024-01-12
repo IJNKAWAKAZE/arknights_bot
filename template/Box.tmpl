@@ -1,0 +1,99 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>我的干员</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            position: absolute;
+            background-color: #2e3031;
+            width: 600px;
+        }
+        #label {
+            float: left;
+            width: 100%;
+        }
+        #title {
+            float: left;
+            color: white;
+            margin-left: 25px;
+            margin-top: -55px;
+            font-size: 30px;
+        }
+        .operator {
+            float: left;
+            background-color: #2e3031;
+        }
+        .operator_bg {
+            width: 60px;
+        }
+        .profession {
+            position: absolute;
+            width: 15px;
+            margin-left: -57px;
+            margin-top: 5px;
+        }
+        .rarity {
+            position: absolute;
+            width: 40px;
+            margin-left: -40px;
+            margin-top: 5px;
+        }
+        .evolve {
+            position: absolute;
+            width: 40px;
+            margin-top: 60px;
+            margin-left: -50px;
+        }
+        .level {
+            position: absolute;
+            background-color: rgba(0,0,0,0.6);
+            color: white;
+            margin-left: 5px;
+            margin-top: -34px;
+            border-radius: 100%;
+            width: 20px;
+            text-align: center;
+        }
+        .potential {
+            position: absolute;
+            width: 30px;
+            margin-left: -30px;
+            margin-top: 80px;
+        }
+        .name {
+            position: absolute;
+            color: white;
+            margin-top: -13px;
+            font-size: 10px;
+            background-color: rgba(0,0,0,0.7);
+            width: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <div>
+        <img id="label" src="/assets/help/label.png"/>
+        {{if .Name}}
+        <span id="title">Dr {{.Name}}</span>
+        {{end}}
+    </div>
+    {{range .Chars}}
+    <div class="operator">
+        <img class="operator_bg" src="https://web.hycdn.cn/arknights/game/assets/char_skin/portrait/{{urlquery .SkinId}}.png"/>
+        <img class="profession" src="/assets/box/{{.Profession}}.png"/>
+        <img class="rarity" src="/assets/box/Rarity_{{.Rarity}}.png" data="{{.Rarity}}"/>
+        <img class="evolve" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/>
+        <div class="level">{{.Level}}</div>
+        <img class="potential" src="/assets/box/Potential_{{.PotentialRank}}.png"/>
+        <div class="name">{{.Name}}</div>
+    </div>
+    {{end}}
+</div>
+<script charset="utf-8" src="/template/js/Box.js"></script>
+</body>
+</html>

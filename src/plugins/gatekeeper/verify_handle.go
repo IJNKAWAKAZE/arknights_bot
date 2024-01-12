@@ -42,15 +42,15 @@ func VerifyMember(message *tgbotapi.Message) {
 
 		// 抽取验证信息
 		operatorsPool := utils.GetOperators()
-		var operatorMap = make(map[string]struct{})
 		var randNumMap = make(map[int64]struct{})
 		var options []Verify
-		for i := 0; i < 4; i++ { // 随机抽取 4 个干员
+		for i := 0; i < 12; i++ { // 随机抽取 12 个干员
 			var operatorIndex int64
 			for { // 抽到重复索引则重新抽取
 				r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(operatorsPool))))
 				if _, has := randNumMap[r.Int64()]; !has {
 					operatorIndex = r.Int64()
+					randNumMap[operatorIndex] = struct{}{}
 					break
 				}
 			}
@@ -58,11 +58,6 @@ func VerifyMember(message *tgbotapi.Message) {
 			shipName := operator.Get("name").String()
 			painting := operator.Get("painting").String()
 			if painting != "" {
-				if _, has := operatorMap[shipName]; has { // 如果 map 中已存在该干员，则跳过
-					continue
-				}
-				// 保存干员信息
-				operatorMap[shipName] = struct{}{}
 				options = append(options, Verify{
 					Name:     shipName,
 					Painting: painting,
@@ -70,19 +65,20 @@ func VerifyMember(message *tgbotapi.Message) {
 			}
 		}
 
-		r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
+		r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
 		random, _ := strconv.Atoi(r.String())
-		correct := options[random]
+		correct := options[random+1]
 
 		var buttons [][]tgbotapi.InlineKeyboardButton
-		for _, v := range options {
+		for i := 0; i < len(options); i += 2 {
 			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(v.Name, fmt.Sprintf("verify,%d,%s,%s,%d", userId, v.Name, correct.Name, messageId)),
+				tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("verify,%d,%s,%s,%d", userId, options[i].Name, correct.Name, messageId)),
+				tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("verify,%d,%s,%s,%d", userId, options[i+1].Name, correct.Name, messageId)),
 			))
 		}
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("✅放行", fmt.Sprintf("verify,%d,PASS,%s,%d", userId, name, messageId)),
-			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("verify,%d,BAN,%s,%d", userId, name, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData("✅放行", fmt.Sprintf("verify,%d,PASS,%d", userId, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("verify,%d,BAN,%d", userId, messageId)),
 		))
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,

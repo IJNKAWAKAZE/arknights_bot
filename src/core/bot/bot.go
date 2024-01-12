@@ -4,6 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/gatekeeper"
+	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/sign"
 	"arknights_bot/plugins/system"
 	"arknights_bot/utils/telebot"
@@ -23,6 +24,7 @@ func Serve() {
 	bot.TeleBot.NewCallBackProcessor("bind", account.ChoosePlayer)
 	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
 	bot.TeleBot.NewCallBackProcessor("sign", sign.SignPlayer)
+	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
 
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && len(update.Message.NewChatMembers) > 0
@@ -30,15 +32,24 @@ func Serve() {
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && update.Message.LeftChatMember != nil
 	}, gatekeeper.LeftMemberHandle)
-
+	// 私聊
+	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
-	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
+	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.SyncGachaHandle)
 
+	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
+	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
+
+	// 普通
 	bot.TeleBot.NewCommandProcessor("help", system.HelpHandle)
 	bot.TeleBot.NewCommandProcessor("ping", system.PingHandle)
 	bot.TeleBot.NewCommandProcessor("sign", sign.SignHandle)
+	bot.TeleBot.NewCommandProcessor("state", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }

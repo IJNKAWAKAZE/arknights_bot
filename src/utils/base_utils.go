@@ -120,6 +120,11 @@ func GetJoinedGroups() []int64 {
 	return groups
 }
 
+// GetUserGacha 获取角色抽卡记录
+func GetUserGacha(userId int64, uid string) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_gacha where user_number = ? and uid = ? order by ts desc, pool_order desc", userId, uid)
+}
+
 // RedisSet redis存值
 func RedisSet(key string, val interface{}, expiration time.Duration) {
 	err := bot.GoRedis.Set(ctx, key, val, expiration).Err()
@@ -216,14 +221,20 @@ func RedisDelSetItem(key string, val string) {
 }
 
 // Screenshot 屏幕截图
-func Screenshot(url string) []byte {
-	pw, _ := playwright.Run()
+func Screenshot(url string, waitTime float64) []byte {
+	pw, err := playwright.Run()
+	if err != nil {
+		log.Println("未检测到playwright，开始自动安装...")
+		playwright.Install()
+		pw, _ = playwright.Run()
+	}
 	browser, _ := pw.Chromium.Launch()
 	page, _ := browser.NewPage()
 	log.Println("开始进行截图...")
 	page.Goto(url, playwright.PageGotoOptions{
 		WaitUntil: playwright.WaitUntilStateNetworkidle,
 	})
+	page.WaitForTimeout(waitTime)
 	locator, _ := page.Locator(".main")
 	screenshot, err := locator.Screenshot()
 	if err != nil {
@@ -238,4 +249,12 @@ func Screenshot(url string) []byte {
 	pw.Stop()
 	log.Println("截图完成...")
 	return screenshot
+}
+
+// ReverseSlice 反转切片
+func ReverseSlice[T any](s []T) {
+	for i := 0; i < len(s)/2; i++ {
+		j := len(s) - i - 1
+		s[i], s[j] = s[j], s[i]
+	}
 }
