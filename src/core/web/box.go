@@ -1,12 +1,14 @@
 package web
 
 import (
+	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
-	"encoding/json"
+	"arknights_bot/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 )
 
 type BoxInfo struct {
@@ -29,10 +31,15 @@ type Char struct {
 func Box(r *gin.Engine) {
 	r.GET("/box", func(c *gin.Context) {
 		var box BoxInfo
-		var account skland.Account
+		var userAccount account.UserAccount
+		var skAccount skland.Account
+		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
-		json.Unmarshal([]byte(c.Query("data")), &account)
-		playerData, _, err := skland.GetPlayerInfo(uid, account)
+		utils.GetAccountByUserId(userId).Scan(&userAccount)
+		skAccount.Hypergryph.Token = userAccount.HypergryphToken
+		skAccount.Skland.Token = userAccount.SklandToken
+		skAccount.Skland.Cred = userAccount.SklandCred
+		playerData, _, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
 			return
@@ -55,8 +62,21 @@ func Box(r *gin.Engine) {
 			chars = append(chars, char)
 		}
 
+		// 按稀有度、精英等级、级别排序
 		sort.Slice(chars, func(i, j int) bool {
-			return chars[i].Rarity > chars[j].Rarity
+			if chars[i].Rarity > chars[j].Rarity {
+				return true
+			}
+			if chars[i].Rarity < chars[j].Rarity {
+				return false
+			}
+			if chars[i].EvolvePhase > chars[j].EvolvePhase {
+				return true
+			}
+			if chars[i].EvolvePhase < chars[j].EvolvePhase {
+				return false
+			}
+			return chars[i].Level > chars[j].Level
 		})
 
 		box.Name = playerData.Status.Name

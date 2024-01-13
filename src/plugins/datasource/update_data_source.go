@@ -33,8 +33,8 @@ func UpdateDataSourceRunner() {
 	for _, name := range operatorList {
 		var operator Verify
 		operator.Name = name
+		count := 0
 		for {
-			log.Printf("获取%s的立绘...", name)
 			pw, err := playwright.Run()
 			if err != nil {
 				log.Println("未检测到playwright，开始自动安装...")
@@ -58,6 +58,10 @@ func UpdateDataSourceRunner() {
 			browser.Close()
 			pw.Stop()
 			if operator.Painting != "" {
+				break
+			}
+			count++
+			if count > 3 {
 				break
 			}
 			log.Printf("干员%s立绘获取失败，正在重试...", name)

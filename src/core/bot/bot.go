@@ -56,5 +56,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
 
+	// 权限
+	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }
