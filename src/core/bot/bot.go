@@ -26,6 +26,7 @@ func Serve() {
 	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
 	bot.TeleBot.NewCallBackProcessor("sign", sign.SignPlayer)
 	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
+	bot.TeleBot.NewCallBackProcessor("report", system.Report)
 
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && len(update.Message.NewChatMembers) > 0
@@ -55,6 +56,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
+	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
 
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)

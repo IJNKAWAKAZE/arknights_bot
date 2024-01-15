@@ -131,10 +131,11 @@ func verify(val string, chatId int64, userId int64, messageId int, joinMessageId
 	}
 	// 踢出超时未验证用户
 	chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-	kickChatMemberConfig := tgbotapi.KickChatMemberConfig{
+	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
 		ChatMemberConfig: chatMember,
+		RevokeMessages:   true,
 	}
-	bot.Arknights.Send(kickChatMemberConfig)
+	bot.Arknights.Send(banChatMemberConfig)
 	// 删除用户入群体醒
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)
