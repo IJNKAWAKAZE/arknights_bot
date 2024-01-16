@@ -8,8 +8,8 @@ import (
 )
 
 type Operator struct {
-	Avatar string `json:"avatar"`
-	Name   string `json:"name"`
+	Name     string `json:"name"`
+	Painting string `json:"painting"`
 }
 
 func GetOperators() []gjson.Result {
@@ -24,13 +24,24 @@ func GetOperatorList() []Operator {
 	doc.Find(".floatnone").Each(func(i int, selection *goquery.Selection) {
 		var operator Operator
 		operator.Name = selection.Nodes[0].FirstChild.Attr[1].Val
-		operator.Avatar = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
+		operator.Painting = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
 		operatorList = append(operatorList, operator)
 	})
 	return operatorList
 }
 
-func GetOperatorByName(name string) []Operator {
+func GetOperatorByName(name string) Operator {
+	var operator Operator
+	for _, op := range GetOperators() {
+		if op.Get("name").String() == name {
+			operator.Name = op.Get("name").String()
+			operator.Painting = op.Get("painting").String()
+		}
+	}
+	return operator
+}
+
+func GetOperatorsByName(name string) []Operator {
 	var operatorList []Operator
 	for _, operator := range GetOperatorList() {
 		if strings.Contains(operator.Name, name) {

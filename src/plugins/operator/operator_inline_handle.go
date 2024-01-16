@@ -9,7 +9,7 @@ import (
 
 func InlineOperator(inlineQuery *tgbotapi.InlineQuery) {
 	name := inlineQuery.Query
-	operatorList := utils.GetOperatorByName(name)
+	operatorList := utils.GetOperatorsByName(name)
 	var inlineQueryResults []interface{}
 	for _, operator := range operatorList {
 		id, _ := gonanoid.New(32)
@@ -18,7 +18,7 @@ func InlineOperator(inlineQuery *tgbotapi.InlineQuery) {
 			Type:        "article",
 			Title:       operator.Name,
 			Description: "查询" + operator.Name,
-			ThumbURL:    operator.Avatar,
+			ThumbURL:    operator.Painting,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
 				Text: "https://prts.wiki/w/" + operator.Name,
 			},

@@ -11,11 +11,6 @@ import (
 	"time"
 )
 
-type Verify struct {
-	Name     string `json:"name"`
-	Painting string `json:"painting"`
-}
-
 func VerifyMember(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -42,7 +37,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		// 抽取验证信息
 		operatorsPool := utils.GetOperators()
 		var randNumMap = make(map[int64]struct{})
-		var options []Verify
+		var options []utils.Operator
 		for i := 0; i < 12; i++ { // 随机抽取 12 个干员
 			var operatorIndex int64
 			for { // 抽到重复索引则重新抽取
@@ -57,7 +52,7 @@ func VerifyMember(message *tgbotapi.Message) {
 			shipName := operator.Get("name").String()
 			painting := operator.Get("painting").String()
 			if painting != "" {
-				options = append(options, Verify{
+				options = append(options, utils.Operator{
 					Name:     shipName,
 					Painting: painting,
 				})

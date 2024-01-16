@@ -4,7 +4,6 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"log"
 )
 
 // OperatorHandle 干员查询
@@ -20,8 +19,7 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 	)
 	sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "请选择要查询的干员")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	msg, err := bot.Arknights.Send(sendMessage)
-	log.Println(err)
+	msg, _ := bot.Arknights.Send(sendMessage)
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	return true, nil
 }
