@@ -11,12 +11,11 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/spf13/viper"
 	"log"
-	"strings"
 )
 
 // SignHandle 森空岛签到
 func SignHandle(update tgbotapi.Update) (bool, error) {
-	cmd := strings.Split(update.Message.Text, " ")
+	param := update.Message.CommandArguments()
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
@@ -46,8 +45,7 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		return true, nil
 	}
 
-	if len(cmd) > 1 {
-		param := cmd[1]
+	if param != "" {
 		if param == "auto" {
 			// 开启自动签到
 			autoSign(update)

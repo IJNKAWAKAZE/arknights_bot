@@ -46,7 +46,8 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	case OP_STATE:
 		return StateHandle(players, userAccount, chatId, userId, messageId)
 	case OP_BOX:
-		return BoxHandle(players, userAccount, chatId, userId, messageId)
+		param := update.Message.CommandArguments()
+		return BoxHandle(players, userAccount, chatId, userId, messageId, param)
 	case OP_GACHA:
 		return GachaHandle(players, userAccount, chatId, userId, messageId)
 	}
