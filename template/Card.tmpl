@@ -8,7 +8,7 @@
         }
         .main {
             position: absolute;
-            width: 580px;
+            width: 610px;
             height: 340px;
             background-color: #2b323c;
         }
@@ -27,7 +27,7 @@
         }
         #card {
             position: absolute;
-            width: 330px;
+            width: 310px;
             margin-top: 5px;
             margin-left: 5px;
             border: 1px solid #3b4654;
@@ -35,12 +35,12 @@
             padding: 5px;
         }
         #card td {
-            line-height: 51px;
+            line-height: 44px;
             color: #7a7a7f;
         }
         #assistChars {
             position: absolute;
-            width: 235px;
+            width: 265px;
             margin-top: 5px;
             margin-left: 340px;
             border: 1px solid #3b4654;
@@ -48,7 +48,7 @@
             padding: 5px;
         }
         #assistChars td {
-            line-height: 30px;
+            line-height: 33.5px;
             color: white;
         }
         .level {
@@ -117,7 +117,7 @@
         {{range .AssistChars}}
         <tr>
             <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png"/><img class="evolve" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/></td>
-            <td colspan="2">{{.Name}}</td>
+            <td colspan="2" style="width: 100px">{{.Name}}</td>
             <td style="text-align: center"><span class="level">{{.Level}}</span></td>
         </tr>
         <tr>
