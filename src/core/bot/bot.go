@@ -55,7 +55,8 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("state", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
+  bot.TeleBot.NewCommandProcessor("web_sign", sign.WebSignHandle)
+  bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
 
 	// 权限

@@ -51,6 +51,10 @@ type Player struct {
 	IsDelete        bool   `json:"isDelete"`
 }
 
+type GenTokenByUidData struct {
+	Token string `json:"token"`
+}
+
 // Login 使用token登录
 func Login(token string) (Account, error) {
 	account := Account{}
@@ -60,7 +64,7 @@ func Login(token string) (Account, error) {
 	}
 	account.Hypergryph.Token = token
 
-	res, err := grantApp(token, AppCodeSKLAND)
+	res, err := GrantApp(token, AppCodeSKLAND)
 	if err != nil {
 		return account, fmt.Errorf("grant app error: %w", err)
 	}
@@ -76,7 +80,7 @@ func Login(token string) (Account, error) {
 }
 
 // 获取 OAuth2 授权代码
-func grantApp(token string, code string) (*GrantAppData, error) {
+func GrantApp(token string, code string) (*GrantAppData, error) {
 	req := HR().SetBody(gh.M{"type": 0, "token": token, "appCode": code})
 	return HypergryphRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant")
 }
@@ -167,4 +171,10 @@ func ArknihghtsPlayers(skland AccountSkland) ([]*Player, error) {
 		}
 	}
 	return players, nil
+}
+
+// 根据Oauth token和uid生成应用token
+func GenTokenByUid(uid string, token string) (*GenTokenByUidData, error) {
+	req := HR().SetBody(gh.M{"uid": uid, "token": token})
+	return HypergryphBindingAPIRequest[*GenTokenByUidData](req, "POST", "/account/binding/v1/token_by_uid")
 }

@@ -156,3 +156,59 @@ func stopSign(update tgbotapi.Update) {
 	msg, _ := bot.Arknights.Send(sendMessage)
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 }
+
+func WebSignHandle(update tgbotapi.Update) (bool, error) {
+	chatId := update.Message.Chat.ID
+	userId := update.Message.From.ID
+	messageId := update.Message.MessageID
+	var userAccount account.UserAccount
+
+	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	if res.RowsAffected == 0 {
+		// 未绑定账号
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
+		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
+		sendMessage.ReplyToMessageID = messageId
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
+
+	type TaleswithinthesandData struct {
+		Success bool `json:"success"`
+	}
+
+	// AppCode 每次活动需要更改
+	grantCode, err := skland.GrantApp(userAccount.HypergryphToken, "be36d44aa36bfb5b")
+	if err != nil {
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("获取授权码失败：%s", err.Error()))
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
+	Token, err := skland.GenTokenByUid(grantCode.Uid, grantCode.Code)
+	if err != nil {
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("获取Token失败：%s", err.Error()))
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
+	req := skland.HR().SetHeader("x-role-token", Token.Token)
+	_, _ = skland.HypergryphRequest[*TaleswithinthesandData](req, "POST", "/ra/taleswithinthesand/api/activity/exchange")
+	_, err = skland.HypergryphRequest[*TaleswithinthesandData](req, "GET", "/ra/taleswithinthesand/api/activity/exchange")
+	if err != nil {
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("请求未成功，请联系管理员：%s", err.Error()))
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
+	sendMessage := tgbotapi.NewMessage(chatId, "本次生息演算网页活动奖励已经领取完毕(请勿重复签到)")
+	msg, _ := bot.Arknights.Send(sendMessage)
+	messagecleaner.AddDelQueue(chatId, messageId, 5)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	return true, nil
+}
