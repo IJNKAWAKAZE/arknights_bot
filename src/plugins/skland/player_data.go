@@ -8,9 +8,13 @@ type PlayerData struct {
 		StandingsSwitch bool `json:"standingsSwitch"`
 	} `json:"showConfig"`
 	Status struct {
-		UID               string `json:"uid"`
-		Name              string `json:"name"`
-		Level             int    `json:"level"`
+		UID    string `json:"uid"`
+		Name   string `json:"name"`
+		Level  int    `json:"level"`
+		Avatar struct {
+			Type string `json:"type"`
+			Id   string `json:"id"`
+		} `json:"avatar"`
 		RegisterTs        int    `json:"registerTs"`
 		MainStageProgress string `json:"mainStageProgress"`
 		Secretary         struct {

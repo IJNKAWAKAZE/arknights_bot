@@ -37,8 +37,12 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/sign", Desc: "开启自动签到", Param: "auto", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/sign", Desc: "关闭自动签到", Param: "stop", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/state", Desc: "当前状态", Param: "", IsBind: true})
-		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "我的干员", Param: "", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "我的干员(默认6星)", Param: "", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "所有干员", Param: "all", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "对应星级干员", Param: "5,6", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/gacha", Desc: "抽卡记录", Param: "", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/operator", Desc: "干员查询", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/report", Desc: "举报", Param: "", IsBind: false})
 
 		helpCmd.PrivateCmds = privateCmds
 		helpCmd.PublicCmds = publicCmds

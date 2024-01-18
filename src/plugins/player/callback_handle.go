@@ -21,7 +21,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
-	if len(d) < 5 {
+	if len(d) < 6 {
 		return true, nil
 	}
 
@@ -31,6 +31,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	clickUserId, _ := strconv.ParseInt(d[2], 10, 64)
 	uid := d[3]
 	messageId, _ := strconv.Atoi(d[4])
+	param := d[5]
 
 	if userId != clickUserId {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
@@ -47,7 +48,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	case OP_STATE:
 		return State(uid, userAccount, chatId, messageId)
 	case OP_BOX:
-		return Box(uid, userAccount, chatId, messageId)
+		return Box(uid, userAccount, chatId, messageId, param)
 	case OP_GACHA:
 		return Gacha(uid, userAccount, chatId, messageId)
 	}

@@ -1,12 +1,16 @@
 package web
 
 import (
+	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
-	"encoding/json"
+	"arknights_bot/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"regexp"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 type BoxInfo struct {
@@ -29,10 +33,16 @@ type Char struct {
 func Box(r *gin.Engine) {
 	r.GET("/box", func(c *gin.Context) {
 		var box BoxInfo
-		var account skland.Account
+		var userAccount account.UserAccount
+		var skAccount skland.Account
+		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
-		json.Unmarshal([]byte(c.Query("data")), &account)
-		playerData, _, err := skland.GetPlayerInfo(uid, account)
+		param := c.Query("param")
+		utils.GetAccountByUserId(userId).Scan(&userAccount)
+		skAccount.Hypergryph.Token = userAccount.HypergryphToken
+		skAccount.Skland.Token = userAccount.SklandToken
+		skAccount.Skland.Cred = userAccount.SklandCred
+		playerData, _, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
 			return
@@ -41,22 +51,38 @@ func Box(r *gin.Engine) {
 		var chars []Char
 
 		for _, c := range playerData.Chars {
-			char := Char{
-				CharId:        c.CharID,
-				SkinId:        c.SkinID,
-				Name:          playerData.CharInfoMap[c.CharID].Name,
-				Level:         c.Level,
-				EvolvePhase:   c.EvolvePhase,
-				PotentialRank: c.PotentialRank,
-				FavorPercent:  c.FavorPercent,
-				Rarity:        playerData.CharInfoMap[c.CharID].Rarity,
-				Profession:    playerData.CharInfoMap[c.CharID].Profession,
+			rarity := playerData.CharInfoMap[c.CharID].Rarity
+			if filter(param, rarity) {
+				char := Char{
+					CharId:        c.CharID,
+					SkinId:        c.SkinID,
+					Name:          playerData.CharInfoMap[c.CharID].Name,
+					Level:         c.Level,
+					EvolvePhase:   c.EvolvePhase,
+					PotentialRank: c.PotentialRank,
+					FavorPercent:  c.FavorPercent,
+					Rarity:        rarity,
+					Profession:    playerData.CharInfoMap[c.CharID].Profession,
+				}
+				chars = append(chars, char)
 			}
-			chars = append(chars, char)
 		}
 
+		// 按稀有度、精英等级、级别排序
 		sort.Slice(chars, func(i, j int) bool {
-			return chars[i].Rarity > chars[j].Rarity
+			if chars[i].Rarity > chars[j].Rarity {
+				return true
+			}
+			if chars[i].Rarity < chars[j].Rarity {
+				return false
+			}
+			if chars[i].EvolvePhase > chars[j].EvolvePhase {
+				return true
+			}
+			if chars[i].EvolvePhase < chars[j].EvolvePhase {
+				return false
+			}
+			return chars[i].Level > chars[j].Level
 		})
 
 		box.Name = playerData.Status.Name
@@ -64,4 +90,28 @@ func Box(r *gin.Engine) {
 
 		c.HTML(http.StatusOK, "Box.tmpl", box)
 	})
+}
+
+func filter(param string, rarity int) bool {
+	switch param {
+	case "":
+		if rarity == 5 {
+			return true
+		}
+	case "all":
+		return true
+	default:
+		matched, _ := regexp.MatchString("^[0-9\\d]+(,[0-9\\d]+)*$", param)
+		if matched {
+			nums := strings.Split(param, ",")
+			for _, num := range nums {
+				r, _ := strconv.Atoi(num)
+				if r == rarity+1 {
+					return true
+				}
+			}
+
+		}
+	}
+	return false
 }
