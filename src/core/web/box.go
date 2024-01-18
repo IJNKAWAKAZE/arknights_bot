@@ -110,7 +110,6 @@ func filter(param string, rarity int) bool {
 					return true
 				}
 			}
-
 		}
 	}
 	return false

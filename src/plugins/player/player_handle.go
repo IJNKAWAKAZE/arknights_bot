@@ -50,6 +50,8 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 		return BoxHandle(players, userAccount, chatId, userId, messageId, param)
 	case OP_GACHA:
 		return GachaHandle(players, userAccount, chatId, userId, messageId)
+	case OP_CARD:
+		return CardHandle(players, userAccount, chatId, userId, messageId)
 	}
 	return true, nil
 }

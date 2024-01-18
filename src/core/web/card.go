@@ -1,13 +1,14 @@
 package web
 
 import (
+	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
-	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"io"
+	"log"
 	"net/http"
-	"os"
+	"strconv"
+	"strings"
 )
 
 type PlayerCard struct {
@@ -17,11 +18,11 @@ type PlayerCard struct {
 	RegTime           int    `json:"regTime"`
 	MainStageProgress string `json:"mainStageProgress"`
 	Avatar            string `json:"avatar"`
-	Assistant         string `json:"assistant"`
 	CharCnt           int    `json:"charCnt"`
 	FurnitureCnt      int    `json:"furnitureCnt"`
 	SkinCnt           int    `json:"skinCnt"`
 	AssistChars       []struct {
+		Name            string `json:"name"`
 		CharID          string `json:"charId"`
 		SkinID          string `json:"skinId"`
 		Level           int    `json:"level"`
@@ -31,8 +32,11 @@ type PlayerCard struct {
 		MainSkillLvl    int    `json:"mainSkillLvl"`
 		SpecializeLevel int    `json:"specializeLevel"`
 		Equip           struct {
-			ID    string `json:"id"`
-			Level int    `json:"level"`
+			ID           string `json:"id"`
+			Level        int    `json:"level"`
+			Name         string `json:"name"`
+			TypeIcon     string `json:"typeIcon"`
+			ShiningColor string `json:"shiningColor"`
 		} `json:"equip"`
 	} `json:"assistChars"`
 }
@@ -40,23 +44,39 @@ type PlayerCard struct {
 func Card(r *gin.Engine) {
 	r.GET("/card", func(c *gin.Context) {
 		var playerCard PlayerCard
-		var playerData skland.PlayerData
-		file, _ := os.Open("aaa.txt")
-		readAll, _ := io.ReadAll(file)
-		json.Unmarshal(readAll, &playerData)
+		var userAccount account.UserAccount
+		var skAccount skland.Account
+		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
+		uid := c.Query("uid")
+		utils.GetAccountByUserId(userId).Scan(&userAccount)
+		skAccount.Hypergryph.Token = userAccount.HypergryphToken
+		skAccount.Skland.Token = userAccount.SklandToken
+		skAccount.Skland.Cred = userAccount.SklandCred
+		playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
 		playerCard.Name = playerData.Status.Name
 		playerCard.Uid = playerData.Status.UID
 		playerCard.Level = playerData.Status.Level
 		playerCard.RegTime = playerData.Status.RegisterTs
-		playerCard.MainStageProgress = playerData.Status.MainStageProgress
+		playerCard.MainStageProgress = playerData.StageInfoMap[playerData.Status.MainStageProgress].Code
 		playerCard.Avatar = playerData.Status.Secretary.SkinID
-		operatorName := playerData.CharInfoMap[playerData.Status.Secretary.CharID].Name
-		playerCard.Assistant = utils.GetOperatorByName(operatorName).Painting
 		playerCard.CharCnt = len(playerData.Chars)
 		playerCard.SkinCnt = len(playerData.Skins)
 		playerCard.FurnitureCnt = playerData.Building.Furniture.Total
 		playerCard.AssistChars = playerData.AssistChars
+		for i, char := range playerCard.AssistChars {
+			name := playerData.CharInfoMap[char.CharID].Name
+			equidId := playerCard.AssistChars[i].Equip.ID
+			playerCard.AssistChars[i].Name = name
+			playerCard.AssistChars[i].Equip.Name = strings.ToUpper(playerData.EquipmentInfoMap[equidId].TypeIcon)
+			playerCard.AssistChars[i].Equip.TypeIcon = playerData.EquipmentInfoMap[equidId].TypeIcon
+			playerCard.AssistChars[i].Equip.ShiningColor = playerData.EquipmentInfoMap[equidId].ShiningColor
+			playerCard.AssistChars[i].MainSkillLvl = playerCard.AssistChars[i].MainSkillLvl + playerCard.AssistChars[i].SpecializeLevel
+		}
 		c.HTML(http.StatusOK, "Card.tmpl", playerCard)
 	})
 }

@@ -36,6 +36,7 @@ type PlayerData struct {
 		SkinCnt      int `json:"skinCnt"`
 	} `json:"status"`
 	AssistChars []struct {
+		Name            string `json:"name"`
 		CharID          string `json:"charId"`
 		SkinID          string `json:"skinId"`
 		Level           int    `json:"level"`
@@ -45,8 +46,11 @@ type PlayerData struct {
 		MainSkillLvl    int    `json:"mainSkillLvl"`
 		SpecializeLevel int    `json:"specializeLevel"`
 		Equip           struct {
-			ID    string `json:"id"`
-			Level int    `json:"level"`
+			ID           string `json:"id"`
+			Level        int    `json:"level"`
+			Name         string `json:"name"`
+			TypeIcon     string `json:"typeIcon"`
+			ShiningColor string `json:"shiningColor"`
 		} `json:"equip"`
 	} `json:"assistChars"`
 	Chars []struct {
