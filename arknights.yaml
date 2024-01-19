@@ -8,16 +8,20 @@ sticker:
   ping: CAACAgUAAxkBAAPBZYTpA2TK3cnNG1CfXiLG_9Yo7t8AAiYEAAML4FddSAYCSfeu2jME
 
 api:
+  user_agent: Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36 EdgA/118.0.2088.66
   wiki: https://prts.wiki/w/
+  wiki_bili: https://wiki.biligame.com/arknights/%E5%B9%B2%E5%91%98%E6%95%B0%E6%8D%AE%E8%A1%A8
+  bilibili_buvid: https://api.bilibili.com/x/frontend/finger/spi
+  bilibili_register_buvid: https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi
   bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly
 
 mysql:
-  dsn:
+  dsn: root:root@tcp(localhost:3306)/arknights?charset=utf8mb4&parseTime=True&loc=Local
 
 redis:
-  addr: www.google.com:6379
+  addr: localhost:6379
   pwd: 123456
-  db: 1
+  db: 0
   pool_size: 20
 
 http:

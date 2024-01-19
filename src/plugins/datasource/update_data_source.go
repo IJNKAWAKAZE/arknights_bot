@@ -73,6 +73,7 @@ func UpdateDataSourceRunner() {
 		log.Println(err)
 		return
 	}
+	defer response.Body.Close()
 	utils.RedisSet("data_source", string(operatorsJson), 0)
 	log.Println("数据源更新完毕")
 }

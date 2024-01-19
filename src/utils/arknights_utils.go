@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/PuerkitoBio/goquery"
+	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"net/http"
 	"strings"
@@ -19,7 +20,7 @@ func GetOperators() []gjson.Result {
 
 func GetOperatorList() []Operator {
 	var operatorList []Operator
-	response, _ := http.Get("https://wiki.biligame.com/arknights/%E5%B9%B2%E5%91%98%E6%95%B0%E6%8D%AE%E8%A1%A8")
+	response, _ := http.Get(viper.GetString("api.wiki_bili"))
 	doc, _ := goquery.NewDocumentFromReader(response.Body)
 	doc.Find(".floatnone").Each(func(i int, selection *goquery.Selection) {
 		var operator Operator
@@ -27,6 +28,7 @@ func GetOperatorList() []Operator {
 		operator.Painting = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
 		operatorList = append(operatorList, operator)
 	})
+	defer response.Body.Close()
 	return operatorList
 }
 
