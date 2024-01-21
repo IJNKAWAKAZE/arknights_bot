@@ -68,12 +68,14 @@ func Box(uid string, account account.UserAccount, chatId int64, messageId int, p
 	if BoxMap[account.UserNumber].Size != len(pic) {
 		sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "box.png"})
 		sendDocument.ReplyToMessageID = messageId
-		msg, _ := bot.Arknights.Send(sendDocument)
-		b := B{
-			Size:   len(pic),
-			FileId: msg.Document.FileID,
+		msg, err := bot.Arknights.Send(sendDocument)
+		if err == nil {
+			b := B{
+				Size:   len(pic),
+				FileId: msg.Document.FileID,
+			}
+			BoxMap[account.UserNumber] = b
 		}
-		BoxMap[account.UserNumber] = b
 		return true, nil
 	}
 	// BOX无改变

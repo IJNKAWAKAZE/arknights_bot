@@ -9,7 +9,10 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/playwright-community/playwright-go"
 	"gorm.io/gorm"
+	"io"
 	"log"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -86,6 +89,15 @@ func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
 		return false
 	}
 	return true
+}
+
+// DownloadFile 下载tg文件
+func DownloadFile(fileId string) (io.ReadCloser, string) {
+	fileUrl, _ := bot.Arknights.GetFileDirectURL(fileId)
+	fileType := fileUrl[strings.LastIndex(fileUrl, ".")+1:]
+	response, _ := http.Get(fileUrl)
+	body := response.Body
+	return body, fileType
 }
 
 // GetAccountByUserId 查询账号信息

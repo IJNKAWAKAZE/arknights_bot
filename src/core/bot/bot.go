@@ -44,9 +44,11 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.SyncGachaHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.ImportGachaHandle)
 
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
+	bot.TeleBot.NewWaitMessageProcessor("importGacha", player.ImportGacha)
 
 	// 普通
 	bot.TeleBot.NewCommandProcessor("help", system.HelpHandle)

@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	OP_STATE = "state" // 实时数据
-	OP_BOX   = "box"   // 我的干员
-	OP_GACHA = "gacha" // 抽卡记录
-	OP_CARD  = "card"  // 我的名片
+	OP_STATE  = "state"  // 实时数据
+	OP_BOX    = "box"    // 我的干员
+	OP_GACHA  = "gacha"  // 抽卡记录
+	OP_CARD   = "card"   // 我的名片
+	OP_IMPORT = "import" // 导入抽卡记录
 )
 
 // PlayerData 角色数据
@@ -22,7 +23,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
-	if len(d) < 6 {
+	if len(d) < 5 {
 		return true, nil
 	}
 
@@ -32,7 +33,6 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	clickUserId, _ := strconv.ParseInt(d[2], 10, 64)
 	uid := d[3]
 	messageId, _ := strconv.Atoi(d[4])
-	param := d[5]
 
 	if userId != clickUserId {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
@@ -49,11 +49,15 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	case OP_STATE:
 		return State(uid, userAccount, chatId, messageId)
 	case OP_BOX:
+		param := d[5]
 		return Box(uid, userAccount, chatId, messageId, param)
 	case OP_GACHA:
 		return Gacha(uid, userAccount, chatId, messageId)
 	case OP_CARD:
 		return Card(uid, userAccount, chatId, messageId)
+	case OP_IMPORT:
+		name := utils.GetFullName(callbackQuery.From)
+		return Import(uid, userAccount, chatId, ImportFile[clickUserId], name)
 	}
 
 	return true, nil

@@ -14,6 +14,7 @@ require (
 	github.com/starudream/go-lib/core/v2 v2.0.15
 	github.com/starudream/go-lib/resty/v2 v2.0.8
 	github.com/tidwall/gjson v1.14.4
+	github.com/tidwall/sjson v1.2.5
 	github.com/u2takey/ffmpeg-go v0.5.0
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.24.3
