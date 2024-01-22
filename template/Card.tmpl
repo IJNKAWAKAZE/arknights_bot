@@ -138,8 +138,13 @@
             {{end}}
         </tr>
         <tr>
-            <td><img class="skill" src="https://web.hycdn.cn/arknights/game/assets/char_skill/{{.SkillID}}.png"/></td>
-            <td colspan="3">Rank.{{.MainSkillLvl}}</td>
+            {{if .SkillID}}
+                <td><img class="skill" src="https://web.hycdn.cn/arknights/game/assets/char_skill/{{.SkillID}}.png"/></td>
+                <td colspan="3">Rank.{{.MainSkillLvl}}</td>
+            {{else}}
+            <td style="height: 20px"> </td>
+            <td colspan="3"> </td>
+            {{end}}
         </tr>
         {{end}}
     </table>
