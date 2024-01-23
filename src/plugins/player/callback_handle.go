@@ -15,6 +15,7 @@ const (
 	OP_GACHA  = "gacha"  // 抽卡记录
 	OP_CARD   = "card"   // 我的名片
 	OP_IMPORT = "import" // 导入抽卡记录
+	OP_EXPORT = "export" // 导出抽卡记录
 )
 
 // PlayerData 角色数据
@@ -58,6 +59,9 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	case OP_IMPORT:
 		name := utils.GetFullName(callbackQuery.From)
 		return Import(uid, userAccount, chatId, ImportFile[clickUserId], name)
+	case OP_EXPORT:
+		name := utils.GetFullName(callbackQuery.From)
+		return Export(uid, userAccount, chatId, name)
 	}
 
 	return true, nil

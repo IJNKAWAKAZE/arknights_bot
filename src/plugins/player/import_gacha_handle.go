@@ -122,7 +122,7 @@ func Import(uid string, account account.UserAccount, chatId int64, fileId string
 	}
 
 	go addGacha(importGachaData, account.UserNumber, uid, name)
-	sendMessage := tgbotapi.NewMessage(chatId, "抽卡记导入成功！")
+	sendMessage := tgbotapi.NewMessage(chatId, "抽卡记录导入成功！")
 	bot.Arknights.Send(sendMessage)
 	return true, nil
 }
