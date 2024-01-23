@@ -21,6 +21,11 @@
         td {
             text-align: center;
         }
+        .new {
+            font-size: 10px;
+            color: red;
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +42,12 @@
         {{range .Star6Info}}
         <tr>
             <td class="ts">{{.Ts}}</td>
-            <td>{{.Name}}</td>
+            <td>
+                {{.Name}}
+                {{if .IsNew}}
+                <span class="new">New</span>
+                {{end}}
+            </td>
             <td>{{.Count}}</td>
         </tr>
         {{end}}

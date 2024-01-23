@@ -137,7 +137,7 @@ func addGacha(importGachaData ImportGachaData, userNumber int64, uid string, nam
 			// 同步抽卡数据
 			for i, c := range d.C {
 				id, _ := gonanoid.New(32)
-				n := strconv.FormatFloat(c[2].(float64), 'f', 2, 64)
+				n := strconv.Itoa(int(c[2].(float64)))
 				isNew, _ := strconv.ParseBool(n)
 				userGacha := UserGacha{
 					Id:         id,

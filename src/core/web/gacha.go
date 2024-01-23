@@ -24,6 +24,7 @@ type Star6Info struct {
 	Name  string `json:"name"`
 	Ts    int64  `json:"ts"`
 	Count int    `json:"count"`
+	IsNew bool   `json:"isNew"`
 }
 
 func Gacha(r *gin.Engine) {
@@ -55,6 +56,7 @@ func Gacha(r *gin.Engine) {
 					Name:  c.CharName,
 					Count: count,
 					Ts:    c.Ts,
+					IsNew: c.IsNew,
 				})
 				count = 1
 				continue
