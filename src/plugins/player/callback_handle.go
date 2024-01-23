@@ -60,8 +60,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 		name := utils.GetFullName(callbackQuery.From)
 		return Import(uid, userAccount, chatId, ImportFile[clickUserId], name)
 	case OP_EXPORT:
-		name := utils.GetFullName(callbackQuery.From)
-		return Export(uid, userAccount, chatId, name)
+		return Export(uid, userAccount, chatId)
 	}
 
 	return true, nil
