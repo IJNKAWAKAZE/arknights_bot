@@ -61,6 +61,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
+	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
 
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)

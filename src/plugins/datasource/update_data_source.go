@@ -50,14 +50,12 @@ func UpdateDataSourceRunner() {
 			imgs, _ := locator.InnerHTML()
 			imgHtml, _ := goquery.NewDocumentFromReader(strings.NewReader(imgs))
 			imgHtml.Find("img").Each(func(i int, selection *goquery.Selection) {
-				if i == 0 {
-					operator.Painting = "http:" + selection.Nodes[0].Attr[1].Val
-				}
+				operator.Skins = append(operator.Skins, "https:"+selection.Nodes[0].Attr[1].Val)
 			})
 			page.Close()
 			browser.Close()
 			pw.Stop()
-			if operator.Painting != "" {
+			if len(operator.Skins) != 0 {
 				break
 			}
 			count++

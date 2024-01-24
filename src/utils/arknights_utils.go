@@ -37,7 +37,7 @@ func GetOperatorByName(name string) Operator {
 	for _, op := range GetOperators() {
 		if op.Get("name").String() == name {
 			operator.Name = op.Get("name").String()
-			operator.Painting = op.Get("painting").String()
+			operator.Painting = op.Get("skins").Array()[0].String()
 		}
 	}
 	return operator
