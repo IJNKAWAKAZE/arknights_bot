@@ -46,7 +46,7 @@ func GetOperatorByName(name string) Operator {
 func GetOperatorsByName(name string) []Operator {
 	var operatorList []Operator
 	for _, operator := range GetOperatorList() {
-		if strings.Contains(operator.Name, name) {
+		if strings.Contains(strings.ToLower(operator.Name), strings.ToLower(name)) {
 			operatorList = append(operatorList, operator)
 		}
 	}

@@ -28,8 +28,7 @@ func InlineOperator(inlineQuery *tgbotapi.InlineQuery) {
 	answerInlineQuery := tgbotapi.InlineConfig{
 		InlineQueryID: inlineQuery.ID,
 		Results:       inlineQueryResults,
-		CacheTime:     60,
-		IsPersonal:    true,
+		CacheTime:     0,
 	}
 	bot.Arknights.Send(answerInlineQuery)
 }

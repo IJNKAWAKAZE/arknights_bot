@@ -53,7 +53,7 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
 	photo, _ := bot.Arknights.Send(sendPhoto)
-	messagecleaner.AddDelQueue(chatId, photo.MessageID, 120)
+	messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
 	poll := tgbotapi.NewPoll(chatId, "请选择上图干员的正确名字")
 	poll.IsAnonymous = false
 	poll.Type = "quiz"
@@ -64,6 +64,6 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 	}
 	poll.Options = pollOptions
 	p, _ := bot.Arknights.Send(poll)
-	messagecleaner.AddDelQueue(chatId, p.MessageID, 120)
+	messagecleaner.AddDelQueue(chatId, p.MessageID, 300)
 	return true, nil
 }
