@@ -62,6 +62,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
 	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
+	bot.TeleBot.NewCommandProcessor("redeem", player.RedeemHandle)
 
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)

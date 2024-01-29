@@ -61,7 +61,7 @@ func GetPlayerGacha(token string) ([]Char, error) {
 
 func getPlayerGacha(token, page string) (string, error) {
 	req := SKR().SetQueryParams(gh.MS{"token": token, "page": page})
-	res, err := HypergryphGacheRequest(req, "GET", "https://ak.hypergryph.com/user/api/inquiry/gacha")
+	res, err := HypergryphAKRequest(req, "GET", "/user/api/inquiry/gacha")
 	if err != nil {
 		log.Println(err)
 		return "", err

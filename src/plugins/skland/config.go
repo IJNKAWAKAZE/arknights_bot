@@ -2,6 +2,7 @@ package skland
 
 const (
 	HypergryphAddr           = "https://as.hypergryph.com"
+	HypergryphAKAddr         = "https://ak.hypergryph.com"
 	HypergryphBindingAPIAddr = "https://binding-api-account-prod.hypergryph.com"
 	HypergryphUserAgent      = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 	AppCodeSKLAND            = "4ca99fa6b56cc2ba"

@@ -47,6 +47,7 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/operator", Desc: "干员查询", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/report", Desc: "举报", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/quiz", Desc: "云玩家检测", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/redeem", Desc: "CDK兑换", Param: "[CDK]", IsBind: true})
 
 		helpCmd.PrivateCmds = privateCmds
 		helpCmd.PublicCmds = publicCmds

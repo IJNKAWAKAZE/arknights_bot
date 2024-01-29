@@ -64,7 +64,7 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	}
 	delete(telebot.WaitMessage, chatId)
 	// 获取角色列表
-	players, err := skland.ArknihghtsPlayers(account.Skland)
+	players, err := skland.ArknightsPlayers(account.Skland)
 	if err != nil || len(players) == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定角色！")
 		bot.Arknights.Send(sendMessage)
