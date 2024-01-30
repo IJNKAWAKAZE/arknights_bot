@@ -4,17 +4,27 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/messagecleaner"
+	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"strings"
 )
 
-// PlayerHandle 角色信息查询
-func PlayerHandle(update tgbotapi.Update) (bool, error) {
+// RedeemHandle CDK兑换
+func RedeemHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
+	cdk := strings.ToUpper(update.Message.CommandArguments())
+
+	if cdk == "" {
+		SendMessage := tgbotapi.NewMessage(chatId, "请输入CDK！")
+		SendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(SendMessage)
+		return true, nil
+	}
 
 	var userAccount account.UserAccount
 	var players []account.UserPlayer
@@ -41,17 +51,30 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 		return true, nil
 	}
 
-	// 判断操作类型
-	switch update.Message.Command() {
-	case OP_STATE:
-		return StateHandle(players, userAccount, chatId, userId, messageId)
-	case OP_BOX:
-		param := update.Message.CommandArguments()
-		return BoxHandle(players, userAccount, chatId, userId, messageId, param)
-	case OP_GACHA:
-		return GachaHandle(players, userAccount, chatId, userId, messageId)
-	case OP_CARD:
-		return CardHandle(players, userAccount, chatId, userId, messageId)
+	// 遍历角色
+	for _, player := range players {
+		if player.ServerName == "b服" {
+			SendMessage := tgbotapi.NewMessage(chatId, "暂不支持B服！")
+			SendMessage.ReplyToMessageID = messageId
+			bot.Arknights.Send(SendMessage)
+			return true, nil
+		}
+		result, err := skland.GetPlayerRedeem(userAccount.HypergryphToken, cdk)
+		if err != nil {
+			SendMessage := tgbotapi.NewMessage(chatId, err.Error())
+			SendMessage.ReplyToMessageID = messageId
+			bot.Arknights.Send(SendMessage)
+			return true, err
+		}
+		if result != "" {
+			SendMessage := tgbotapi.NewMessage(chatId, result)
+			SendMessage.ReplyToMessageID = messageId
+			bot.Arknights.Send(SendMessage)
+			return true, fmt.Errorf(result)
+		}
+		SendMessage := tgbotapi.NewMessage(chatId, "CDK兑换成功，请进入游戏领取奖励。")
+		SendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(SendMessage)
 	}
 	return true, nil
 }

@@ -86,8 +86,18 @@ func HypergryphRequest[T any](r *resty.Request, method, path string) (t T, _ err
 	return res.Data, nil
 }
 
-func HypergryphGacheRequest(r *resty.Request, method, path string) (d string, _ error) {
-	res, err := r.Execute(method, path)
+func HypergryphBindingAPIRequest[T any](r *resty.Request, method, path string) (t T, _ error) {
+	res, err := resty.ParseResp[*HBaseResp[any], *HBaseResp[T]](
+		r.SetError(&HBaseResp[any]{}).SetResult(&HBaseResp[T]{}).Execute(method, HypergryphBindingAPIAddr+path),
+	)
+	if err != nil {
+		return t, fmt.Errorf("[hypergryph] %w", err)
+	}
+	return res.Data, nil
+}
+
+func HypergryphAKRequest(r *resty.Request, method, path string) (d string, _ error) {
+	res, err := r.Execute(method, HypergryphAKAddr+path)
 	if err != nil {
 		return d, fmt.Errorf("[hypergryph] %w", err)
 	}

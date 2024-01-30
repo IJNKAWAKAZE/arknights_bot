@@ -105,10 +105,11 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 }
 
 func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chatMember tgbotapi.ChatMemberConfig, joinMessageId int) {
-	kickChatMemberConfig := tgbotapi.KickChatMemberConfig{
+	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
 		ChatMemberConfig: chatMember,
+		RevokeMessages:   true,
 	}
-	bot.Arknights.Send(kickChatMemberConfig)
+	bot.Arknights.Send(banChatMemberConfig)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, callbackQuery.Message.MessageID)
 	bot.Arknights.Send(delMsg)
 	val := fmt.Sprintf("verify%d%d", chatId, userId)

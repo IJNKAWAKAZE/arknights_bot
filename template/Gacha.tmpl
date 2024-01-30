@@ -21,11 +21,17 @@
         td {
             text-align: center;
         }
+        .new {
+            font-size: 10px;
+            color: red;
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
 <div class="main">
     <h3 id="total">总计<span style="color: red">{{.Total}}</span>抽</h3>
+    <h5 style="display: flex;justify-content: center;">(<span id="beg_time"></span>——<span id="end_time"></span>)</h5>
     <div id="chart"></div>
     <table style="width: 600px;border-spacing: 0">
         <tr>
@@ -36,7 +42,12 @@
         {{range .Star6Info}}
         <tr>
             <td class="ts">{{.Ts}}</td>
-            <td>{{.Name}}</td>
+            <td>
+                {{.Name}}
+                {{if .IsNew}}
+                <span class="new">New</span>
+                {{end}}
+            </td>
             <td>{{.Count}}</td>
         </tr>
         {{end}}
@@ -106,6 +117,10 @@
         }
         var chart = echarts.init(document.getElementById('chart'));
         chart.setOption(option);
+        const beg_time = document.getElementById("beg_time");
+        const end_time = document.getElementById("end_time");
+        beg_time.textContent = timestampToTime({{.BegTime}})
+        end_time.textContent = timestampToTime({{.EndTime}})
         const items = document.getElementsByClassName("ts");
         for (let i = 0; i < items.length; i++) {
             var item = items[i]

@@ -33,28 +33,37 @@ func UpdateDataSourceRunner() {
 	for _, name := range operatorList {
 		var operator Verify
 		operator.Name = name
-		pw, err := playwright.Run()
-		if err != nil {
-			log.Println("未检测到playwright，开始自动安装...")
-			playwright.Install()
-			pw, _ = playwright.Run()
-		}
-		browser, _ := pw.Chromium.Launch()
-		page, _ := browser.NewPage()
-		page.Goto(api+name, playwright.PageGotoOptions{
-			WaitUntil: playwright.WaitUntilStateNetworkidle,
-		})
-		locator, _ := page.Locator("#charimg")
-		imgs, _ := locator.InnerHTML()
-		imgHtml, _ := goquery.NewDocumentFromReader(strings.NewReader(imgs))
-		imgHtml.Find("img").Each(func(i int, selection *goquery.Selection) {
-			if i == 0 {
-				operator.Painting = "http:" + selection.Nodes[0].Attr[1].Val
+		count := 0
+		for {
+			pw, err := playwright.Run()
+			if err != nil {
+				log.Println("未检测到playwright，开始自动安装...")
+				playwright.Install()
+				pw, _ = playwright.Run()
 			}
-		})
-		page.Close()
-		browser.Close()
-		pw.Stop()
+			browser, _ := pw.Chromium.Launch()
+			page, _ := browser.NewPage()
+			page.Goto(api+name, playwright.PageGotoOptions{
+				WaitUntil: playwright.WaitUntilStateNetworkidle,
+			})
+			locator, _ := page.Locator("#charimg")
+			imgs, _ := locator.InnerHTML()
+			imgHtml, _ := goquery.NewDocumentFromReader(strings.NewReader(imgs))
+			imgHtml.Find("img").Each(func(i int, selection *goquery.Selection) {
+				operator.Skins = append(operator.Skins, "https:"+selection.Nodes[0].Attr[1].Val)
+			})
+			page.Close()
+			browser.Close()
+			pw.Stop()
+			if len(operator.Skins) != 0 {
+				break
+			}
+			count++
+			if count > 3 {
+				break
+			}
+			log.Printf("干员%s立绘获取失败，正在重试...", name)
+		}
 		operatorJson = append(operatorJson, operator)
 	}
 	operatorsJson, err := json.Marshal(operatorJson)
@@ -62,6 +71,7 @@ func UpdateDataSourceRunner() {
 		log.Println(err)
 		return
 	}
+	defer response.Body.Close()
 	utils.RedisSet("data_source", string(operatorsJson), 0)
 	log.Println("数据源更新完毕")
 }

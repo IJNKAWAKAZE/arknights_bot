@@ -17,11 +17,14 @@ type GachaLog struct {
 	Star3     int                `json:"star3"`
 	Chars     []player.UserGacha `json:"chars"`
 	Star6Info []Star6Info        `json:"Star6Info"`
+	BegTime   int64              `json:"begTime"`
+	EndTime   int64              `json:"endTime"`
 }
 type Star6Info struct {
 	Name  string `json:"name"`
 	Ts    int64  `json:"ts"`
 	Count int    `json:"count"`
+	IsNew bool   `json:"isNew"`
 }
 
 func Gacha(r *gin.Engine) {
@@ -53,6 +56,7 @@ func Gacha(r *gin.Engine) {
 					Name:  c.CharName,
 					Count: count,
 					Ts:    c.Ts,
+					IsNew: c.IsNew,
 				})
 				count = 1
 				continue
@@ -71,6 +75,8 @@ func Gacha(r *gin.Engine) {
 		gachaLog.Star4 = star4
 		gachaLog.Star3 = star3
 		gachaLog.Chars = userGacha
+		gachaLog.BegTime = userGacha[len(userGacha)-1].Ts
+		gachaLog.EndTime = userGacha[0].Ts
 
 		utils.ReverseSlice(star6Info)
 		gachaLog.Star6Info = star6Info

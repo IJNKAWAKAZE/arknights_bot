@@ -8,14 +8,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"math/big"
-	"strconv"
 	"time"
 )
-
-type Verify struct {
-	Name     string `json:"name"`
-	Painting string `json:"painting"`
-}
 
 func VerifyMember(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
@@ -43,7 +37,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		// 抽取验证信息
 		operatorsPool := utils.GetOperators()
 		var randNumMap = make(map[int64]struct{})
-		var options []Verify
+		var options []utils.Operator
 		for i := 0; i < 12; i++ { // 随机抽取 12 个干员
 			var operatorIndex int64
 			for { // 抽到重复索引则重新抽取
@@ -56,18 +50,19 @@ func VerifyMember(message *tgbotapi.Message) {
 			}
 			operator := operatorsPool[operatorIndex]
 			shipName := operator.Get("name").String()
-			painting := operator.Get("painting").String()
+			painting := operator.Get("skins").Array()[0].String()
 			if painting != "" {
-				options = append(options, Verify{
+				options = append(options, utils.Operator{
 					Name:     shipName,
 					Painting: painting,
 				})
+			} else {
+				i--
 			}
 		}
 
 		r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
-		random, _ := strconv.Atoi(r.String())
-		correct := options[random+1]
+		correct := options[r.Int64()+1]
 
 		var buttons [][]tgbotapi.InlineKeyboardButton
 		for i := 0; i < len(options); i += 2 {
@@ -131,10 +126,11 @@ func verify(val string, chatId int64, userId int64, messageId int, joinMessageId
 	}
 	// 踢出超时未验证用户
 	chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-	kickChatMemberConfig := tgbotapi.KickChatMemberConfig{
+	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
 		ChatMemberConfig: chatMember,
+		RevokeMessages:   true,
 	}
-	bot.Arknights.Send(kickChatMemberConfig)
+	bot.Arknights.Send(banChatMemberConfig)
 	// 删除用户入群体醒
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)

@@ -51,6 +51,10 @@ type Player struct {
 	IsDelete        bool   `json:"isDelete"`
 }
 
+type GenTokenByUidData struct {
+	Token string `json:"token"`
+}
+
 // Login 使用token登录
 func Login(token string) (Account, error) {
 	account := Account{}
@@ -154,8 +158,8 @@ func listPlayer(skland AccountSkland) (*ListPlayerData, error) {
 	return SklandRequest[*ListPlayerData](SKR(), "GET", "/api/v1/game/player/binding", skland)
 }
 
-// ArknihghtsPlayers 获取明日方舟绑定角色
-func ArknihghtsPlayers(skland AccountSkland) ([]*Player, error) {
+// ArknightsPlayers 获取明日方舟绑定角色
+func ArknightsPlayers(skland AccountSkland) ([]*Player, error) {
 	var players []*Player
 	playerList, err := listPlayer(skland)
 	if err != nil {
@@ -167,4 +171,10 @@ func ArknihghtsPlayers(skland AccountSkland) ([]*Player, error) {
 		}
 	}
 	return players, nil
+}
+
+// GenTokenByUid 根据Oauth token和uid生成应用token
+func GenTokenByUid(uid string, token string) (*GenTokenByUidData, error) {
+	req := HR().SetBody(gh.M{"uid": uid, "token": token})
+	return HypergryphBindingAPIRequest[*GenTokenByUidData](req, "POST", "/account/binding/v1/token_by_uid")
 }

@@ -9,7 +9,10 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/playwright-community/playwright-go"
 	"gorm.io/gorm"
+	"io"
 	"log"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -46,6 +49,7 @@ type GroupJoined struct {
 	Id          string    `json:"id" gorm:"primaryKey"`
 	GroupName   string    `json:"groupName"`
 	GroupNumber int64     `json:"groupNumber"`
+	News        int64     `json:"news"`
 	CreateTime  time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime  time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark      string    `json:"remark"`
@@ -74,6 +78,7 @@ func SaveJoined(message *tgbotapi.Message) {
 		Id:          id,
 		GroupName:   message.Chat.Title,
 		GroupNumber: message.Chat.ID,
+		News:        0,
 	}
 
 	bot.DBEngine.Table("group_joined").Create(&groupJoined)
@@ -86,6 +91,15 @@ func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
 		return false
 	}
 	return true
+}
+
+// DownloadFile 下载tg文件
+func DownloadFile(fileId string) (io.ReadCloser, string) {
+	fileUrl, _ := bot.Arknights.GetFileDirectURL(fileId)
+	fileType := fileUrl[strings.LastIndex(fileUrl, ".")+1:]
+	response, _ := http.Get(fileUrl)
+	body := response.Body
+	return body, fileType
 }
 
 // GetAccountByUserId 查询账号信息
@@ -116,7 +130,7 @@ func GetAutoSignByUserId(userId int64) *gorm.DB {
 // GetJoinedGroups 获取加入的群组
 func GetJoinedGroups() []int64 {
 	var groups []int64
-	bot.DBEngine.Raw("select group_number from group_joined group by group_number").Scan(&groups)
+	bot.DBEngine.Raw("select group_number from group_joined where news = 1 group by group_number").Scan(&groups)
 	return groups
 }
 

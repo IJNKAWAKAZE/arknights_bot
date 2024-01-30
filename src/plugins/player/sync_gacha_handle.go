@@ -66,6 +66,7 @@ func SyncGachaHandle(update tgbotapi.Update) (bool, error) {
 		if player.ServerName == "b服" {
 			SendMessage := tgbotapi.NewMessage(chatId, "暂不支持B服！")
 			bot.Arknights.Send(SendMessage)
+			return true, nil
 		}
 
 		// 获取角色抽卡记录
