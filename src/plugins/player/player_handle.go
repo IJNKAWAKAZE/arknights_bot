@@ -8,6 +8,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 // PlayerHandle 角色信息查询
@@ -48,10 +49,15 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	case OP_BOX:
 		param := update.Message.CommandArguments()
 		return BoxHandle(players, userAccount, chatId, userId, messageId, param)
+	case OP_SYNC:
+		return SyncGachaHandle(players, userAccount, chatId, userId, messageId)
 	case OP_GACHA:
 		return GachaHandle(players, userAccount, chatId, userId, messageId)
 	case OP_CARD:
 		return CardHandle(players, userAccount, chatId, userId, messageId)
+	case OP_REDEEM:
+		cdk := strings.ToUpper(update.Message.CommandArguments())
+		return RedeemHandle(players, userAccount, chatId, userId, messageId, cdk)
 	}
 	return true, nil
 }

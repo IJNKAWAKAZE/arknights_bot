@@ -23,10 +23,12 @@ func GetOperatorList() []Operator {
 	response, _ := http.Get(viper.GetString("api.wiki_bili"))
 	doc, _ := goquery.NewDocumentFromReader(response.Body)
 	doc.Find(".floatnone").Each(func(i int, selection *goquery.Selection) {
-		var operator Operator
-		operator.Name = selection.Nodes[0].FirstChild.Attr[1].Val
-		operator.Painting = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
-		operatorList = append(operatorList, operator)
+		if selection.Nodes[0].FirstChild.FirstChild.Attr != nil {
+			var operator Operator
+			operator.Name = selection.Nodes[0].FirstChild.Attr[1].Val
+			operator.Painting = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
+			operatorList = append(operatorList, operator)
+		}
 	})
 	defer response.Body.Close()
 	return operatorList

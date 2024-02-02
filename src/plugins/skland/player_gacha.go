@@ -18,14 +18,22 @@ type Char struct {
 }
 
 // GetPlayerGacha 抽卡记录
-func GetPlayerGacha(token string) ([]Char, error) {
+func GetPlayerGacha(token, channelId string) ([]Char, error) {
 	var chars []Char
-	err := checkToken(token)
-	if err != nil {
-		log.Println(err)
-		return chars, err
+	if channelId == "1" {
+		err := CheckToken(token)
+		if err != nil {
+			log.Println(err)
+			return chars, err
+		}
+	} else if channelId == "2" {
+		err := CheckBToken(token)
+		if err != nil {
+			log.Println(err)
+			return chars, err
+		}
 	}
-	res, err := getPlayerGacha(token, "1")
+	res, err := getPlayerGacha(token, "1", channelId)
 	if err != nil {
 		log.Println(err)
 		return chars, err
@@ -34,7 +42,7 @@ func GetPlayerGacha(token string) ([]Char, error) {
 	totalPage := int(math.Ceil(gjson.Get(res, "data.pagination.total").Float() / 10))
 
 	for i := 1; i <= totalPage; i++ {
-		res, err = getPlayerGacha(token, strconv.Itoa(i))
+		res, err = getPlayerGacha(token, strconv.Itoa(i), channelId)
 		if err != nil {
 			break
 		}
@@ -59,8 +67,8 @@ func GetPlayerGacha(token string) ([]Char, error) {
 	return chars, err
 }
 
-func getPlayerGacha(token, page string) (string, error) {
-	req := SKR().SetQueryParams(gh.MS{"token": token, "page": page})
+func getPlayerGacha(token, page, channelId string) (string, error) {
+	req := SKR().SetQueryParams(gh.MS{"token": token, "page": page, "channelId": channelId})
 	res, err := HypergryphAKRequest(req, "GET", "/user/api/inquiry/gacha")
 	if err != nil {
 		log.Println(err)

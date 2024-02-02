@@ -8,9 +8,9 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-// SetTokenHandle 重设token
+// SetBTokenHandle 设置btoken
 
-func SetTokenHandle(update tgbotapi.Update) (bool, error) {
+func SetBTokenHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 
@@ -24,19 +24,19 @@ func SetTokenHandle(update tgbotapi.Update) (bool, error) {
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
-	sendMessage := tgbotapi.NewMessage(chatId, "请输入新token或使用 /cancel 指令取消操作。")
+	sendMessage := tgbotapi.NewMessage(chatId, "请输入btoken或使用 /cancel 指令取消操作。")
 	bot.Arknights.Send(sendMessage)
 	sendMessage.Text = "如何获取token\n\n" +
-		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
-		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)"
+		"1\\.前往 [官网](https://ak.hypergryph.com/user/bilibili/login) 登录\n" +
+		"2\\.打开网址复制content中的 token  [获取token](https://web-api.hypergryph.com/account/info/ak-b)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
-	telebot.WaitMessage[chatId] = "resetToken"
+	telebot.WaitMessage[chatId] = "bToken"
 	return true, nil
 }
 
-// ResetToken 重设token
-func ResetToken(update tgbotapi.Update) (bool, error) {
+// SetBToken 设置btoken
+func SetBToken(update tgbotapi.Update) (bool, error) {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -45,9 +45,9 @@ func ResetToken(update tgbotapi.Update) (bool, error) {
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)
 
-	account, err := skland.Login(token)
+	err := skland.CheckBToken(token)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
+		sendMessage := tgbotapi.NewMessage(chatId, "请检查token是否正确。")
 		bot.Arknights.Send(sendMessage)
 		return true, err
 	}
@@ -56,11 +56,9 @@ func ResetToken(update tgbotapi.Update) (bool, error) {
 	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
-		userAccount.HypergryphToken = token
-		userAccount.SklandToken = account.Skland.Token
-		userAccount.SklandToken = account.Skland.Cred
+		userAccount.BToken = token
 		bot.DBEngine.Table("user_account").Save(&userAccount)
-		sendMessage := tgbotapi.NewMessage(chatId, "重设token成功！")
+		sendMessage := tgbotapi.NewMessage(chatId, "设置BToken成功！")
 		bot.Arknights.Send(sendMessage)
 	}
 	delete(telebot.WaitMessage, chatId)

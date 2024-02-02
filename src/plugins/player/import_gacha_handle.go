@@ -40,7 +40,7 @@ func ImportGachaHandle(update tgbotapi.Update) (bool, error) {
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
-	sendMessage := tgbotapi.NewMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的抽卡数据粘贴到txt文本中发送或使用 /cancel 指令取消操作。")
+	sendMessage := tgbotapi.NewMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。")
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
 	telebot.WaitMessage[chatId] = "importGacha"
@@ -53,7 +53,7 @@ func ImportGacha(update tgbotapi.Update) (bool, error) {
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 	doc := update.Message.Document
-	if doc != nil && strings.HasSuffix(doc.FileName, ".txt") {
+	if doc != nil && strings.HasSuffix(doc.FileName, ".json") {
 		delete(telebot.WaitMessage, chatId)
 		ImportFile[userId] = doc.FileID
 		var userAccount account.UserAccount
@@ -110,6 +110,7 @@ func ImportGacha(update tgbotapi.Update) (bool, error) {
 }
 
 func Import(uid string, account account.UserAccount, chatId int64, fileId string, name string) (bool, error) {
+	delete(ImportFile, account.UserNumber)
 	var importGachaData ImportGachaData
 	f, _ := utils.DownloadFile(fileId)
 	data, _ := io.ReadAll(f)

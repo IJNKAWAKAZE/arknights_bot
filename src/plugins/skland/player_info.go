@@ -7,26 +7,6 @@ import (
 	"log"
 )
 
-var Weight map[string]int
-
-func init() {
-	weight := make(map[string]int)
-	weight["1"] = 2
-	weight["2"] = 3
-	weight["3"] = 5
-	weight["4"] = 2
-	weight["5"] = 5
-	weight["6"] = 5
-	weight["7"] = 5
-	weight["8"] = 5
-	weight["9"] = 5
-	weight["10"] = 5
-	weight["11"] = 5
-	weight["12"] = 5
-	weight["13"] = 3
-	weight["14"] = 3
-	Weight = weight
-}
 func GetPlayerInfo(uid string, account Account) (*PlayerData, Account, error) {
 	var playerData *PlayerData
 	account, err := RefreshToken(uid, account)
