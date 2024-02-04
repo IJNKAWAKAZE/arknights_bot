@@ -80,7 +80,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		)
 		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
-		sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", name, userId)
+		sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", utils.EscapesMarkdownV2(name), userId)
 		sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
 		photo, err := bot.Arknights.Send(sendPhoto)
 		if err != nil {
@@ -131,7 +131,7 @@ func verify(val string, chatId int64, userId int64, messageId int, joinMessageId
 		RevokeMessages:   true,
 	}
 	bot.Arknights.Send(banChatMemberConfig)
-	// 删除用户入群体醒
+	// 删除用户入群提醒
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)
 	utils.RedisDelSetItem("verify", val)

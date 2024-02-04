@@ -10,7 +10,6 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
-	"github.com/spf13/viper"
 	"github.com/tidwall/sjson"
 	"io"
 	"strconv"
@@ -36,7 +35,6 @@ func ImportGachaHandle(update tgbotapi.Update) (bool, error) {
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
@@ -62,12 +60,8 @@ func ImportGacha(update tgbotapi.Update) (bool, error) {
 		res := utils.GetAccountByUserId(userId).Scan(&userAccount)
 		if res.RowsAffected == 0 {
 			// 未绑定账号
-			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
-			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-			sendMessage.ReplyToMessageID = messageId
-			msg, _ := bot.Arknights.Send(sendMessage)
-			messagecleaner.AddDelQueue(chatId, messageId, 5)
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
+			bot.Arknights.Send(sendMessage)
 			return true, nil
 		}
 

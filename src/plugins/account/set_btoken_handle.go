@@ -20,7 +20,6 @@ func SetBTokenHandle(update tgbotapi.Update) (bool, error) {
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}

@@ -51,7 +51,7 @@ func ReportHandle(update tgbotapi.Update) (bool, error) {
 		var buttons [][]tgbotapi.InlineKeyboardButton
 
 		var text bytes.Buffer
-		text.WriteString(fmt.Sprintf("被举报人：[%s](tg://user?id=%d)\n", name, target))
+		text.WriteString(fmt.Sprintf("被举报人：[%s](tg://user?id=%d)\n", utils.EscapesMarkdownV2(name), target))
 		text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/%s/%d)\n", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
 		text.WriteString("召唤管理：")
 		charAdmins, _ := bot.Arknights.GetChatAdministrators(getAdmins)
