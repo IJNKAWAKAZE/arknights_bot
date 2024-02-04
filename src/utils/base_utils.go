@@ -305,6 +305,6 @@ func special(b byte) bool {
 	for _, b := range []byte(`_*[]()~>#+-=|{}.!`) {
 		specialBytes[b%16] |= 1 << (b / 16)
 	}
-	specialBytes[b%16] |= 1 << (byte('`') / 16)
+	specialBytes[byte('`')%16] |= 1 << (byte('`') / 16)
 	return b < utf8.RuneSelf && specialBytes[b%16]&(1<<(b/16)) != 0
 }
