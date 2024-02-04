@@ -15,12 +15,14 @@ func Start() {
 	Box(r)
 	Gacha(r)
 	Card(r)
+	Base(r)
 	templates := []string{
 		"./template/Help.tmpl",
 		"./template/State.tmpl",
 		"./template/Box.tmpl",
 		"./template/Gacha.tmpl",
 		"./template/Card.tmpl",
+		"./template/Base.tmpl",
 	}
 	r.LoadHTMLFiles(templates...)
 	port := viper.GetString("http.port")

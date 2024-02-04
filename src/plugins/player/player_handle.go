@@ -55,6 +55,8 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 		return GachaHandle(players, userAccount, chatId, userId, messageId)
 	case OP_CARD:
 		return CardHandle(players, userAccount, chatId, userId, messageId)
+	case OP_BASE:
+		return BaseHandle(players, userAccount, chatId, userId, messageId)
 	case OP_REDEEM:
 		cdk := strings.ToUpper(update.Message.CommandArguments())
 		return RedeemHandle(players, userAccount, chatId, userId, messageId, cdk)

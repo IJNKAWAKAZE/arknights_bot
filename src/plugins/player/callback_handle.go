@@ -14,6 +14,7 @@ const (
 	OP_BOX    = "box"        // 我的干员
 	OP_GACHA  = "gacha"      // 抽卡记录
 	OP_CARD   = "card"       // 我的名片
+	OP_BASE   = "base"       // 基建信息
 	OP_SYNC   = "sync_gacha" // 同步抽卡记录
 	OP_IMPORT = "import"     // 导入抽卡记录
 	OP_EXPORT = "export"     // 导出抽卡记录
@@ -61,6 +62,8 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 		return Gacha(uid, userAccount, chatId, messageId)
 	case OP_CARD:
 		return Card(uid, userAccount, chatId, messageId)
+	case OP_BASE:
+		return Base(uid, userAccount, chatId, messageId)
 	case OP_IMPORT:
 		name := utils.GetFullName(callbackQuery.From)
 		return Import(uid, userAccount, chatId, ImportFile[clickUserId], name)
