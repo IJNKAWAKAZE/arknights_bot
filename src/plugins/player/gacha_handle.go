@@ -56,6 +56,13 @@ func Gacha(uid string, account account.UserAccount, chatId int64, messageId int)
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
+
+	if len(pic)/1024 > 150 {
+		sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "gacha.png"})
+		sendDocument.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendDocument)
+		return true, nil
+	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendPhoto)
