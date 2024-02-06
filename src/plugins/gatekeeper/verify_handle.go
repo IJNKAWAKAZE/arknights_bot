@@ -54,7 +54,7 @@ func VerifyMember(message *tgbotapi.Message) {
 			if painting != "" {
 				options = append(options, utils.Operator{
 					Name:     shipName,
-					Painting: painting,
+					ThumbURL: painting,
 				})
 			} else {
 				i--
@@ -78,7 +78,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,
 		)
-		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
+		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 		sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", utils.EscapesMarkdownV2(name), userId)
 		sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2

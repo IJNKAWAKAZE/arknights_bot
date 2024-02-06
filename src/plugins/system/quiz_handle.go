@@ -41,7 +41,7 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 		if painting != "" {
 			options = append(options, utils.Operator{
 				Name:     shipName,
-				Painting: painting,
+				ThumbURL: painting,
 			})
 		} else {
 			i--
@@ -51,7 +51,7 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
 	correct := options[r.Int64()]
 
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
+	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
 	photo, _ := bot.Arknights.Send(sendPhoto)
 	messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
 	poll := tgbotapi.NewPoll(chatId, "请选择上图干员的正确名字")

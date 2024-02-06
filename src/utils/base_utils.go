@@ -4,6 +4,8 @@ import (
 	bot "arknights_bot/config"
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -307,4 +309,10 @@ func special(b byte) bool {
 	}
 	specialBytes[byte('`')%16] |= 1 << (byte('`') / 16)
 	return b < utf8.RuneSelf && specialBytes[b%16]&(1<<(b/16)) != 0
+}
+
+func Md5(str string) string {
+	m5 := md5.Sum([]byte(str))
+	m5str := hex.EncodeToString(m5[:])
+	return m5str
 }

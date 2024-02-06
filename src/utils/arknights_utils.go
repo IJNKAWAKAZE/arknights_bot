@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
@@ -9,8 +10,11 @@ import (
 )
 
 type Operator struct {
-	Name     string `json:"name"`
-	Painting string `json:"painting"`
+	Name       string   `json:"name"`
+	Profession string   `json:"profession"`
+	Rarity     int      `json:"rarity"`
+	ThumbURL   string   `json:"thumbURL"`
+	Skins      []string `json:"skins"`
 }
 
 func GetOperators() []gjson.Result {
@@ -26,7 +30,7 @@ func GetOperatorList() []Operator {
 		if selection.Nodes[0].FirstChild.FirstChild.Attr != nil {
 			var operator Operator
 			operator.Name = selection.Nodes[0].FirstChild.Attr[1].Val
-			operator.Painting = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
+			operator.ThumbURL = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
 			operatorList = append(operatorList, operator)
 		}
 	})
@@ -38,8 +42,7 @@ func GetOperatorByName(name string) Operator {
 	var operator Operator
 	for _, op := range GetOperators() {
 		if op.Get("name").String() == name {
-			operator.Name = op.Get("name").String()
-			operator.Painting = op.Get("skins").Array()[0].String()
+			json.Unmarshal([]byte(op.String()), &operator)
 		}
 	}
 	return operator
