@@ -53,7 +53,7 @@ func UpdateDataSourceRunner() {
 		paintingName := fmt.Sprintf("半身像_%s_1.png", operator.Name)
 		m := utils.Md5(paintingName)
 		path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-		operator.ThumbURL = path + paintingName
+		operator.ThumbURL = path + paintingName + "?image_process=format,webp/quality,Q_90"
 		operators = append(operators, operator)
 	})
 
@@ -80,21 +80,21 @@ func UpdateDataSourceRunner() {
 				paintingName := fmt.Sprintf("立绘_%s_%d.png", name, e+1)
 				m := utils.Md5(paintingName)
 				path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-				painting := path + paintingName
+				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 				operators[i].Skins = append(operators[i].Skins, painting)
 			}
 			// 精1立绘
 			paintingName := fmt.Sprintf("立绘_%s_1+.png", name)
 			m := utils.Md5(paintingName)
 			path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-			painting := path + paintingName
+			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 			operators[i].Skins = append(operators[i].Skins, painting)
 			// 皮肤
 			for c := 0; c < skinCount[name]; c++ {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-				painting := path + paintingName
+				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 				operators[i].Skins = append(operators[i].Skins, painting)
 			}
 			continue
@@ -104,14 +104,14 @@ func UpdateDataSourceRunner() {
 			paintingName := fmt.Sprintf("立绘_%s_2.png", name)
 			m := utils.Md5(paintingName)
 			path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-			painting := path + paintingName
+			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 			operators[i].Skins = append(operators[i].Skins, painting)
 			// 皮肤
 			for c := 0; c < skinCount[name]; c++ {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-				painting := path + paintingName
+				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 				operators[i].Skins = append(operators[i].Skins, painting)
 			}
 			continue
@@ -121,14 +121,14 @@ func UpdateDataSourceRunner() {
 			paintingName := fmt.Sprintf("立绘_%s_1.png", name)
 			m := utils.Md5(paintingName)
 			path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-			painting := path + paintingName
+			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 			operators[i].Skins = append(operators[i].Skins, painting)
 			// 皮肤
 			for c := 0; c < skinCount[name]; c++ {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-				painting := path + paintingName
+				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 				operators[i].Skins = append(operators[i].Skins, painting)
 			}
 		} else {
@@ -137,7 +137,7 @@ func UpdateDataSourceRunner() {
 				paintingName := fmt.Sprintf("立绘_%s_%d.png", name, e+1)
 				m := utils.Md5(paintingName)
 				path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-				painting := path + paintingName
+				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 				operators[i].Skins = append(operators[i].Skins, painting)
 			}
 			// 皮肤
@@ -145,45 +145,12 @@ func UpdateDataSourceRunner() {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-				painting := path + paintingName
+				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
 				operators[i].Skins = append(operators[i].Skins, painting)
 			}
 		}
 	}
 
-	/*for c, op := range operators {
-		count := 0
-		for {
-			pw, err := playwright.Run()
-			if err != nil {
-				log.Println("未检测到playwright，开始自动安装...")
-				playwright.Install()
-				pw, _ = playwright.Run()
-			}
-			browser, _ := pw.Chromium.Launch()
-			page, _ := browser.NewPage()
-			page.Goto(api+op.Name, playwright.PageGotoOptions{
-				WaitUntil: playwright.WaitUntilStateNetworkidle,
-			})
-			locator, _ := page.Locator("#charimg")
-			imgs, _ := locator.InnerHTML()
-			imgHtml, _ := goquery.NewDocumentFromReader(strings.NewReader(imgs))
-			imgHtml.Find("img").Each(func(i int, selection *goquery.Selection) {
-				operators[c].Skins = append(operators[c].Skins, "https:"+selection.Nodes[0].Attr[1].Val)
-			})
-			page.Close()
-			browser.Close()
-			pw.Stop()
-			if len(operators[c].Skins) != 0 {
-				break
-			}
-			count++
-			if count > 3 {
-				break
-			}
-			log.Printf("干员%s立绘获取失败，正在重试...", op.Name)
-		}
-	}*/
 	defer response.Body.Close()
 	utils.RedisSet("data_source", json.MustMarshalString(operators), 0)
 	log.Println("数据源更新完毕")
