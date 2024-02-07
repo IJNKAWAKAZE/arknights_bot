@@ -7,19 +7,8 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"strconv"
 )
-
-var PoolUP = make(map[int]string)
-var Pool = make(map[int]string)
-
-func init() {
-	PoolUP[6] = viper.GetString("gacha.pool_up_6")
-	PoolUP[5] = viper.GetString("gacha.pool_up_5")
-	Pool[6] = viper.GetString("gacha.pool_6")
-	Pool[5] = viper.GetString("gacha.pool_5")
-	Pool[4] = viper.GetString("gacha.pool_4")
-	Pool[3] = viper.GetString("gacha.pool_3")
-}
 
 // HeadhuntHandle 寻访模拟
 func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
@@ -27,6 +16,21 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 60)
+	key := fmt.Sprintf("headhuntTimes:%d", userId)
+	if !utils.RedisIsExists(key) {
+		utils.RedisSet(key, "1", 0)
+	} else {
+		times, _ := strconv.Atoi(utils.RedisGet(key))
+		headhuntTimes := bot.HeadhuntTimes
+		if times == headhuntTimes {
+			sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
+			sendMessage.ReplyToMessageID = messageId
+			msg, _ := bot.Arknights.Send(sendMessage)
+			messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
+			return true, nil
+		}
+		utils.RedisSet(key, strconv.Itoa(times+1), 0)
+	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 	port := viper.GetString("http.port")
@@ -43,4 +47,14 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	msg, _ := bot.Arknights.Send(sendPhoto)
 	messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
 	return true, nil
+}
+
+func ResetHeadhuntTimes() func() {
+	resetHeadhuntTimes := func() {
+		res, ctx := utils.RedisScanKeys("headhuntTimes:*")
+		for res.Next(ctx) {
+			utils.RedisDel(res.Val())
+		}
+	}
+	return resetHeadhuntTimes
 }

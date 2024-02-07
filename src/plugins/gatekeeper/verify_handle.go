@@ -84,7 +84,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
 		photo, err := bot.Arknights.Send(sendPhoto)
 		if err != nil {
-			log.Println(err)
+			log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
 			restrictChatMemberConfig = tgbotapi.RestrictChatMemberConfig{
 				Permissions: &tgbotapi.ChatPermissions{
 					CanSendMessages:       true,

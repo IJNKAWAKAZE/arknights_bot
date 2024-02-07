@@ -11,6 +11,7 @@ import (
 
 type GachaLog struct {
 	Total     int                `json:"total"`
+	Current   int                `json:"current"`
 	Star6     int                `json:"star6"`
 	Star5     int                `json:"star5"`
 	Star4     int                `json:"star4"`
@@ -73,6 +74,7 @@ func Gacha(r *gin.Engine) {
 		}
 
 		gachaLog.Total = len(userGacha)
+		gachaLog.Current = count - 1
 		gachaLog.Star6 = star6
 		gachaLog.Star5 = star5
 		gachaLog.Star4 = star4

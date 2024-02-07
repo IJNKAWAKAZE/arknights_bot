@@ -16,13 +16,13 @@ var PoolUP = make(map[int]string)
 var Pool = make(map[int]string)
 
 func init() {
-	PoolUP[7] = viper.GetString("gacha.pool_up_6_1")
-	PoolUP[6] = viper.GetString("gacha.pool_up_6")
-	PoolUP[5] = viper.GetString("gacha.pool_up_5")
-	Pool[6] = viper.GetString("gacha.pool_6")
-	Pool[5] = viper.GetString("gacha.pool_5")
-	Pool[4] = viper.GetString("gacha.pool_4")
-	Pool[3] = viper.GetString("gacha.pool_3")
+	PoolUP[7] = viper.GetString("headhunt.pool_up_6_1")
+	PoolUP[6] = viper.GetString("headhunt.pool_up_6")
+	PoolUP[5] = viper.GetString("headhunt.pool_up_5")
+	Pool[6] = viper.GetString("headhunt.pool_6")
+	Pool[5] = viper.GetString("headhunt.pool_5")
+	Pool[4] = viper.GetString("headhunt.pool_4")
+	Pool[3] = viper.GetString("headhunt.pool_3")
 }
 
 func Headhunt(r *gin.Engine) {
@@ -101,7 +101,7 @@ func reProb(r6prob, r5prob, r4prob, r3prob *float64, times *int) {
 func randChar(rank int) string {
 	upWeight := 50
 	if rank == 6 {
-		upWeight = viper.GetInt("gacha.up_weight")
+		upWeight = viper.GetInt("headhunt.up_weight")
 	}
 	charaProb := int64(upWeight * 100)
 	charRand := getRandomInt(1, 10000)

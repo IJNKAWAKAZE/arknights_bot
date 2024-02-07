@@ -27,7 +27,8 @@ redis:
 http:
   port: 23333
 
-gacha:
+headhunt:
+  times: 3
   up_weight: 70
   pool_up_6: 黍/左乐
   pool_up_6_1: 重岳/令/夕
