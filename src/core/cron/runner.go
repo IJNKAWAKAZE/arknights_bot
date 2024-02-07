@@ -13,8 +13,8 @@ import (
 func StartCron() error {
 	crontab := cron.New(cron.WithSeconds())
 
-	//明日方舟bilibili动态 0 0/10 * * * ?
-	_, err := crontab.AddFunc("0 0/10 * * * ?", arknightsnews.BilibiliNews())
+	//明日方舟bilibili动态 0/30 * * * * ?
+	_, err := crontab.AddFunc("0/30 * * * * ?", arknightsnews.BilibiliNews())
 	if err != nil {
 		return err
 	}

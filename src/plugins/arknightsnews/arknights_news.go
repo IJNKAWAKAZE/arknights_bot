@@ -43,7 +43,7 @@ func BilibiliNews() func() {
 
 		if len(pics) == 1 {
 			for _, group := range groups {
-				if pics[0].Height > 2000 {
+				if pics[0].Height > 3000 {
 					sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileURL(pics[0].Url))
 					sendDocument.Caption = text
 					config.Arknights.Send(sendDocument)
@@ -68,7 +68,7 @@ func BilibiliNews() func() {
 					media = append(media, inputVideo)
 					continue
 				}
-				if pic.Height > 2000 {
+				if pic.Height > 3000 {
 					var inputDocument tgbotapi.InputMediaDocument
 					inputDocument.Media = tgbotapi.FileURL(pic.Url)
 					inputDocument.Type = "document"
