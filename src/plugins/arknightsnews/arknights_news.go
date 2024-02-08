@@ -119,14 +119,23 @@ func ParseBilibiliDynamic() (string, []Pic) {
 		b3 = utils.RedisGet("bili:b3")
 		b4 = utils.RedisGet("bili:b4")
 	} else {
-		b3, b4 = generateBuvid()
-		registerBuvid(b3, b4)
+		b3, b4, err := generateBuvid()
+		if err != nil {
+			return text, pics
+		}
+		err = registerBuvid(b3, b4)
+		if err != nil {
+			return text, pics
+		}
 		// 保存B3,4
 		utils.RedisSet("bili:b3", b3, time.Hour*24)
 		utils.RedisSet("bili:b4", b4, time.Hour*24)
 	}
 	url := viper.GetString("api.bilibili_dynamic")
-	resBody := requestBili("GET", fmt.Sprintf("buvid3=%s; buvid4=%s", b3, b4), url, nil)
+	resBody, err := requestBili("GET", fmt.Sprintf("buvid3=%s; buvid4=%s", b3, b4), url, nil)
+	if err != nil {
+		return text, pics
+	}
 	result := gjson.ParseBytes(resBody)
 	items := result.Get("data.items").Array()
 	for _, item := range items {
@@ -188,35 +197,48 @@ func ParseBilibiliDynamic() (string, []Pic) {
 	return text, pics
 }
 
-func generateBuvid() (string, string) {
+func generateBuvid() (string, string, error) {
 	url := viper.GetString("api.bilibili_buvid")
-	resBody := requestBili("GET", "", url, nil)
+	resBody, err := requestBili("GET", "", url, nil)
+	if err != nil {
+		return "", "", err
+	}
 	jsonData := gjson.ParseBytes(resBody)
 	b3 := jsonData.Get("data.b_3").String()
 	b4 := jsonData.Get("data.b_4").String()
-	return b3, b4
+	return b3, b4, nil
 }
 
-func registerBuvid(b3, b4 string) {
+func registerBuvid(b3, b4 string) error {
 	url := viper.GetString("api.bilibili_register_buvid")
 	jsonData := `{"3064":2,"5062":"1704899411253","03bf":"","39c8":"333.937.fp.risk","34f1":"","d402":"","654a":"","6e7c":"360x668","3c43":{"2673":0,"5766":24,"6527":0,"7003":1,"807e":1,"b8ce":"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36 EdgA/118.0.2088.66","641c":0,"07a4":"zh-CN","1c57":4,"0bd0":8,"fc9d":-480,"6aa9":"Asia/Shanghai","75b8":1,"3b21":1,"8a1c":1,"d52f":"not available","adca":"Linux armv81","80c9":[],"13ab":"zMgAAAAASUVORK5CYII=","bfe9":"mgQDEKAKxirCZRFLCvwP8Bjez5pveZop4AAAAASUVORK5CYII=","6bc5":"Google Inc. (ARM)~ANGLE (ARM, Mali-G57 MC2, OpenGL ES 3.2)","ed31":0,"72bd":0,"097b":0,"d02f":"124.08072766105033"},"54ef":"{}","8b94":"","df35":"A95D3545-DEC10-D817-35410-531784C2281905903infoc","07a4":"zh-CN","5f45":null,"db46":0}`
 	payload := Payload{
 		Payload: jsonData,
 	}
 	payloadb, _ := json.Marshal(payload)
-	requestBili("POST", fmt.Sprintf("buvid3=%s; buvid4=%s", b3, b4), url, bytes.NewReader(payloadb))
+	_, err := requestBili("POST", fmt.Sprintf("buvid3=%s; buvid4=%s", b3, b4), url, bytes.NewReader(payloadb))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func requestBili(method, cookie, url string, body io.Reader) []byte {
-	req, _ := http.NewRequest(method, url, body)
+func requestBili(method, cookie, url string, body io.Reader) ([]byte, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Add("User-Agent", viper.GetString("api.user_agent"))
 	req.Header.Add("referer", "https://m.bilibili.com/")
 	req.Header.Add("Content-Type", "application/json")
 	if cookie != "" {
 		req.Header.Add("Cookie", cookie)
 	}
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
 	resBody, _ := io.ReadAll(res.Body)
 	defer res.Body.Close()
-	return resBody
+	return resBody, nil
 }
