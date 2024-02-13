@@ -13,6 +13,7 @@ func Start() {
 	Help(r)
 	State(r)
 	Box(r)
+	Missing(r)
 	Gacha(r)
 	Card(r)
 	Base(r)
@@ -21,6 +22,7 @@ func Start() {
 		"./template/Help.tmpl",
 		"./template/State.tmpl",
 		"./template/Box.tmpl",
+		"./template/Missing.tmpl",
 		"./template/Gacha.tmpl",
 		"./template/Card.tmpl",
 		"./template/Base.tmpl",
