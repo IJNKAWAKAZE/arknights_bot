@@ -66,6 +66,9 @@ func Missing(r *gin.Engine) {
 
 		for _, operator := range operatorList {
 			name := operator.Get("name").String()
+			if name == "阿米娅(近卫)" {
+				continue
+			}
 			rarity := int(operator.Get("rarity").Int())
 			if filter(param, rarity) {
 				if _, has := myOperators[name]; !has {
