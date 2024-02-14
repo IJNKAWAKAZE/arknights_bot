@@ -17,21 +17,21 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	messageId := update.Message.MessageID
 	chatType := update.Message.Chat.Type
 	messagecleaner.AddDelQueue(chatId, messageId, 60)
-	key := fmt.Sprintf("headhuntTimes:%d", userId)
-	if !utils.RedisIsExists(key) {
-		utils.RedisSet(key, "1", 0)
-	} else {
-		times, _ := strconv.Atoi(utils.RedisGet(key))
-		headhuntTimes := bot.HeadhuntTimes
-		if times == headhuntTimes {
-			sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
-			sendMessage.ReplyToMessageID = messageId
-			msg, _ := bot.Arknights.Send(sendMessage)
-			messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
-			return true, nil
-		}
-		if chatType != "private" {
-		utils.RedisSet(key, strconv.Itoa(times+1), 0) 
+	if chatType != "private" {
+		key := fmt.Sprintf("headhuntTimes:%d", userId)
+		if !utils.RedisIsExists(key) {
+			utils.RedisSet(key, "1", 0)
+		} else {
+			times, _ := strconv.Atoi(utils.RedisGet(key))
+			headhuntTimes := bot.HeadhuntTimes
+			if times == headhuntTimes {
+				sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
+				sendMessage.ReplyToMessageID = messageId
+				msg, _ := bot.Arknights.Send(sendMessage)
+				messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
+				return true, nil
+			}
+			utils.RedisSet(key, strconv.Itoa(times+1), 0)
 		}
 	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
