@@ -70,19 +70,13 @@ func Box(r *gin.Engine) {
 
 		// 按稀有度、精英等级、级别排序
 		sort.Slice(chars, func(i, j int) bool {
-			if chars[i].Rarity > chars[j].Rarity {
-				return true
+			if chars[i].Rarity != chars[j].Rarity {
+				return chars[i].Rarity > chars[j].Rarity
+			} else if chars[i].EvolvePhase != chars[j].EvolvePhase {
+				return chars[i].EvolvePhase > chars[j].EvolvePhase
+			} else {
+				return chars[i].Level > chars[j].Level
 			}
-			if chars[i].Rarity < chars[j].Rarity {
-				return false
-			}
-			if chars[i].EvolvePhase > chars[j].EvolvePhase {
-				return true
-			}
-			if chars[i].EvolvePhase < chars[j].EvolvePhase {
-				return false
-			}
-			return chars[i].Level > chars[j].Level
 		})
 
 		box.Name = playerData.Status.Name
