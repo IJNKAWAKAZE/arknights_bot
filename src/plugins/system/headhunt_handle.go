@@ -2,7 +2,7 @@ package system
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/plugins/messagecleaner"
+	//"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -16,6 +16,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 	chatType := update.Message.Chat.Type
+	//messagecleaner.AddDelQueue(chatId, messageId, 60)
 	if chatType != "private" {
 		key := fmt.Sprintf("headhuntTimes:%d", userId)
 		if !utils.RedisIsExists(key) {
@@ -27,6 +28,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 				sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
 				sendMessage.ReplyToMessageID = messageId
 				msg, _ := bot.Arknights.Send(sendMessage)
+				//messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
 				return true, nil
 			}
 			utils.RedisSet(key, strconv.Itoa(times+1), 0)
@@ -40,14 +42,15 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage := tgbotapi.NewMessage(chatId, "失败啦，啊哈哈哈！")
 		sendMessage.ReplyToMessageID = messageId
 		msg, _ := bot.Arknights.Send(sendMessage)
+		//messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
 		return true, nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
 	msg, _ := bot.Arknights.Send(sendPhoto)
+	//messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
 	return true, nil
 }
-
 func ResetHeadhuntTimes() func() {
 	resetHeadhuntTimes := func() {
 		res, ctx := utils.RedisScanKeys("headhuntTimes:*")
