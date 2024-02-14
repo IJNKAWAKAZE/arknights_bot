@@ -15,6 +15,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
+	chatType := update.Message.Chat.Type
 	messagecleaner.AddDelQueue(chatId, messageId, 60)
 	key := fmt.Sprintf("headhuntTimes:%d", userId)
 	if !utils.RedisIsExists(key) {
@@ -29,7 +30,9 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 			messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
 			return true, nil
 		}
-		utils.RedisSet(key, strconv.Itoa(times+1), 0)
+		if chatType != "private" {
+		utils.RedisSet(key, strconv.Itoa(times+1), 0) 
+		}
 	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
