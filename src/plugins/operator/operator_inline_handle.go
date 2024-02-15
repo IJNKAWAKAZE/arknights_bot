@@ -18,7 +18,7 @@ func InlineOperator(inlineQuery *tgbotapi.InlineQuery) {
 			Type:        "article",
 			Title:       operator.Name,
 			Description: "查询" + operator.Name,
-			ThumbURL:    operator.Painting,
+			ThumbURL:    operator.ThumbURL,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
 				Text: "https://prts.wiki/w/" + operator.Name,
 			},

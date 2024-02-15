@@ -1,0 +1,458 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>基建</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            background-color: #2e3031;
+            width: 1815px;
+            color: white;
+        }
+        .base {
+            width: 900px;
+            height: 110px;
+            border: solid 1px;
+            border-radius: 15px;
+            display: inline-flex;
+            flex-direction: column;
+            margin-top: 5px;
+        }
+        .avatar {
+            width: 40px;
+        }
+        h3 {
+            margin-left: 10px;
+        }
+        progress {
+            width: 150px;
+            height: 3px;
+            border-radius: 1px;
+        }
+        progress::-webkit-progress-value{
+            background: white;
+        }
+        #labor {
+            width: 100px;
+            height: 3px;
+            border-radius: 1px;
+        }
+        .title {
+            display: flex;
+            justify-content: space-between;
+        }
+        .title_icon {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        .chars {
+            margin-left: 10px;
+        }
+        .board {
+            display: inline-flex;
+            justify-content: center;
+            width: 20px;
+            border: solid 1px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <div>
+        <h3 style="display: inline">基建信息</h3>
+        <span style="display: inline-block;float: right;margin-right: 30px">
+            <div style="display: flex">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12L19 19M36 36L29 29" stroke="#852cd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M36 12L29 19M12 36L19 29" stroke="#852cd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="19" y="19" width="10" height="10" fill="#852cd3" stroke="#852cd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M36 19C37.3845 19 38.7378 18.5895 39.889 17.8203C41.0401 17.0511 41.9373 15.9579 42.4672 14.6788C42.997 13.3997 43.1356 11.9922 42.8655 10.6344C42.5954 9.2765 41.9287 8.02922 40.9497 7.05026C39.9708 6.07129 38.7235 5.4046 37.3656 5.13451C36.0078 4.86441 34.6003 5.00303 33.3212 5.53285C32.0421 6.06266 30.9489 6.95987 30.1797 8.11101C29.4105 9.26215 29 10.6155 29 12" stroke="#852cd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M36 29C37.3845 29 38.7378 29.4105 39.889 30.1797C41.0401 30.9489 41.9373 32.0421 42.4672 33.3212C42.997 34.6003 43.1356 36.0078 42.8655 37.3656C42.5954 38.7235 41.9287 39.9708 40.9497 40.9497C39.9708 41.9287 38.7235 42.5954 37.3656 42.8655C36.0078 43.1356 34.6003 42.997 33.3212 42.4672C32.0421 41.9373 30.9489 41.0401 30.1797 39.889C29.4105 38.7378 29 37.3845 29 36" stroke="#852cd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 29C10.6155 29 9.26216 29.4105 8.11101 30.1797C6.95987 30.9489 6.06266 32.0421 5.53285 33.3212C5.00303 34.6003 4.86441 36.0078 5.13451 37.3656C5.4046 38.7235 6.07129 39.9708 7.05026 40.9497C8.02922 41.9287 9.2765 42.5954 10.6344 42.8655C11.9922 43.1356 13.3997 42.997 14.6788 42.4672C15.9579 41.9373 17.0511 41.0401 17.8203 39.889C18.5895 38.7378 19 37.3845 19 36" stroke="#852cd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 19C10.6155 19 9.26216 18.5895 8.11101 17.8203C6.95987 17.0511 6.06266 15.9579 5.53285 14.6788C5.00303 13.3997 4.86441 11.9922 5.13451 10.6344C5.4046 9.2765 6.07129 8.02922 7.05026 7.05026C8.02922 6.07129 9.2765 5.4046 10.6344 5.13451C11.9922 4.86441 13.3997 5.00303 14.6788 5.53285C15.9579 6.06266 17.0511 6.95987 17.8203 8.11101C18.5895 9.26215 19 10.6155 19 12" stroke="#852cd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>{{.Labor.Current}}/{{.Labor.Total}}</span>
+            </div>
+            <progress id="labor" max="{{.Labor.Total}}" value="{{.Labor.Current}}"></progress>
+        </span>
+    </div>
+    <div class="base">
+        <h3>控制中枢 Lv.{{.Control.Level}}</h3>
+        <div class="chars">
+            {{if .Control.Chars}}
+            {{range .Control.Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    {{range .Tradings}}
+    <div class="base">
+        <h3 class="title">贸易站 Lv.{{.Level}}
+            <div class="title_icon">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M33.0499 7H38C39.1046 7 40 7.89543 40 9V42C40 43.1046 39.1046 44 38 44H10C8.89543 44 8 43.1046 8 42L8 9C8 7.89543 8.89543 7 10 7H16H17V10H31V7H33.0499Z" fill="none" stroke="#8cd1ff" stroke-width="4" stroke-linejoin="round"/>
+                    <rect x="17" y="4" width="14" height="6" stroke="#8cd1ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M26.9996 19L19 27.0012H29.004L21.0003 35.0018" stroke="#8cd1ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span style="color: #8cd1ff">{{.Strategy}}&nbsp{{.Current}}/{{.Total}}</span>
+            </div>
+        </h3>
+        <div class="chars">
+            {{if .Chars}}
+            {{range .Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+    {{range .Manufactures}}
+    <div class="base">
+        <h3 class="title">制造站 Lv.{{.Level}}
+            <div class="title_icon">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M44 14L24 4L4 14V34L24 44L44 34V14Z" stroke="#d79d13" stroke-width="4" stroke-linejoin="round"/>
+                    <path d="M4 14L24 24" stroke="#d79d13" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M24 44V24" stroke="#d79d13" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M44 14L24 24" stroke="#d79d13" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M34 9L14 19" stroke="#d79d13" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span style="color: #d79d13">{{.Item}}&nbsp{{.Current}}/{{.Total}}</span>
+            </div>
+        </h3>
+        <div class="chars">
+            {{if .Chars}}
+            {{range .Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+    {{range .Powers}}
+    <div class="base">
+        <h3 class="title">发电站 Lv.{{.Level}}
+            <div class="title_icon">
+                <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13 14H6C4.89543 14 4 14.8954 4 16V32C4 33.1046 4.89543 34 6 34H13" stroke="#adfe2e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M31 34H38C39.1046 34 40 33.1046 40 32V16C40 14.8954 39.1046 14 38 14H31" stroke="#adfe2e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22.002 14L17 24.0012H27.004L22 34" stroke="#adfe2e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M42 20H44C45.1046 20 46 20.8954 46 22V26C46 27.1046 45.1046 28 44 28H42V20Z" fill="#adfe2e"/></svg>
+                <span style="color: #adfe2e">{{.Power}}</span>
+            </div>
+        </h3>
+        <div class="chars">
+            {{if .Chars}}
+            {{range .Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+    <div class="base">
+        <h3 class="title">会客室 Lv.{{.Meeting.Level}}
+            <div class="title_icon">
+                {{if .Meeting.Sharing}}
+                <div style="position: absolute;margin-left: -200px;color: #eb9712;display: flex;align-items: center;">
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.5 39.3706C16.3908 41.6439 20.0371 42.9999 24 42.9999C27.9629 42.9999 31.6092 41.6439 34.5 39.3706" stroke="#ee810a" stroke-width="4"/>
+                        <path d="M19 9.74707C12.0513 11.8822 7 18.3511 7 25.9999C7 27.9247 7.31989 29.7748 7.9094 31.4999" stroke="#ee810a" stroke-width="4"/>
+                        <path d="M29 9.74707C35.9487 11.8822 41 18.3511 41 25.9999C41 27.9247 40.6801 29.7748 40.0906 31.4999" stroke="#ee810a" stroke-width="4"/>
+                        <path d="M43 36C43 37.3416 42.4716 38.5597 41.6117 39.4577C40.7015 40.4082 39.4199 41 38 41C35.2386 41 33 38.7614 33 36C33 33.9899 34.1861 32.2569 35.8967 31.4626C36.536 31.1657 37.2487 31 38 31C40.7614 31 43 33.2386 43 36Z" fill="none" stroke="#ee810a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 36C15 37.3416 14.4716 38.5597 13.6117 39.4577C12.7015 40.4082 11.4199 41 10 41C7.23858 41 5 38.7614 5 36C5 33.9899 6.18614 32.2569 7.89667 31.4626C8.53604 31.1657 9.24867 31 10 31C12.7614 31 15 33.2386 15 36Z" fill="none" stroke="#ee810a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 9C29 10.3416 28.4716 11.5597 27.6117 12.4577C26.7015 13.4082 25.4199 14 24 14C21.2386 14 19 11.7614 19 9C19 6.98991 20.1861 5.25686 21.8967 4.4626C22.536 4.16572 23.2487 4 24 4C26.7614 4 29 6.23858 29 9Z" fill="none" stroke="#ee810a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    线索交流开启中
+                </div>
+                {{end}}
+                <span>线索
+                    {{range .Meeting.Board}}
+                    <div class="board">
+                        {{.}}
+                    </div>
+                    {{end}}
+                </span>
+            </div>
+        </h3>
+        <div class="chars">
+            {{if .Meeting.Chars}}
+            {{range .Meeting.Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    <div class="base">
+        <h3 class="title">办公室 Lv.{{.Hire.Level}}
+            <div class="title_icon">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 34H44" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M42 39L21 5" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 39L27 5" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>刷新次数{{.Hire.RefreshCount}}</span>
+            </div>
+        </h3>
+        <div class="chars">
+            {{if .Hire.Chars}}
+            {{range .Hire.Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    {{range .Dormitories}}
+    <div class="base">
+        <h3 class="title">宿舍 Lv.{{.Level}}
+            <div class="title_icon">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M31 43C31 43 18 44 11 36C4 28 4 4 4 4C4 4 28 3 36 9C44 15 42 32 42 32" stroke="#66c02f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M44 44C44 44 32.8207 35.5515 26 28C19.1793 20.4485 16 13 16 13" stroke="#66c02f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M26 28L27 15" stroke="#66c02f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M26 28L16 27" stroke="#66c02f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span style="color: #66c02f">舒适度{{.Comfort}}</span>
+            </div>
+        </h3>
+        <div class="chars">
+            {{if .Chars}}
+            {{range .Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+</div>
+</body>
+</html>

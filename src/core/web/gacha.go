@@ -11,6 +11,7 @@ import (
 
 type GachaLog struct {
 	Total     int                `json:"total"`
+	Current   int                `json:"current"`
 	Star6     int                `json:"star6"`
 	Star5     int                `json:"star5"`
 	Star4     int                `json:"star4"`
@@ -21,10 +22,11 @@ type GachaLog struct {
 	EndTime   int64              `json:"endTime"`
 }
 type Star6Info struct {
-	Name  string `json:"name"`
-	Ts    int64  `json:"ts"`
-	Count int    `json:"count"`
-	IsNew bool   `json:"isNew"`
+	Name     string `json:"name"`
+	Ts       int64  `json:"ts"`
+	Count    int    `json:"count"`
+	IsNew    bool   `json:"isNew"`
+	PoolName string `json:"poolName"`
 }
 
 func Gacha(r *gin.Engine) {
@@ -53,10 +55,11 @@ func Gacha(r *gin.Engine) {
 			case 5:
 				star6++
 				star6Info = append(star6Info, Star6Info{
-					Name:  c.CharName,
-					Count: count,
-					Ts:    c.Ts,
-					IsNew: c.IsNew,
+					Name:     c.CharName,
+					Count:    count,
+					Ts:       c.Ts,
+					IsNew:    c.IsNew,
+					PoolName: c.PoolName,
 				})
 				count = 1
 				continue
@@ -69,7 +72,9 @@ func Gacha(r *gin.Engine) {
 			}
 			count++
 		}
+
 		gachaLog.Total = len(userGacha)
+		gachaLog.Current = count - 1
 		gachaLog.Star6 = star6
 		gachaLog.Star5 = star5
 		gachaLog.Star4 = star4

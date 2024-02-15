@@ -6,6 +6,7 @@ import (
 	"arknights_bot/utils"
 	"crypto/rand"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"log"
 	"math/big"
 )
 
@@ -41,7 +42,7 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 		if painting != "" {
 			options = append(options, utils.Operator{
 				Name:     shipName,
-				Painting: painting,
+				ThumbURL: painting,
 			})
 		} else {
 			i--
@@ -51,8 +52,11 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
 	correct := options[r.Int64()]
 
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
-	photo, _ := bot.Arknights.Send(sendPhoto)
+	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
+	photo, err := bot.Arknights.Send(sendPhoto)
+	if err != nil {
+		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
+	}
 	messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
 	poll := tgbotapi.NewPoll(chatId, "请选择上图干员的正确名字")
 	poll.IsAnonymous = false

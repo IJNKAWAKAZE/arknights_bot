@@ -30,18 +30,20 @@
 </head>
 <body>
 <div class="main">
-    <h3 id="total">总计<span style="color: red">{{.Total}}</span>抽</h3>
+    <h3 id="total">总计<span style="color: red">{{.Total}}</span>抽(已垫{{.Current}}抽)</h3>
     <h5 style="display: flex;justify-content: center;">(<span id="beg_time"></span>——<span id="end_time"></span>)</h5>
     <div id="chart"></div>
     <table style="width: 600px;border-spacing: 0">
         <tr>
             <th style="width: 40%">时间</th>
-            <th style="width: 40%">名字</th>
-            <th style="width: 20%">抽数</th>
+            <th style="width: 25%">卡池</th>
+            <th style="width: 25%">名字</th>
+            <th style="width: 10%">抽数</th>
         </tr>
         {{range .Star6Info}}
         <tr>
             <td class="ts">{{.Ts}}</td>
+            <td>{{.PoolName}}</td>
             <td>
                 {{.Name}}
                 {{if .IsNew}}

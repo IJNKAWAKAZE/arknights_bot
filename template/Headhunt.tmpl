@@ -1,0 +1,47 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>寻访模拟</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            position: absolute;
+            width: 1175px;
+            height: 340px;
+            padding-left: 25px;
+            background-color: #2b323c;
+        }
+        .operator {
+            display: inline-flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
+        .lh {
+            width: 110px;
+        }
+        .profession {
+            position: absolute;
+            margin-top: 190px;
+        }
+        .rarity {
+            position: absolute;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    {{range .}}
+    <div style="display: inline-block;background-image: url('/assets/headhunt/back_{{.Rarity}}.png');height: 320px;">
+        <div class="operator">
+            <img class="lh" src="{{.ThumbURL}}"/>
+            <img class="profession" src="/assets/headhunt/{{.Profession}}.png"/>
+            <img class="rarity" src="/assets/headhunt/Rarity_{{.Rarity}}.png"/>
+        </div>
+    </div>
+    {{end}}
+</div>
+</body>
+</html>

@@ -9,14 +9,22 @@ import (
 )
 
 // GetPlayerRedeem CDK兑换
-func GetPlayerRedeem(token, cdk string) (string, error) {
-	err := checkToken(token)
-	if err != nil {
-		log.Println(err)
-		return err.Error(), err
+func GetPlayerRedeem(token, cdk, channelId string) (string, error) {
+	if channelId == "1" {
+		err := CheckToken(token)
+		if err != nil {
+			log.Println(err)
+			return err.Error(), err
+		}
+	} else if channelId == "2" {
+		err := CheckBToken(token)
+		if err != nil {
+			log.Println(err)
+			return err.Error(), err
+		}
 	}
 
-	res, err := getPlayerRedeem(token, cdk)
+	res, err := getPlayerRedeem(token, cdk, channelId)
 	if err != nil {
 		return "", err
 	}
@@ -28,7 +36,7 @@ func GetPlayerRedeem(token, cdk string) (string, error) {
 	return "", nil
 }
 
-func getPlayerRedeem(token, cdk string) (string, error) {
+func getPlayerRedeem(token, cdk, channelId string) (string, error) {
 	path := "/user/api/gift/exchange"
 	headers := make(map[string]string)
 	headers["Accept"] = "application/json"
@@ -37,7 +45,7 @@ func getPlayerRedeem(token, cdk string) (string, error) {
 		return "", fmt.Errorf("获取csrf_token失败")
 	}
 	headers["X-Csrf-Token"] = resp.Cookies()[1].Value
-	req1 := SKR().SetHeaders(headers).SetBody(gh.M{"token": token, "giftCode": cdk, "channelId": 1}).SetCookie(resp.Cookies()[1])
+	req1 := SKR().SetHeaders(headers).SetBody(gh.M{"token": token, "giftCode": cdk, "channelId": channelId}).SetCookie(resp.Cookies()[1])
 	res, err := HypergryphAKRequest(req1, "POST", path)
 	if err != nil {
 		return "", fmt.Errorf("发送兑换请求失败")

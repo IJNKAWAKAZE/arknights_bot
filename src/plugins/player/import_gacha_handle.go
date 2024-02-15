@@ -10,7 +10,6 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
-	"github.com/spf13/viper"
 	"github.com/tidwall/sjson"
 	"io"
 	"strconv"
@@ -36,11 +35,10 @@ func ImportGachaHandle(update tgbotapi.Update) (bool, error) {
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
-	sendMessage := tgbotapi.NewMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的抽卡数据粘贴到txt文本中发送或使用 /cancel 指令取消操作。")
+	sendMessage := tgbotapi.NewMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。")
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
 	telebot.WaitMessage[chatId] = "importGacha"
@@ -53,7 +51,7 @@ func ImportGacha(update tgbotapi.Update) (bool, error) {
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 	doc := update.Message.Document
-	if doc != nil && strings.HasSuffix(doc.FileName, ".txt") {
+	if doc != nil && strings.HasSuffix(doc.FileName, ".json") {
 		delete(telebot.WaitMessage, chatId)
 		ImportFile[userId] = doc.FileID
 		var userAccount account.UserAccount
@@ -62,12 +60,8 @@ func ImportGacha(update tgbotapi.Update) (bool, error) {
 		res := utils.GetAccountByUserId(userId).Scan(&userAccount)
 		if res.RowsAffected == 0 {
 			// 未绑定账号
-			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
-			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-			sendMessage.ReplyToMessageID = messageId
-			msg, _ := bot.Arknights.Send(sendMessage)
-			messagecleaner.AddDelQueue(chatId, messageId, 5)
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
+			bot.Arknights.Send(sendMessage)
 			return true, nil
 		}
 
@@ -110,6 +104,7 @@ func ImportGacha(update tgbotapi.Update) (bool, error) {
 }
 
 func Import(uid string, account account.UserAccount, chatId int64, fileId string, name string) (bool, error) {
+	delete(ImportFile, account.UserNumber)
 	var importGachaData ImportGachaData
 	f, _ := utils.DownloadFile(fileId)
 	data, _ := io.ReadAll(f)

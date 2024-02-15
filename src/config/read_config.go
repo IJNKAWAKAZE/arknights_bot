@@ -6,6 +6,7 @@ import (
 )
 
 var MsgDelDelay float64
+var HeadhuntTimes int
 
 func init() {
 	// 设置配置文件的名字
@@ -21,4 +22,5 @@ func init() {
 		return
 	}
 	MsgDelDelay = viper.GetFloat64("bot.msg_del_delay")
+	HeadhuntTimes = viper.GetInt("headhunt.times")
 }

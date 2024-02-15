@@ -43,11 +43,13 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.SyncGachaHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.PlayerHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.ImportGachaHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.ExportGachaHandle)
 
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
+	bot.TeleBot.NewWaitMessageProcessor("bToken", account.SetBToken)
 	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
 	bot.TeleBot.NewWaitMessageProcessor("importGacha", player.ImportGacha)
 
@@ -57,12 +59,15 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("sign", sign.SignHandle)
 	bot.TeleBot.NewCommandProcessor("state", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("missing", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("card", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("base", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
 	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
-	bot.TeleBot.NewCommandProcessor("redeem", player.RedeemHandle)
+	bot.TeleBot.NewCommandProcessor("redeem", player.PlayerHandle)
+	bot.TeleBot.NewCommandProcessor("headhunt", system.HeadhuntHandle)
 
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)

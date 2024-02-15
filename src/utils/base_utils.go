@@ -4,6 +4,8 @@ import (
 	bot "arknights_bot/config"
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -14,6 +16,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 var ctx = context.Background()
@@ -271,4 +274,45 @@ func ReverseSlice[T any](s []T) {
 		j := len(s) - i - 1
 		s[i], s[j] = s[j], s[i]
 	}
+}
+
+// EscapesMarkdownV2 ModeMarkdownV2特殊字符转义
+func EscapesMarkdownV2(s string) string {
+	var i int
+	for i = 0; i < len(s); i++ {
+		if special(s[i]) {
+			break
+		}
+	}
+	if i >= len(s) {
+		return s
+	}
+
+	b := make([]byte, 2*len(s)-i)
+	copy(b, s[:i])
+	j := i
+	for ; i < len(s); i++ {
+		if special(s[i]) {
+			b[j] = '\\'
+			j++
+		}
+		b[j] = s[i]
+		j++
+	}
+	return string(b[:j])
+}
+
+func special(b byte) bool {
+	var specialBytes [16]byte
+	for _, b := range []byte(`_*[]()~>#+-=|{}.!`) {
+		specialBytes[b%16] |= 1 << (b / 16)
+	}
+	specialBytes[byte('`')%16] |= 1 << (byte('`') / 16)
+	return b < utf8.RuneSelf && specialBytes[b%16]&(1<<(b/16)) != 0
+}
+
+func Md5(str string) string {
+	m5 := md5.Sum([]byte(str))
+	m5str := hex.EncodeToString(m5[:])
+	return m5str
 }

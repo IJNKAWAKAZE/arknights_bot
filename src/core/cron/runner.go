@@ -5,6 +5,7 @@ import (
 	"arknights_bot/plugins/datasource"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/sign"
+	"arknights_bot/plugins/system"
 	"github.com/robfig/cron/v3"
 	"log"
 )
@@ -12,8 +13,8 @@ import (
 func StartCron() error {
 	crontab := cron.New(cron.WithSeconds())
 
-	//明日方舟bilibili动态 0 0/10 * * * ?
-	_, err := crontab.AddFunc("0 0/10 * * * ?", arknightsnews.BilibiliNews())
+	//明日方舟bilibili动态 0/30 * * * * ?
+	_, err := crontab.AddFunc("0/30 * * * * ?", arknightsnews.BilibiliNews())
 	if err != nil {
 		return err
 	}
@@ -32,6 +33,12 @@ func StartCron() error {
 
 	//清理消息 0/1 * * * * ?
 	_, err = crontab.AddFunc("0/1 * * * * ?", messagecleaner.DelMsg())
+	if err != nil {
+		return err
+	}
+
+	//重置每日寻访次数 0 0 0 * * ?
+	_, err = crontab.AddFunc("0 0 0 * * ?", system.ResetHeadhuntTimes())
 	if err != nil {
 		return err
 	}

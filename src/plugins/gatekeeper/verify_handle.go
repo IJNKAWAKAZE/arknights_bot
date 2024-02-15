@@ -54,7 +54,7 @@ func VerifyMember(message *tgbotapi.Message) {
 			if painting != "" {
 				options = append(options, utils.Operator{
 					Name:     shipName,
-					Painting: painting,
+					ThumbURL: painting,
 				})
 			} else {
 				i--
@@ -78,13 +78,13 @@ func VerifyMember(message *tgbotapi.Message) {
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,
 		)
-		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.Painting))
+		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
-		sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", name, userId)
+		sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", utils.EscapesMarkdownV2(name), userId)
 		sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
 		photo, err := bot.Arknights.Send(sendPhoto)
 		if err != nil {
-			log.Println(err)
+			log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
 			restrictChatMemberConfig = tgbotapi.RestrictChatMemberConfig{
 				Permissions: &tgbotapi.ChatPermissions{
 					CanSendMessages:       true,
@@ -131,7 +131,7 @@ func verify(val string, chatId int64, userId int64, messageId int, joinMessageId
 		RevokeMessages:   true,
 	}
 	bot.Arknights.Send(banChatMemberConfig)
-	// 删除用户入群体醒
+	// 删除用户入群提醒
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)
 	utils.RedisDelSetItem("verify", val)

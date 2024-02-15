@@ -25,7 +25,10 @@ func UpdateHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage := tgbotapi.NewMessage(chatId, "开始更新数据源")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		go datasource.UpdateDataSourceRunner()
+		datasource.UpdateDataSourceRunner()
+		sendMessage = tgbotapi.NewMessage(chatId, "数据源更新结束")
+		sendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
 
