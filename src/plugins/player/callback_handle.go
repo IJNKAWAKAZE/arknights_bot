@@ -9,15 +9,6 @@ import (
 	"strings"
 )
 
-const (
-	OP_STATE  = "state"  // 实时数据
-	OP_BOX    = "box"    // 我的干员
-	OP_GACHA  = "gacha"  // 抽卡记录
-	OP_CARD   = "card"   // 我的名片
-	OP_IMPORT = "import" // 导入抽卡记录
-	OP_EXPORT = "export" // 导出抽卡记录
-)
-
 // PlayerData 角色数据
 func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	callbackQuery := callBack.CallbackQuery
@@ -30,7 +21,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
-	operate := d[1]
+	operate, ok := parseIntStringToOperation(d[1])
 	clickUserId, _ := strconv.ParseInt(d[2], 10, 64)
 	uid := d[3]
 	messageId, _ := strconv.Atoi(d[4])
@@ -44,7 +35,9 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	// 获取账号信息
 	var userAccount account.UserAccount
 	utils.GetAccountByUserId(userId).Scan(&userAccount)
-
+	if !ok { // no match found
+		return true, nil
+	}
 	// 判断操作类型
 	switch operate {
 	case OP_STATE:

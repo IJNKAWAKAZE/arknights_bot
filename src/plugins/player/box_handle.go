@@ -3,7 +3,6 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -18,30 +17,7 @@ type B struct {
 	FileId string `json:"fileId"`
 }
 
-// BoxHandle 我的干员
-func BoxHandle(players []account.UserPlayer, userAccount account.UserAccount, chatId int64, userId int64, messageId int, param string) (bool, error) {
-	if len(players) > 1 {
-		// 绑定多个角色进行选择
-		var buttons [][]tgbotapi.InlineKeyboardButton
-		for _, player := range players {
-			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.PlayerName, player.ServerName), fmt.Sprintf("%s,%s,%d,%s,%d,%s", "player", OP_BOX, userId, player.Uid, messageId, param)),
-			))
-		}
-		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
-			buttons...,
-		)
-		sendMessage := tgbotapi.NewMessage(chatId, "请选择要查询的角色")
-		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	} else {
-		// 绑定单个角色
-		return Box(players[0].Uid, userAccount, chatId, messageId, param)
-	}
-
-	return true, nil
-}
+// Box 我的干员
 
 func Box(uid string, account account.UserAccount, chatId int64, messageId int, param string) (bool, error) {
 
