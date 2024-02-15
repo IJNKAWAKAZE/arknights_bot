@@ -1,16 +1,15 @@
 package player
 
 import (
-	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"log"
 	"strings"
 )
 
 // PlayerHandle 角色信息查询
 func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
-	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 
 	var userAccount account.UserAccount
@@ -24,21 +23,17 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	if !ok {
 		return true, nil
 	}
-	players = *playersP
+	players = playersP
 	userAccount = *userAccountP
+	if players == nil || len(players) == 0 {
+		log.Printf("Code reach impossible point players = %v after getPlayer warp", players)
+	}
 	if len(players) > 1 {
-		if operations != OP_REDEEM {
-			return true, playerSelector(update, players, operations, NO_REQUIREMENT)
-		}
-		cdk := strings.ToUpper(update.Message.CommandArguments())
-		if cdk == "" {
-			SendMessage := tgbotapi.NewMessage(chatId, "请输入CDK！")
-			SendMessage.ReplyToMessageID = messageId
-			bot.Arknights.Send(SendMessage)
-			return true, nil
-		}
-
-		Redeem[userId] = cdk
+		return true, playerSelector(update, players, operations, NO_REQUIREMENT)
+	}
+	// if some per requirement not meet (such as not enough argument) cancel the operation
+	if !operations.getPerReqForPlayerSelection()(update) {
+		return true, nil
 	}
 	// 判断操作类型
 	switch operations {

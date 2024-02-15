@@ -8,12 +8,13 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"log"
 )
 
 // this function is a combination of getAccount and getPlayers Function
-func getAccountAndPlayers(update tgbotapi.Update) (*account.UserAccount, *[]account.UserPlayer, error) {
+func getAccountAndPlayers(update tgbotapi.Update) (*account.UserAccount, []account.UserPlayer, error) {
 	var userAccount *account.UserAccount
-	var players *[]account.UserPlayer
+	var players []account.UserPlayer
 	var err error
 	userAccount, err = getAccount(update)
 	if err == nil && userAccount != nil {
@@ -49,7 +50,10 @@ func playerSelector(update tgbotapi.Update, players []account.UserPlayer, operat
 	)
 	sendMessage := tgbotapi.NewMessage(chatId, operation.getHintWordForPlayerSelection())
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	msg, _ := bot.Arknights.Send(sendMessage)
+	msg, err := bot.Arknights.Send(sendMessage)
+	if err != nil {
+		log.Println("can not send massage ", err)
+	}
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	return nil
 }
@@ -68,17 +72,25 @@ func getAccount(update tgbotapi.Update) (*account.UserAccount, error) {
 	messageId := update.Message.MessageID
 	var userAccount account.UserAccount
 	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
-	if res.RowsAffected == 0 {
+	if res.RowsAffected != 0 {
+		if res.RowsAffected == -1 {
+			panic("SQL ERROR check your sql config")
+		}
+		return &userAccount, nil
+	} else {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			log.Println("can not send massage ", err)
+		}
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil, nil
 	}
-	return &userAccount, nil
+
 }
 
 // this function use to get the players
@@ -89,18 +101,26 @@ func getAccount(update tgbotapi.Update) (*account.UserAccount, error) {
 //   - the pointer to array of userPlayers nil if not found
 //
 // Note: this function will automatically ask user to bind their characters
-func getPlayers(update tgbotapi.Update) (*[]account.UserPlayer, error) {
+func getPlayers(update tgbotapi.Update) ([]account.UserPlayer, error) {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 	var players []account.UserPlayer
 	res := utils.GetPlayersByUserId(userId).Scan(&players)
-	if res.RowsAffected == 0 {
+	if res.RowsAffected != 0 {
+		if res.RowsAffected == -1 {
+			panic("SQL ERROR check your sql config")
+		}
+		return players, nil
+	} else {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			log.Println("can not send massage ", err)
+		}
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil, nil
 	}
-	return &players, nil
+
 }

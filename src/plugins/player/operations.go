@@ -9,16 +9,16 @@ import (
 type PlayerOperation int
 
 const (
-	OP_STATE   PlayerOperation = iota // 实时数据
-	OP_BOX                            // 我的干员
-	OP_GACHA                          // 抽卡记录
-	OP_CARD                           // 我的名片
-	OP_IMPORT                         // 导入抽卡记录
-	OP_EXPORT                         // 导出抽卡记录
-	OP_MISSING                        // 为获取干员
-	OP_BASE                           // 基建信息
-	OP_SYNC                           // 同步抽卡记录
-	OP_REDEEM                         // CDK兑换
+	OP_STATE   PlayerOperation = iota + 1 // 实时数据
+	OP_BOX                                // 我的干员
+	OP_GACHA                              // 抽卡记录
+	OP_CARD                               // 我的名片
+	OP_IMPORT                             // 导入抽卡记录
+	OP_EXPORT                             // 导出抽卡记录
+	OP_MISSING                            // 为获取干员
+	OP_BASE                               // 基建信息
+	OP_SYNC                               // 同步抽卡记录
+	OP_REDEEM                             // CDK兑换
 )
 
 var (
@@ -38,7 +38,7 @@ var (
 
 func parseIntStringToOperation(str string) (PlayerOperation, bool) {
 	result, err := strconv.Atoi(str)
-	if err != nil || result < 0 || result >= len(playerOperationMap) {
+	if err != nil || result < 1 || result > len(playerOperationMap) {
 		return -1, false
 	}
 	return PlayerOperation(result), true

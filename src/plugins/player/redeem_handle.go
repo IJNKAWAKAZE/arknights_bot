@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var Redeem = make(map[int64]string)
+var redeem = make(map[int64]string)
 
 // RedeemHandle CDK兑换
 func getRedeemPerFeq(update tgbotapi.Update) bool {
@@ -26,13 +26,13 @@ func getRedeemPerFeq(update tgbotapi.Update) bool {
 		bot.Arknights.Send(SendMessage)
 		return false
 	} else {
-		Redeem[userId] = cdk
+		redeem[userId] = cdk
 		return true
 	}
 }
 
 func RedeemCDK(uid string, userAccount account.UserAccount, chatId int64, messageId int, cdk string) (bool, error) {
-	delete(Redeem, userAccount.UserNumber)
+	delete(redeem, userAccount.UserNumber)
 	token := userAccount.HypergryphToken
 	channelId := "1"
 	var userPlayer account.UserPlayer

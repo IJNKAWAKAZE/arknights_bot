@@ -22,6 +22,9 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
 	operate, ok := parseIntStringToOperation(d[1])
+	if !ok {
+		return true, nil
+	}
 	clickUserId, _ := strconv.ParseInt(d[2], 10, 64)
 	uid := d[3]
 	messageId, _ := strconv.Atoi(d[4])
@@ -29,9 +32,6 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	if userId != clickUserId {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
 		bot.Arknights.Send(answer)
-		return true, nil
-	}
-	if !ok {
 		return true, nil
 	}
 
@@ -64,7 +64,7 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 	case OP_EXPORT:
 		return Export(uid, userAccount, chatId)
 	case OP_REDEEM:
-		return RedeemCDK(uid, userAccount, chatId, messageId, Redeem[clickUserId])
+		return RedeemCDK(uid, userAccount, chatId, messageId, redeem[clickUserId])
 	}
 
 	return true, nil
