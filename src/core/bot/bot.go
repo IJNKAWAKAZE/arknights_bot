@@ -46,7 +46,7 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.PlayerHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.ImportGachaHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.ExportGachaHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.PlayerHandle)
 
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 	bot.TeleBot.NewWaitMessageProcessor("bToken", account.SetBToken)

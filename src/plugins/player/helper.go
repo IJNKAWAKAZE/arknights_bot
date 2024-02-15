@@ -21,6 +21,7 @@ func getAccountAndPlayers(update tgbotapi.Update) (*account.UserAccount, *[]acco
 	}
 	return userAccount, players, err
 }
+func NO_REQUIREMENT(_ tgbotapi.Update) bool { return true }
 
 // this function will guide user to select the player and SEND CALLBACK TO callback_handle.go
 // Param :
@@ -30,7 +31,13 @@ func getAccountAndPlayers(update tgbotapi.Update) (*account.UserAccount, *[]acco
 //
 // Return :
 //   - error : error if any
-func playerSelector(chatId int64, userId int64, messageId int, players []account.UserPlayer, operation PlayerOperation, extraStep func()) error {
+func playerSelector(update tgbotapi.Update, players []account.UserPlayer, operation PlayerOperation, perRequirement func(u2 tgbotapi.Update) bool) error {
+	chatId := update.Message.Chat.ID
+	userId := update.Message.From.ID
+	messageId := update.Message.MessageID
+	if !perRequirement(update) {
+		return nil
+	}
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
@@ -44,7 +51,6 @@ func playerSelector(chatId int64, userId int64, messageId int, players []account
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	msg, _ := bot.Arknights.Send(sendMessage)
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	extraStep()
 	return nil
 }
 

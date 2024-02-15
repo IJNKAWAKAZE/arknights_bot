@@ -1,6 +1,7 @@
 package player
 
 import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strconv"
 	"strings"
 )
@@ -54,5 +55,13 @@ func (operation PlayerOperation) getHintWordForPlayerSelection() string {
 		return "请选择要兑换的角色"
 	default:
 		return "请选择要查询的角色"
+	}
+}
+func (operation PlayerOperation) getPerReqForPlayerSelection() func(update tgbotapi.Update) bool {
+	switch operation {
+	case OP_REDEEM:
+		return getRedeemPerFeq
+	default:
+		return NO_REQUIREMENT
 	}
 }
