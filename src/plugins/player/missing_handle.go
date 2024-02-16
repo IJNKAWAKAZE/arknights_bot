@@ -10,7 +10,7 @@ import (
 	"regexp"
 )
 
-// MissingHandle 为获取干员
+// MissingHandle 未获取干员
 
 func Missing(uid string, account account.UserAccount, chatId int64, messageId int, param string) (bool, error) {
 

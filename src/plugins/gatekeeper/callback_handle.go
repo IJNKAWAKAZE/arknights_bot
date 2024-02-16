@@ -24,14 +24,8 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 
 	if d[2] == "PASS" || d[2] == "BAN" {
 		joinMessageId, _ = strconv.Atoi(d[3])
-		getChatMemberConfig := tgbotapi.GetChatMemberConfig{
-			ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
-				ChatID: chatId,
-				UserID: callbackQuery.From.ID,
-			},
-		}
 
-		if !utils.IsAdmin(getChatMemberConfig) {
+		if !utils.IsAdmin(chatId, callbackQuery.From.ID) {
 			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
 			bot.Arknights.Send(answer)
 			return true, nil

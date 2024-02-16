@@ -88,7 +88,13 @@ func SaveJoined(message *tgbotapi.Message) {
 }
 
 // IsAdmin 是否管理员
-func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
+func IsAdmin(chatId, userId int64) bool {
+	getChatMemberConfig := tgbotapi.GetChatMemberConfig{
+		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+			ChatID: chatId,
+			UserID: userId,
+		},
+	}
 	memberInfo, _ := bot.Arknights.GetChatMember(getChatMemberConfig)
 	if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
 		return false

@@ -26,14 +26,7 @@ func ReportHandle(update tgbotapi.Update) (bool, error) {
 		target := replyToMessage.From.ID
 		name := utils.GetFullName(replyToMessage.From)
 
-		getChatMemberConfig := tgbotapi.GetChatMemberConfig{
-			ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
-				ChatID: chatId,
-				UserID: target,
-			},
-		}
-
-		if utils.IsAdmin(getChatMemberConfig) {
+		if utils.IsAdmin(chatId, target) {
 			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
 			sendMessage.ReplyToMessageID = messageId
 			msg, _ := bot.Arknights.Send(sendMessage)

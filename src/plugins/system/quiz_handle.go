@@ -5,6 +5,7 @@ import (
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"crypto/rand"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"math/big"
@@ -13,10 +14,43 @@ import (
 // QuizHandle 云玩家检测
 func QuizHandle(update tgbotapi.Update) (bool, error) {
 	chatId := update.Message.Chat.ID
+	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
+	param := update.Message.CommandArguments()
+	key := fmt.Sprintf("quiz:%d", chatId)
 
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)
+
+	if param == "" {
+		if utils.RedisIsExists(key) && utils.RedisGet(key) == "stop" {
+			sendMessage := tgbotapi.NewMessage(chatId, "云玩家检测功能已关闭！")
+			msg, _ := bot.Arknights.Send(sendMessage)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			return true, nil
+		}
+	}
+
+	if param != "" {
+		if utils.IsAdmin(chatId, userId) {
+			text := ""
+			if param == "start" {
+				utils.RedisSet(key, "start", 0)
+				text = "云玩家检测已开启！"
+			} else if param == "stop" {
+				utils.RedisSet(key, "stop", 0)
+				text = "云玩家检测已关闭！"
+			}
+			sendMessage := tgbotapi.NewMessage(chatId, text)
+			msg, _ := bot.Arknights.Send(sendMessage)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			return true, nil
+		}
+		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
+		msg, _ := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
+	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)
