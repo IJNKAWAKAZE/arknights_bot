@@ -266,10 +266,10 @@
                 source: [
                     ['poolName', 'poolCount'],
                     {{range .PoolCount}}
-                ['{{.PoolName}}', '{{.PoolCount}}'],
-        {{end}}
-    ]
-    },
+                    ['{{.PoolName}}', '{{.PoolCount}}'],
+                    {{end}}
+                ]
+        },
         xAxis: {
             splitLine: {
                 show: false
@@ -292,7 +292,7 @@
             containLabel: true,
                 top: '2%',
                 left: '2%',
-                right: '2%',
+                right: '10%',
                 bottom: '20%',
         },
         series: [
