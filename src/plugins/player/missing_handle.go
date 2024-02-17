@@ -34,7 +34,6 @@ func Missing(uid string, account account.UserAccount, chatId int64, messageId in
 		return true, nil
 	}
 
-	// BOX无改变
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "missing.png"})
 	sendDocument.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendDocument)
