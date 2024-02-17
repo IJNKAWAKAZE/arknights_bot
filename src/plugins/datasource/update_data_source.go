@@ -48,11 +48,15 @@ func UpdateDataSourceRunner() {
 		operator.Name = selection.Nodes[0].Attr[0].Val
 		operator.Profession = Profession[selection.Nodes[0].Attr[1].Val]
 		operator.Rarity, _ = strconv.Atoi(selection.Nodes[0].Attr[2].Val)
-
-		// 半身像
-		paintingName := fmt.Sprintf("半身像_%s_1.png", operator.Name)
+		// 头像
+		paintingName := fmt.Sprintf("头像_%s.png", operator.Name)
 		m := utils.Md5(paintingName)
 		path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
+		operator.Avatar = path + paintingName + "?image_process=format,webp/quality,Q_90"
+		// 半身像
+		paintingName = fmt.Sprintf("半身像_%s_1.png", operator.Name)
+		m = utils.Md5(paintingName)
+		path = "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
 		operator.ThumbURL = path + paintingName + "?image_process=format,webp/quality,Q_90"
 		operators = append(operators, operator)
 	})

@@ -148,6 +148,11 @@ func GetUserGacha(userId int64, uid string) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_gacha where user_number = ? and uid = ? order by ts desc, pool_order desc", userId, uid)
 }
 
+// GetUserPoolCount 获取角色卡池水位
+func GetUserPoolCount(userId int64, uid string) *gorm.DB {
+	return bot.DBEngine.Raw("select pool_name, count(1) pool_count, max(ts) ts from user_gacha where user_number = ? and uid = ? group by pool_name order by ts", userId, uid)
+}
+
 // RedisSet redis存值
 func RedisSet(key string, val interface{}, expiration time.Duration) {
 	err := bot.GoRedis.Set(ctx, key, val, expiration).Err()
