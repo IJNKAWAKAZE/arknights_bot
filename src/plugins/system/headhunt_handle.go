@@ -2,6 +2,7 @@ package system
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -79,7 +80,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
-	msg, _ := bot.Arknights.Send(sendPhoto)
+	bot.Arknights.Send(sendPhoto)
 	//messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
 	return true, nil
 }
