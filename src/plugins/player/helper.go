@@ -3,6 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/commandOperation"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 	"log"
 )
+
+var hashSize = 11
 
 // this function is a combination of getAccount and getPlayers Function
 func getAccountAndPlayers(update tgbotapi.Update) (*account.UserAccount, []account.UserPlayer, error) {
@@ -32,23 +35,24 @@ func NO_REQUIREMENT(_ tgbotapi.Update) bool { return true }
 //
 // Return :
 //   - error : error if any
-func playerSelector(update tgbotapi.Update, players []account.UserPlayer, operation PlayerOperation, perRequirement func(u2 tgbotapi.Update) bool) error {
+func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, players []account.UserPlayer, operation commandOperation.OperationI, nameType string) error {
 	chatId := update.Message.Chat.ID
-	userId := update.Message.From.ID
-	messageId := update.Message.MessageID
-	if !perRequirement(update) {
-		return nil
+	callBackFunction := operation.GetCallBackFunctionOnMultiPlayer(update, userAccount, chatId, nameType)
+	functionHash := RandStringBytesMaskImprSrcUnsafe(hashSize)
+	//keep trying to make sure key not duplicate
+	for ; !commandOperation.AddCallback(functionHash, callBackFunction); functionHash = RandStringBytesMaskImprSrcUnsafe(hashSize) {
 	}
+
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.PlayerName, player.ServerName), fmt.Sprintf("%s,%d,%d,%s,%d", "player", operation, userId, player.Uid, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.PlayerName, player.ServerName), fmt.Sprintf("%s,%s,%s", "player", functionHash, player.Uid)),
 		))
 	}
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
-	sendMessage := tgbotapi.NewMessage(chatId, operation.getHintWordForPlayerSelection())
+	sendMessage := tgbotapi.NewMessage(chatId, operation.HintWordForPlayerSelection())
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	msg, err := bot.Arknights.Send(sendMessage)
 	if err != nil {
