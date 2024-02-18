@@ -19,7 +19,7 @@ type PlayerOperationRedeem struct {
 
 // RedeemHandle CDK兑换
 func (_ PlayerOperationRedeem) CheckRequirementsAndPrepare(update tgbotapi.Update) bool {
-	return len(update.Message.CommandArguments()) == 1
+	return len(update.Message.CommandArguments()) != 0
 }
 func (_ PlayerOperationRedeem) HintOnRequirementsFailed() (string, bool) {
 	return "请输入CDK！", false
