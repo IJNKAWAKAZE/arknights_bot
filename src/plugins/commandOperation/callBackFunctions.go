@@ -44,8 +44,11 @@ func RemoveCallBack(callBackHash string) {
 	delete(callBackMap, callBackHash)
 }
 func GetCallback(callBackHash string) (MultiuserCallBackFunction, bool) {
-	callback, err := callBackMap[callBackHash]
-	return callback, err
+	callback, ok := callBackMap[callBackHash]
+	if ok {
+		RemoveCallBack(callBackHash)
+	}
+	return callback, ok
 }
 func AddCallback(callBackHash string, function MultiuserCallBackFunction) bool {
 	_, hasKey := callBackMap[callBackHash]
