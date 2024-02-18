@@ -1,7 +1,7 @@
 package web
 
 import (
-	"arknights_bot/plugins/commandOperation/player"
+	"arknights_bot/plugins/player"
 	"arknights_bot/utils"
 	"github.com/gin-gonic/gin"
 	"log"
