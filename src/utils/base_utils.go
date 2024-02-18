@@ -88,7 +88,13 @@ func SaveJoined(message *tgbotapi.Message) {
 }
 
 // IsAdmin 是否管理员
-func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
+func IsAdmin(chatId, userId int64) bool {
+	getChatMemberConfig := tgbotapi.GetChatMemberConfig{
+		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+			ChatID: chatId,
+			UserID: userId,
+		},
+	}
 	memberInfo, _ := bot.Arknights.GetChatMember(getChatMemberConfig)
 	if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
 		return false
@@ -140,6 +146,11 @@ func GetJoinedGroups() []int64 {
 // GetUserGacha 获取角色抽卡记录
 func GetUserGacha(userId int64, uid string) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_gacha where user_number = ? and uid = ? order by ts desc, pool_order desc", userId, uid)
+}
+
+// GetUserPoolCount 获取角色卡池水位
+func GetUserPoolCount(userId int64, uid string) *gorm.DB {
+	return bot.DBEngine.Raw("select pool_name, count(1) pool_count, max(ts) ts from user_gacha where user_number = ? and uid = ? group by pool_name order by ts", userId, uid)
 }
 
 // RedisSet redis存值

@@ -7,118 +7,321 @@
         }
         .main {
             position: absolute;
-            width: 600px;
-            background-color: blanchedalmond;
+            width: 1000px;
         }
-        #total {
-            display: flex;
-            justify-content: center;
+        h1 {
+            color: #eeeeee;
+            position: absolute;
         }
-        #chart {
-            width: 600px;
+        .title {
+            color: #eeeeee;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 20px;
+        }
+        .item {
+            width: 300px;
+            height: 250px;
+            display: inline-block;
+            border: solid 1px;
+            border-radius: 20px;
+            background-color: #1f1e1e;
+            margin-top: 150px;
+            margin-left: 20px;
+        }
+        #avg {
+            color: #eeeeee;
+            margin-left: 30px;
+        }
+        #avg tr {
+            display: block;
+            margin: 15px 0;
+        }
+        #avg td {
+            width: 150px;
+        }
+        #header {
+            background-image: url("assets/gacha/header.png");
             height: 400px;
         }
-        td {
-            text-align: center;
+        #article {
+            background-color: #0c0d0c;
+        }
+        #article table {
+            width: 230px;
+            display: inline-block;
+            color: #eeeeee;
+            margin-top: 20px;
+        }
+        #article img {
+            width: 100px;
+        }
+        .chars {
+            width: 465px;
+            border: solid 1px;
+            border-radius: 20px;
+            background-color: #1f1e1e;
+            margin-left: 20px;
+            margin-top: 40px;
+            display: inline-table;
+        }
+        .t {
+            font-size: 15px;
         }
         .new {
             font-size: 10px;
             color: red;
             vertical-align: top;
         }
+        #footer {
+            background-image: url("assets/gacha/footer.png");
+            height: 269px;
+        }
+        #now {
+            color: #eeeeee;
+            margin-left: 530px;
+            margin-top: 190px;
+        }
     </style>
 </head>
 <body>
 <div class="main">
-    <h3 id="total">总计<span style="color: red">{{.Total}}</span>抽(已垫{{.Current}}抽)</h3>
-    <h5 style="display: flex;justify-content: center;">(<span id="beg_time"></span>——<span id="end_time"></span>)</h5>
-    <div id="chart"></div>
-    <table style="width: 600px;border-spacing: 0">
-        <tr>
-            <th style="width: 40%">时间</th>
-            <th style="width: 25%">卡池</th>
-            <th style="width: 25%">名字</th>
-            <th style="width: 10%">抽数</th>
-        </tr>
-        {{range .Star6Info}}
-        <tr>
-            <td class="ts">{{.Ts}}</td>
-            <td>{{.PoolName}}</td>
-            <td>
-                {{.Name}}
-                {{if .IsNew}}
-                <span class="new">New</span>
-                {{end}}
-            </td>
-            <td>{{.Count}}</td>
-        </tr>
-        {{end}}
-    </table>
+    <header id="header">
+        <h1 style="margin-left: 320px;margin-top: 45px;">{{.Name}}</h1>
+        <h1 style="margin-left: 250px;margin-top: 96px;display: flex; align-items: center">共{{.Total}}抽<span style="font-size: 23px;">(<span id="beg_time"></span>——<span id="end_time"></span>)</span></h1>
+        <div class="item">
+            <div class="title">星级分布</div>
+            <div id="chart"></div>
+        </div>
+        <div class="item">
+            <div class="title">星级分布</div>
+            <table id="avg">
+                <tr>
+                    <td>{{.Star6}}个6星</td>
+                    <td>{{.Avg6}}抽/个</td>
+                </tr>
+                <tr>
+                    <td>{{.Star5}}个5星</td>
+                    <td>{{.Avg5}}抽/个</td>
+                </tr>
+                <tr>
+                    <td>{{.Star4}}个4星</td>
+                    <td>{{.Avg4}}抽/个</td>
+                </tr>
+                <tr>
+                    <td>{{.Star3}}个3星</td>
+                    <td>{{.Avg3}}抽/个</td>
+                </tr>
+            </table>
+        </div>
+        <div class="item">
+            <div class="title">卡池分布(最近10个)</div>
+            <div id="chart1"></div>
+        </div>
+    </header>
+    <article id="article">
+        <div class="chars">
+            <div class="title">新获得干员(至多显示20个)</div>
+            {{range .Chars}}
+            <table>
+                <tr>
+                    <td rowspan="4"><img src="{{.Avatar}}"/></td>
+                    <td>
+                        {{.CharName}}
+                        {{if .IsNew}}
+                        <span class="new">New</span>
+                        {{end}}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ts t">{{.Ts}}</td>
+                </tr>
+                <tr>
+                    <td class="t">{{.PoolName}}</td>
+                </tr>
+                <tr>
+                    <td></td>
+                </tr>
+            </table>
+            {{end}}
+        </div>
+        <div class="chars">
+            <div class="title">获得六星干员(至多显示20个)</div>
+            {{range .Star6Info}}
+            <table>
+                <tr>
+                    <td rowspan="4"><img src="{{.Avatar}}"/></td>
+                    <td>
+                        {{.Name}}
+                        {{if .IsNew}}
+                        <span class="new">New</span>
+                        {{end}}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="ts t">{{.Ts}}</td>
+                </tr>
+                <tr>
+                    <td class="t">{{.PoolName}}</td>
+                </tr>
+                <tr>
+                    <td class="t">花费{{.Count}}抽</td>
+                </tr>
+            </table>
+            {{end}}
+        </div>
+    </article>
+    <footer id="footer">
+        <h1 id="now"></h1>
+    </footer>
 </div>
 </body>
 <script>
     window.onload = function () {
         option = {
-            title: {
-                text: '各星级概率分布',
-                left: 'center',
-                top: '5%'
-            },
             legend: {
-                orient: 'horizontal',
-                left: 'center',
-                top: '15%',
-                itemGap: 20
+                orient: 'vertical',
+                left: 0,
+                top:45,
+                itemWidth:8,
+                itemHeight:8,
+                itemGap:18,
+                textStyle:{
+                    fontSize: 14,
+                    color:'#fff'
+                },
+                formatter: function(name) {
+                    // 获取legend显示内容
+                    let data = option.series[0].data;
+                    let total = 0;
+                    let tarValue = 0;
+                    for (let i = 0, l = data.length; i < l; i++) {
+                        total += data[i].value;
+                        if (data[i].name == name) {
+                            tarValue = data[i].value;
+                        }
+                    }
+                    let p = (tarValue / total * 100).toFixed(2);
+                    return name + ' ' + ' ' + p + '%';
+                },
             },
             series: [
                 {
                     type: 'pie',
-                    radius: '50%',
-                    top: '10%',
+                    radius: '70%',
+                    top: '-20%',
+                    left: '25%',
                     data: [
-                        {
-                            value: {{.Star6}},
-                            name: '6星',
-                            itemStyle: {
-                                color: "rgba(244,110,30,1)"
-                            }
-                        },
-                        {
-                            value: {{.Star5}},
-                            name: '5星',
-                            itemStyle: {
-                                color: "rgba(247,171,55,1)"
-                            }
-                        },
-                        {
-                            value: {{.Star4}},
-                            name: '4星',
-                            itemStyle: {
-                                color: "rgba(161,53,246,1)"
-                            }
-                        },
-                        {
-                            value: {{.Star3}},
-                            name: '3星',
-                            itemStyle: {
-                                color: "rgba(109,116,126,1)"
-                            }
-                        }
+                            {
+                                value: {{.Star6}},
+                                name: '6星',
+                                itemStyle: {
+                                    color: "rgba(244,110,30,1)"
+                                }
+                            },
+                            {
+                                value: {{.Star5}},
+                                name: '5星',
+                                itemStyle: {
+                                    color: "rgba(247,171,55,1)"
+                                }
+                            },
+                            {
+                                value: {{.Star4}},
+                                name: '4星',
+                                itemStyle: {
+                                    color: "rgba(161,53,246,1)"
+                                }
+                            },
+                            {
+                                value: {{.Star3}},
+                                name: '3星',
+                                itemStyle: {
+                                    color: "rgba(109,116,126,1)",
+                                }
+                            },
                     ],
-                    label: {
+                    itemStyle: {
                         normal: {
-                            formatter: '{b} : {c}个 ({d}%)'
-                        }
+                            label: {
+                                show: false
+                            },
+                            labelLine: {
+                                show: false
+                            }
+                        },
+
                     },
-                    labelLine:{
-                        normal:{
-                            length: 20
+            }]
+        }
+
+        var chart = echarts.init(document.getElementById('chart'), null, {
+            height: 250,
+            width: 300,
+        });
+        chart.setOption(option);
+
+        option1 = {
+            dataset: {
+                source: [
+                    ['poolName', 'poolCount'],
+                    {{range .PoolCount}}
+                    ['{{.PoolName}}', '{{.PoolCount}}'],
+                    {{end}}
+                ]
+        },
+        xAxis: {
+            splitLine: {
+                show: false
+            },
+            axisTick: {
+                show: false
+            },
+            axisLabel: {
+                show: false
+            },
+        },
+        yAxis: {
+            type: 'category',
+                axisLabel: {
+                interval: 0,
+                    color: 'white',
+            },
+        },
+        grid: {
+            containLabel: true,
+                top: '2%',
+                left: '2%',
+                right: '10%',
+                bottom: '20%',
+        },
+        series: [
+            {
+                type: 'bar',
+                encode: {
+                    x: 'poolCount',
+                    y: 'poolName'
+                },
+                itemStyle: {
+                    normal: {
+                        label: {
+                            show: true,
+                            position: 'right',
+                            textStyle: {
+                                color: 'white',
+                            }
                         }
                     }
-                }]
-        }
-        var chart = echarts.init(document.getElementById('chart'));
-        chart.setOption(option);
+                },
+            }
+        ]
+    }
+        var chart1= echarts.init(document.getElementById('chart1'), null, {
+            height: 250,
+            width: 300,
+        });
+        chart1.setOption(option1);
+
         const beg_time = document.getElementById("beg_time");
         const end_time = document.getElementById("end_time");
         beg_time.textContent = timestampToTime({{.BegTime}})
@@ -126,8 +329,10 @@
         const items = document.getElementsByClassName("ts");
         for (let i = 0; i < items.length; i++) {
             var item = items[i]
-            item.textContent = timestampToTime(item.textContent)
+            item.textContent = formatDate(item.textContent)
         }
+        const now = document.getElementById("now");
+        now.textContent = getNow();
     }
     function timestampToTime(timestamp) {
         timestamp = timestamp ? timestamp : null;
@@ -139,6 +344,27 @@
         let m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
         let s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
         return Y + M + D + h + m + s;
+    }
+    function formatDate(timestamp) {
+        timestamp = timestamp ? timestamp : null;
+        let date = new Date(timestamp*1000);
+        let Y = date.getFullYear() + '-';
+        let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+        let D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
+        return Y + M + D;
+    }
+    function getNow() {
+        var date = new Date();
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var strDate = date.getDate();
+        if (month >= 1 && month <= 9) {
+            month = "0" + month;
+        }
+        if (strDate >= 0 && strDate <= 9) {
+            strDate = "0" + strDate;
+        }
+        return year + '年' + month + '月' + strDate + '日';
     }
 </script>
 <script charset="utf-8" src="/template/js/echarts.min.js"></script>

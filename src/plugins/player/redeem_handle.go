@@ -9,44 +9,30 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"strings"
 )
 
-var Redeem = make(map[int64]string)
+var redeem = make(map[int64]string)
 
 // RedeemHandle CDK兑换
-func RedeemHandle(players []account.UserPlayer, userAccount account.UserAccount, chatId int64, userId int64, messageId int, cdk string) (bool, error) {
+func getRedeemPerFeq(update tgbotapi.Update) bool {
+	chatId := update.Message.Chat.ID
+	userId := update.Message.From.ID
+	messageId := update.Message.MessageID
+	cdk := strings.ToUpper(update.Message.CommandArguments())
 	if cdk == "" {
 		SendMessage := tgbotapi.NewMessage(chatId, "请输入CDK！")
 		SendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(SendMessage)
-		return true, nil
-	}
-
-	Redeem[userId] = cdk
-	if len(players) > 1 {
-		// 绑定多个角色进行选择
-		var buttons [][]tgbotapi.InlineKeyboardButton
-		for _, player := range players {
-			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.PlayerName, player.ServerName), fmt.Sprintf("%s,%s,%d,%s,%d", "player", OP_REDEEM, userId, player.Uid, messageId)),
-			))
-		}
-		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
-			buttons...,
-		)
-		sendMessage := tgbotapi.NewMessage(chatId, "请选择要兑换的角色")
-		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return false
 	} else {
-		// 绑定单个角色
-		return RedeemCDK(players[0].Uid, userAccount, chatId, messageId, cdk)
+		redeem[userId] = cdk
+		return true
 	}
-	return true, nil
 }
 
 func RedeemCDK(uid string, userAccount account.UserAccount, chatId int64, messageId int, cdk string) (bool, error) {
-	delete(Redeem, userAccount.UserNumber)
+	delete(redeem, userAccount.UserNumber)
 	token := userAccount.HypergryphToken
 	channelId := "1"
 	var userPlayer account.UserPlayer

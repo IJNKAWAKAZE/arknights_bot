@@ -17,7 +17,8 @@ func BindHandle(update tgbotapi.Update) (bool, error) {
 	bot.Arknights.Send(sendMessage)
 	sendMessage.Text = "如何获取token\n\n" +
 		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
-		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)"
+		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)\n\n" +
+		"手机用户且已登录森空岛直接点击此处获取token：[获取token](https://ss.xingzhige.com/skland.html)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
 	telebot.WaitMessage[chatId] = "setToken"

@@ -2,10 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
-	"net/http"
 	"strings"
 )
 
@@ -13,45 +10,36 @@ type Operator struct {
 	Name       string   `json:"name"`
 	Profession string   `json:"profession"`
 	Rarity     int      `json:"rarity"`
+	Avatar     string   `json:"avatar"`
 	ThumbURL   string   `json:"thumbURL"`
 	Skins      []string `json:"skins"`
 }
+
+var operatorMap = make(map[string]Operator)
 
 func GetOperators() []gjson.Result {
 	operatorsJson := RedisGet("data_source")
 	return gjson.Parse(operatorsJson).Array()
 }
 
-func GetOperatorList() []Operator {
-	var operatorList []Operator
-	response, _ := http.Get(viper.GetString("api.wiki_bili"))
-	doc, _ := goquery.NewDocumentFromReader(response.Body)
-	doc.Find(".floatnone").Each(func(i int, selection *goquery.Selection) {
-		if selection.Nodes[0].FirstChild.FirstChild.Attr != nil {
-			var operator Operator
-			operator.Name = selection.Nodes[0].FirstChild.Attr[1].Val
-			operator.ThumbURL = selection.Nodes[0].FirstChild.FirstChild.Attr[1].Val
-			operatorList = append(operatorList, operator)
-		}
-	})
-	defer response.Body.Close()
-	return operatorList
-}
-
 func GetOperatorByName(name string) Operator {
-	var operator Operator
-	for _, op := range GetOperators() {
-		if op.Get("name").String() == name {
+	if len(operatorMap) == 0 {
+		for _, op := range GetOperators() {
+			var operator Operator
+			opName := op.Get("name").String()
 			json.Unmarshal([]byte(op.String()), &operator)
+			operatorMap[opName] = operator
 		}
 	}
-	return operator
+	return operatorMap[name]
 }
 
 func GetOperatorsByName(name string) []Operator {
 	var operatorList []Operator
-	for _, operator := range GetOperatorList() {
-		if strings.Contains(strings.ToLower(operator.Name), strings.ToLower(name)) {
+	for _, op := range GetOperators() {
+		if strings.Contains(strings.ToLower(op.Get("name").String()), strings.ToLower(name)) {
+			var operator Operator
+			json.Unmarshal([]byte(op.String()), &operator)
 			operatorList = append(operatorList, operator)
 		}
 	}

@@ -31,28 +31,6 @@ type UserGacha struct {
 }
 
 // SyncGachaHandle 同步抽卡记录
-func SyncGachaHandle(players []account.UserPlayer, userAccount account.UserAccount, chatId int64, userId int64, messageId int) (bool, error) {
-	if len(players) > 1 {
-		// 绑定多个角色进行选择
-		var buttons [][]tgbotapi.InlineKeyboardButton
-		for _, player := range players {
-			buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.PlayerName, player.ServerName), fmt.Sprintf("%s,%s,%d,%s,%d", "player", OP_SYNC, userId, player.Uid, messageId)),
-			))
-		}
-		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
-			buttons...,
-		)
-		sendMessage := tgbotapi.NewMessage(chatId, "请选择要同步的角色")
-		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	} else {
-		// 绑定单个角色
-		return SyncGacha(players[0].Uid, userAccount, chatId, messageId, userAccount.UserName)
-	}
-	return true, nil
-}
 
 func SyncGacha(uid string, userAccount account.UserAccount, chatId int64, messageId int, name string) (bool, error) {
 	token := userAccount.HypergryphToken
