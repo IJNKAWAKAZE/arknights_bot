@@ -46,7 +46,7 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 		msg, isMarkDown := operation.HintOnRequirementsFailed()
 		utils.SendMassage(chatId, msg, isMarkDown, &messageId)
 	}
-	if len(players) > 1 || true {
+	if len(players) > 1 {
 		return true, playerSelector(update, userAccount, players, operation, command)
 	}
 	return operation.Run(players[0].Uid, userAccount, chatId, update.Message)
