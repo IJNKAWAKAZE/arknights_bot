@@ -3,6 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/commandOperation"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
@@ -12,27 +13,24 @@ import (
 	"strings"
 )
 
-var redeem = make(map[int64]string)
-
-// RedeemHandle CDK兑换
-func getRedeemPerFeq(update tgbotapi.Update) bool {
-	chatId := update.Message.Chat.ID
-	userId := update.Message.From.ID
-	messageId := update.Message.MessageID
-	cdk := strings.ToUpper(update.Message.CommandArguments())
-	if cdk == "" {
-		SendMessage := tgbotapi.NewMessage(chatId, "请输入CDK！")
-		SendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(SendMessage)
-		return false
-	} else {
-		redeem[userId] = cdk
-		return true
-	}
+type PlayerOperationRedeem struct {
+	commandOperation.OperationAbstract
 }
 
-func RedeemCDK(uid string, userAccount account.UserAccount, chatId int64, messageId int, cdk string) (bool, error) {
-	delete(redeem, userAccount.UserNumber)
+// RedeemHandle CDK兑换
+func (_ PlayerOperationRedeem) CheckRequirementsAndPrepare(update tgbotapi.Update) bool {
+	return len(update.Message.CommandArguments()) != 0
+}
+func (_ PlayerOperationRedeem) HintOnRequirementsFailed() (string, bool) {
+	return "请输入CDK！", false
+}
+func (_ PlayerOperationRedeem) HintWordForPlayerSelection() string {
+	return "请选择要兑换的角色"
+}
+func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+	messageId := message.MessageID
+	cdk := message.CommandArguments()
+	cdk = strings.ToUpper(cdk)
 	token := userAccount.HypergryphToken
 	channelId := "1"
 	var userPlayer account.UserPlayer

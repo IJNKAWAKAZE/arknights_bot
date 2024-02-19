@@ -3,6 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/commandOperation"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -12,9 +13,19 @@ import (
 	"time"
 )
 
-func Export(uid string, account account.UserAccount, chatId int64) (bool, error) {
+type PlayerOperationExport struct {
+	commandOperation.OperationAbstract
+}
+
+func (_ PlayerOperationExport) hintWordForPlayerSelection() string {
+	return "请选择要导出的角色"
+}
+
+// BoxHandle 我的干员
+
+func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
 	var userGacha []UserGacha
-	res := utils.GetUserGacha(account.UserNumber, uid).Scan(&userGacha)
+	res := utils.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "不存在抽卡记录！")
 		bot.Arknights.Send(sendMessage)

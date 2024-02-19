@@ -3,6 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/commandOperation"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
@@ -29,10 +30,14 @@ type UserGacha struct {
 	UpdateTime time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark     string    `json:"remark"`
 }
+type PlayerOperationSyncGacha struct {
+	commandOperation.OperationAbstract
+}
 
 // SyncGachaHandle 同步抽卡记录
 
-func SyncGacha(uid string, userAccount account.UserAccount, chatId int64, messageId int, name string) (bool, error) {
+func (_ PlayerOperationSyncGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+	messageId := message.MessageID
 	token := userAccount.HypergryphToken
 	channelId := "1"
 	var userPlayer account.UserPlayer
@@ -71,7 +76,7 @@ func SyncGacha(uid string, userAccount account.UserAccount, chatId int64, messag
 			id, _ := gonanoid.New(32)
 			userGacha := UserGacha{
 				Id:         id,
-				UserName:   name,
+				UserName:   userAccount.UserName,
 				UserNumber: userAccount.UserNumber,
 				Uid:        uid,
 				PoolName:   c.PoolName,
