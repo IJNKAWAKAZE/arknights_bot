@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func SendMassage(chatId int64, massage string, isMarkDown bool, replyId *int) {
+func SendMessage(chatId int64, massage string, isMarkDown bool, replyId *int) {
 	tgMassage := tgbotapi.NewMessage(chatId, massage)
 	if replyId != nil {
 		tgMassage.ReplyToMessageID = *replyId

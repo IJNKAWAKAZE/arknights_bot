@@ -3,7 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -13,7 +13,7 @@ import (
 
 // MissingHandle 未获取干员
 type PlayerOperationMissing struct {
-	commandOperation.OperationAbstract
+	commandoperation.OperationAbstract
 }
 
 // BoxHandle 我的干员

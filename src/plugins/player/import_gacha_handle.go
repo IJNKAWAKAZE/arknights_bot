@@ -3,7 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/utils"
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -22,16 +22,16 @@ type ImportGachaData struct {
 }
 
 type PlayerOperationImportS1 struct {
-	commandOperation.MultiStepOperation
+	commandoperation.MultiStepOperation
 }
 
 func (o PlayerOperationImportS1) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
-	utils.SendMassage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。", true, nil)
-	commandOperation.AddNextStep(chatId, *o.NextStepOperation(uid, userAccount, message.CommandArguments()))
+	utils.SendMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。", true, nil)
+	commandoperation.AddNextStep(chatId, *o.NextStepOperation(uid, userAccount, message.CommandArguments()), "importGacha")
 	return true, nil
 }
-func (_ PlayerOperationImportS1) NextStepOperation(playerUID string, userAccount account.UserAccount, param string) *commandOperation.NextStepOperation {
-	return &commandOperation.NextStepOperation{
+func (_ PlayerOperationImportS1) NextStepOperation(playerUID string, userAccount account.UserAccount, param string) *commandoperation.NextStepOperation {
+	return &commandoperation.NextStepOperation{
 		PlayerID:      playerUID,
 		Account:       userAccount,
 		Param:         param,
@@ -40,7 +40,7 @@ func (_ PlayerOperationImportS1) NextStepOperation(playerUID string, userAccount
 }
 
 type PlayerOperationImportS2 struct {
-	commandOperation.OperationAbstract
+	commandoperation.OperationAbstract
 }
 
 func (o PlayerOperationImportS2) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {

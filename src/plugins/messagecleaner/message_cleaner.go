@@ -2,7 +2,7 @@ package messagecleaner
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/utils"
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -33,7 +33,7 @@ func DelMsg() func() {
 			if t.Sub(msgObject.CreateTime).Seconds() > msgObject.DelTime {
 				delMsg := tgbotapi.NewDeleteMessage(msgObject.ChatId, msgObject.MessageId)
 				bot.Arknights.Send(delMsg)
-				commandOperation.RemoveCallBack(msgObject.FunctionHash)
+				commandoperation.RemoveCallBack(msgObject.FunctionHash)
 				m, _ := json.Marshal(msgObject)
 				utils.RedisDelListItem("msgObjects", string(m))
 			}

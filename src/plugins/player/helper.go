@@ -3,7 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
@@ -35,12 +35,12 @@ func NO_REQUIREMENT(_ tgbotapi.Update) bool { return true }
 //
 // Return :
 //   - error : error if any
-func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, players []account.UserPlayer, operation commandOperation.OperationI, nameType string) error {
+func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, players []account.UserPlayer, operation commandoperation.OperationI, nameType string) error {
 	chatId := update.Message.Chat.ID
 	callBackFunction := operation.GetCallBackFunctionOnMultiPlayer(update, userAccount, chatId, nameType)
-	functionHash := RandStringBytesMaskImprSrcUnsafe(hashSize)
+	functionHash := utils.RandStringBytesMaskImprSrcUnsafe(hashSize)
 	//keep trying to make sure key not duplicate
-	for ; !commandOperation.AddCallback(functionHash, callBackFunction); functionHash = RandStringBytesMaskImprSrcUnsafe(hashSize) {
+	for ; !commandoperation.AddCallback(functionHash, callBackFunction); functionHash = utils.RandStringBytesMaskImprSrcUnsafe(hashSize) {
 	}
 
 	var buttons [][]tgbotapi.InlineKeyboardButton

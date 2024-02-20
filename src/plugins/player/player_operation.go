@@ -1,11 +1,11 @@
 package player
 
 import (
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 )
 
 var (
-	playerOperationMap = map[string]commandOperation.OperationI{
+	playerOperationMap = map[string]commandoperation.OperationI{
 		"state":        PlayerOperationState{},
 		"box":          PlayerOperationBox{},
 		"gacha":        PlayerOperationGacha{},
@@ -19,12 +19,12 @@ var (
 	}
 )
 
-func initFactoey() {
+func initFactory() {
 	for k, f := range playerOperationMap {
-		commandOperation.OperationTypeMaps[k] = f
+		commandoperation.OperationTypeMaps[k] = f
 	}
 }
-func playerOperationFactory(operation string) *commandOperation.OperationI {
+func playerOperationFactory(operation string) *commandoperation.OperationI {
 
 	result, ok := playerOperationMap[operation]
 	if !ok {

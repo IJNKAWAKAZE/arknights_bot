@@ -3,7 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -14,7 +14,7 @@ import (
 )
 
 type PlayerOperationExport struct {
-	commandOperation.OperationAbstract
+	commandoperation.OperationAbstract
 }
 
 func (_ PlayerOperationExport) hintWordForPlayerSelection() string {

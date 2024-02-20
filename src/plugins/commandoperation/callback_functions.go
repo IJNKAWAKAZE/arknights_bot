@@ -1,4 +1,4 @@
-package commandOperation
+package commandoperation
 
 import (
 	"arknights_bot/plugins/account"
@@ -10,8 +10,8 @@ import (
 var callBackMap = make(map[string]MultiuserCallBackFunction)
 var nextStepMap = make(map[int64]NextStepOperation)
 
-func AddNextStep(chatID int64, operation NextStepOperation) bool {
-	telebot.WaitMessage[chatID] = "importGacha"
+func AddNextStep(chatID int64, operation NextStepOperation, cmd string) bool {
+	telebot.WaitMessage[chatID] = cmd
 	_, hasKey := nextStepMap[chatID]
 	if hasKey {
 		return false
@@ -79,12 +79,12 @@ func (op NextStepOperation) Run(update tgbotapi.Update) error {
 
 		_, err = op.NextOperation.Run(op.PlayerID, op.Account, chatId, update.Message)
 		if err != nil {
-			utils.SendMassage(chatId, "未知错误，请重试。", false, &messageID)
+			utils.SendMessage(chatId, "未知错误，请重试。", false, &messageID)
 		}
 		RemoveNextStep(chatId)
 	} else {
 		msg, isMarkDown := op.NextOperation.HintOnRequirementsFailed()
-		utils.SendMassage(chatId, msg+" 使用 /cancel 指令取消操作", isMarkDown, &messageID)
+		utils.SendMessage(chatId, msg+" 使用 /cancel 指令取消操作", isMarkDown, &messageID)
 	}
 	return err
 }

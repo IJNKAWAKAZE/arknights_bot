@@ -3,7 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
@@ -31,7 +31,7 @@ type UserGacha struct {
 	Remark     string    `json:"remark"`
 }
 type PlayerOperationSyncGacha struct {
-	commandOperation.OperationAbstract
+	commandoperation.OperationAbstract
 }
 
 // SyncGachaHandle 同步抽卡记录

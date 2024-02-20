@@ -2,7 +2,7 @@ package player
 
 import (
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
@@ -13,21 +13,21 @@ var inited = false
 // PlayerHandle 角色信息查询
 func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	if !inited {
-		initFactoey()
+		initFactory()
 		inited = true
 	}
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
 	var userAccount account.UserAccount
 	var players []account.UserPlayer
-	var operationP *commandOperation.OperationI
+	var operationP *commandoperation.OperationI
 	userAccountP, playersP, err := getAccountAndPlayers(update)
 	if err != nil || userAccountP == nil || playersP == nil {
 		return true, err
 	}
 	command := update.Message.Command()
-	if commandOperation.HaveNextStep(chatId) {
-		return true, commandOperation.GetStep(chatId).Run(update)
+	if commandoperation.HaveNextStep(chatId) {
+		return true, commandoperation.GetStep(chatId).Run(update)
 	}
 	if len(command) != 0 {
 		operationP = playerOperationFactory(command)
@@ -44,7 +44,7 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	}
 	if !operation.CheckRequirementsAndPrepare(update) {
 		msg, isMarkDown := operation.HintOnRequirementsFailed()
-		utils.SendMassage(chatId, msg, isMarkDown, &messageId)
+		utils.SendMessage(chatId, msg, isMarkDown, &messageId)
 		return true, nil
 	}
 	if len(players) > 1 {

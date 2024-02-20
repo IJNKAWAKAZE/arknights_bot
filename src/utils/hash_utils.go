@@ -1,4 +1,4 @@
-package player
+package utils
 
 import (
 	"math/rand"

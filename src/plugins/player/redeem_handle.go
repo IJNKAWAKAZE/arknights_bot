@@ -3,7 +3,7 @@ package player
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/commandOperation"
+	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
@@ -14,7 +14,7 @@ import (
 )
 
 type PlayerOperationRedeem struct {
-	commandOperation.OperationAbstract
+	commandoperation.OperationAbstract
 }
 
 // RedeemHandle CDK兑换

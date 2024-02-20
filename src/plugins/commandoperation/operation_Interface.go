@@ -1,4 +1,4 @@
-package commandOperation
+package commandoperation
 
 import (
 	"arknights_bot/plugins/account"
