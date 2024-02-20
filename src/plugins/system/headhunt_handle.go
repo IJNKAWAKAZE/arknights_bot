@@ -17,7 +17,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	messageId := update.Message.MessageID
 	param := update.Message.CommandArguments()
 	headhuntKey := fmt.Sprintf("headhuntFlag:%d", chatId)
-	messagecleaner.AddDelQueue(chatId, messageId, 60)
+	//messagecleaner.AddDelQueue(chatId, messageId, 60)
 
 	if param == "" {
 		if utils.RedisIsExists(headhuntKey) && utils.RedisGet(headhuntKey) == "stop" {

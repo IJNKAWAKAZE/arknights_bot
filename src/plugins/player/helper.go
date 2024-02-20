@@ -58,7 +58,7 @@ func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, pla
 	if err != nil {
 		log.Println("can not send massage ", err)
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueueFuncHash(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay, functionHash)
 	return nil
 }
 
