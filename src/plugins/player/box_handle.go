@@ -11,13 +11,6 @@ import (
 	"regexp"
 )
 
-type B struct {
-	Size   int    `json:"size"`
-	FileId string `json:"fileId"`
-}
-
-var BoxMap = make(map[int64]B)
-
 type PlayerOperationBox struct {
 	commandOperation.OperationAbstract
 }
@@ -46,36 +39,9 @@ func (_ PlayerOperationBox) Run(uid string, userAccount account.UserAccount, cha
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
-	// BOX有改变
-	if BoxMap[userAccount.UserNumber].Size != len(pic) {
-		sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "box.png"})
-		sendDocument.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendDocument)
-		if err == nil {
-			b := B{
-				Size:   len(pic),
-				FileId: msg.Document.FileID,
-			}
-			BoxMap[userAccount.UserNumber] = b
-		}
-		return true, nil
-	}
-	// BOX无改变
+
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "box.png"})
-	if BoxMap[userAccount.UserNumber].FileId != "" {
-		sendDocument.BaseFile = tgbotapi.BaseFile{
-			BaseChat: tgbotapi.BaseChat{
-				ChatID: chatId,
-			},
-			File: tgbotapi.FileID(BoxMap[userAccount.UserNumber].FileId),
-		}
-	}
 	sendDocument.ReplyToMessageID = messageId
-	msg, _ := bot.Arknights.Send(sendDocument)
-	b := B{
-		Size:   len(pic),
-		FileId: msg.Document.FileID,
-	}
-	BoxMap[userAccount.UserNumber] = b
+	bot.Arknights.Send(sendDocument)
 	return true, nil
 }

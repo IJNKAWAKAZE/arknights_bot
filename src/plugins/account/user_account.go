@@ -7,7 +7,6 @@ type UserAccount struct {
 	UserName        string    `json:"userName"`
 	UserNumber      int64     `json:"userNumber"`
 	HypergryphToken string    `json:"hypergryphToken"`
-	BToken          string    `json:"BToken"`
 	SklandToken     string    `json:"sklandToken"`
 	SklandCred      string    `json:"sklandCred"`
 	CreateTime      time.Time `json:"createTime" gorm:"autoCreateTime"`

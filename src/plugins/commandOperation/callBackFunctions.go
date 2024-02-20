@@ -79,7 +79,7 @@ func (op NextStepOperation) Run(update tgbotapi.Update) error {
 
 		_, err = op.NextOperation.Run(op.PlayerID, op.Account, chatId, update.Message)
 		if err != nil {
-			utils.SendMassage(chatId, "Something Wrong please start again", false, &messageID)
+			utils.SendMassage(chatId, "未知错误，请重试。", false, &messageID)
 		}
 		RemoveNextStep(chatId)
 	} else {

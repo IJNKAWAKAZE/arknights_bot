@@ -75,3 +75,24 @@ func UnbindPlayer(callBack tgbotapi.Update) (bool, error) {
 	bot.Arknights.Send(delMsg)
 	return true, nil
 }
+
+// ChooseBTokenPlayer 选择设置BToken角色
+func ChooseBTokenPlayer(callBack tgbotapi.Update) (bool, error) {
+	callbackQuery := callBack.CallbackQuery
+	data := callBack.CallbackData()
+	d := strings.Split(data, ",")
+
+	if len(d) < 2 {
+		return true, nil
+	}
+
+	userId := callbackQuery.From.ID
+	chatId := callbackQuery.Message.Chat.ID
+	messageId := callbackQuery.Message.MessageID
+	uid := d[1]
+
+	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+	bot.Arknights.Send(delMsg)
+	WaitBToken(chatId, userId, uid)
+	return true, nil
+}

@@ -34,20 +34,14 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/gacha?userId=%d&uid=%s", port, userAccount.UserNumber, uid), 3000)
 	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重设token。")
+		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
 
-	/*if len(pic)/1024 > 150 {
-		sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "gacha.png"})
-		sendDocument.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendDocument)
-		return true, nil
-	}*/
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
-	sendPhoto.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendPhoto)
+	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "gacha.png"})
+	sendDocument.ReplyToMessageID = messageId
+	bot.Arknights.Send(sendDocument)
 	return true, nil
 }

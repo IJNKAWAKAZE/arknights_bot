@@ -11,7 +11,7 @@ import (
 	"regexp"
 )
 
-// MissingHandle 为获取干员
+// MissingHandle 未获取干员
 type PlayerOperationMissing struct {
 	commandOperation.OperationAbstract
 }
@@ -41,7 +41,6 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 		return true, nil
 	}
 
-	// BOX无改变
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "missing.png"})
 	sendDocument.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendDocument)

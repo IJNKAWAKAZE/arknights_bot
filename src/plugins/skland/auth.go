@@ -147,7 +147,7 @@ func CheckToken(token string) error {
 	return err
 }
 
-// 检查B服token有效性
+// CheckBToken 检查BToken有效性
 func CheckBToken(token string) error {
 	req := HR().SetBody(gh.MS{"token": token})
 	_, err := HypergryphRequest[any](req, "POST", "/u8/user/info/v1/basic")

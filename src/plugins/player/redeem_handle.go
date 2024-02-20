@@ -36,11 +36,11 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 	var userPlayer account.UserPlayer
 	utils.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
 	if userPlayer.ServerName == "b服" || userPlayer.ServerName == "bilibili服" {
-		token = userAccount.BToken
+		token = userPlayer.BToken
 		channelId = "2"
 		// BToken为空设置BToken
 		if token == "" {
-			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("B服Token未设置，请先进行[设置](https://t.me/%s)。", viper.GetString("bot.name")))
+			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("BToken未设置，请先进行[设置](https://t.me/%s)。", viper.GetString("bot.name")))
 			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 			sendMessage.ReplyToMessageID = messageId
 			msg, _ := bot.Arknights.Send(sendMessage)

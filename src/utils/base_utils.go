@@ -121,6 +121,11 @@ func GetPlayersByUserId(userId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_player where user_number = ?", userId)
 }
 
+// GetBPlayersByUserId 查询绑定B服角色列表
+func GetBPlayersByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_player where user_number = ? and server_name in('b服','bilibili服')", userId)
+}
+
 // GetPlayerByUserId 查询绑定角色
 func GetPlayerByUserId(userId int64, uid string) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_player where user_number = ? and uid = ?", userId, uid)
@@ -258,23 +263,26 @@ func Screenshot(url string, waitTime float64) []byte {
 	}
 	browser, _ := pw.Chromium.Launch()
 	page, _ := browser.NewPage()
+	defer func() {
+		log.Println("关闭playwright")
+		page.Close()
+		browser.Close()
+		pw.Stop()
+	}()
 	log.Println("开始进行截图...")
 	page.Goto(url, playwright.PageGotoOptions{
 		WaitUntil: playwright.WaitUntilStateNetworkidle,
 	})
 	page.WaitForTimeout(waitTime)
 	locator, _ := page.Locator(".main")
-	screenshot, err := locator.Screenshot()
-	if err != nil {
-		log.Println(err)
-		page.Close()
-		browser.Close()
-		pw.Stop()
+	if v, _ := locator.IsVisible(); !v {
+		log.Println("元素未加载取消截图操作")
 		return nil
 	}
-	page.Close()
-	browser.Close()
-	pw.Stop()
+	screenshot, err := locator.Screenshot()
+	if err != nil {
+		return nil
+	}
 	log.Println("截图完成...")
 	return screenshot
 }

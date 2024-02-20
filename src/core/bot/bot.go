@@ -24,6 +24,7 @@ func Serve() {
 	bot.TeleBot.NewCallBackProcessor("verify", gatekeeper.CallBackData)
 	bot.TeleBot.NewCallBackProcessor("bind", account.ChoosePlayer)
 	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
+	bot.TeleBot.NewCallBackProcessor("setbtoken", account.ChooseBTokenPlayer)
 	bot.TeleBot.NewCallBackProcessor("sign", sign.SignPlayer)
 	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
 	bot.TeleBot.NewCallBackProcessor("report", system.Report)

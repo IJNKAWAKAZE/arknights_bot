@@ -72,7 +72,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/headhunt?userId=%d", port, userId), 0)
 	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "失败啦，啊哈哈哈！")
+		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
