@@ -152,7 +152,7 @@ func CheckBToken(token string) error {
 	req := HR().SetBody(gh.MS{"token": token})
 	_, err := HypergryphRequest[any](req, "POST", "/u8/user/info/v1/basic")
 	if err != nil {
-		return fmt.Errorf("token已失效请重新登录！")
+		return fmt.Errorf("btoken已失效请重新登录！")
 	}
 	return err
 }
