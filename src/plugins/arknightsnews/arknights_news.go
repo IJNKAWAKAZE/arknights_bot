@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 )
 
 type Payload struct {
@@ -60,15 +59,16 @@ func BilibiliNews() func() {
 			var mediaGroup tgbotapi.MediaGroupConfig
 			var media []interface{}
 			mediaGroup.ChatID = group
-			for i, pic := range pics {
-				if strings.HasSuffix(pic.Url, ".gif") {
-					var inputVideo tgbotapi.InputMediaVideo
-					inputVideo.Media = tgbotapi.FileBytes{Bytes: convert2Video(pic.Url, i)}
-					inputVideo.Type = "video"
-					media = append(media, inputVideo)
-					continue
+
+			d := false
+			for _, p := range pics {
+				if p.Height > 3000 {
+					d = true
 				}
-				if pic.Height > 3000 {
+			}
+
+			for i, pic := range pics {
+				if d {
 					var inputDocument tgbotapi.InputMediaDocument
 					inputDocument.Media = tgbotapi.FileURL(pic.Url)
 					inputDocument.Type = "document"
@@ -77,6 +77,13 @@ func BilibiliNews() func() {
 					}
 					media = append(media, inputDocument)
 				} else {
+					if strings.HasSuffix(pic.Url, ".gif") {
+						var inputVideo tgbotapi.InputMediaVideo
+						inputVideo.Media = tgbotapi.FileBytes{Bytes: convert2Video(pic.Url, i)}
+						inputVideo.Type = "video"
+						media = append(media, inputVideo)
+						continue
+					}
 					var inputPhoto tgbotapi.InputMediaPhoto
 					inputPhoto.Media = tgbotapi.FileURL(pic.Url)
 					inputPhoto.Type = "photo"
@@ -113,23 +120,13 @@ func convert2Video(url string, i int) []byte {
 func ParseBilibiliDynamic() (string, []Pic) {
 	var text string
 	var pics []Pic
-	b3 := ""
-	b4 := ""
-	if utils.RedisIsExists("bili:b3") && utils.RedisIsExists("bili:b4") {
-		b3 = utils.RedisGet("bili:b3")
-		b4 = utils.RedisGet("bili:b4")
-	} else {
-		b3, b4, err := generateBuvid()
-		if err != nil {
-			return text, pics
-		}
-		err = registerBuvid(b3, b4)
-		if err != nil {
-			return text, pics
-		}
-		// 保存B3,4
-		utils.RedisSet("bili:b3", b3, time.Hour*24)
-		utils.RedisSet("bili:b4", b4, time.Hour*24)
+	b3, b4, err := generateBuvid()
+	if err != nil {
+		return text, pics
+	}
+	err = registerBuvid(b3, b4)
+	if err != nil {
+		return text, pics
 	}
 	url := viper.GetString("api.bilibili_dynamic")
 	resBody, err := requestBili("GET", fmt.Sprintf("buvid3=%s; buvid4=%s", b3, b4), url, nil)
