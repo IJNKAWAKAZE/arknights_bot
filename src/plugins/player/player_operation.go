@@ -25,7 +25,6 @@ func initFactory() {
 	}
 }
 func playerOperationFactory(operation string) *commandoperation.OperationI {
-
 	result, ok := playerOperationMap[operation]
 	if !ok {
 		return nil

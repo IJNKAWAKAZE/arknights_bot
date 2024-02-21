@@ -8,18 +8,25 @@
         }
         .main {
             position: absolute;
-            width: 1175px;
-            height: 340px;
+            width: 1024px;
+            height: 576px;
             padding-left: 25px;
-            background-color: #2b323c;
+            background-image: url("/assets/headhunt/bg.png");
+            background-size: contain;
+        }
+        .bg {
+            display: inline-block;
+            height: 270px;
+            margin-top: 130px;
+            padding-top: 100px;
+            background-size: cover;
         }
         .operator {
             display: inline-flex;
             justify-content: center;
-            margin-top: 50px;
         }
         .lh {
-            width: 110px;
+            width: 95px;
         }
         .profession {
             position: absolute;
@@ -34,7 +41,7 @@
 <body>
 <div class="main">
     {{range .}}
-    <div style="display: inline-block;background-image: url('/assets/headhunt/back_{{.Rarity}}.png');height: 320px;">
+    <div class="bg" style="background-image: url('/assets/headhunt/back_{{.Rarity}}.png');">
         <div class="operator">
             <img class="lh" src="{{.ThumbURL}}"/>
             <img class="profession" src="/assets/headhunt/{{.Profession}}.png"/>
