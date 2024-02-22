@@ -72,5 +72,6 @@ func Serve() {
 
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)
+	bot.TeleBot.NewCommandProcessor("news", system.NewsHandle)
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }

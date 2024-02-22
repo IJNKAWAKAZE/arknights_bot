@@ -87,6 +87,11 @@ func SaveJoined(message *tgbotapi.Message) {
 	bot.DBEngine.Table("group_joined").Create(&groupJoined)
 }
 
+// GetJoinedByChatId 查询入群记录
+func GetJoinedByChatId(chatId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from group_joined where group_number = ? limit 1", chatId)
+}
+
 // IsAdmin 是否管理员
 func IsAdmin(chatId, userId int64) bool {
 	getChatMemberConfig := tgbotapi.GetChatMemberConfig{
