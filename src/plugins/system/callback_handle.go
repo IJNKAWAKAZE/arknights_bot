@@ -23,14 +23,7 @@ func Report(callBack tgbotapi.Update) (bool, error) {
 	messageId := callbackQuery.Message.MessageID
 	target, _ := strconv.ParseInt(d[2], 10, 64)
 
-	getChatMemberConfig := tgbotapi.GetChatMemberConfig{
-		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
-			ChatID: chatId,
-			UserID: userId,
-		},
-	}
-
-	if !utils.IsAdmin(getChatMemberConfig) {
+	if !utils.IsAdmin(chatId, userId) {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
 		bot.Arknights.Send(answer)
 		return true, nil

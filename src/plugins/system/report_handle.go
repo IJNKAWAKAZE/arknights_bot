@@ -20,20 +20,11 @@ func ReportHandle(update tgbotapi.Update) (bool, error) {
 
 	if message.ReplyToMessage != nil {
 		replyToMessage := message.ReplyToMessage
-
 		replyMessageId := replyToMessage.MessageID
-
 		target := replyToMessage.From.ID
 		name := utils.GetFullName(replyToMessage.From)
 
-		getChatMemberConfig := tgbotapi.GetChatMemberConfig{
-			ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
-				ChatID: chatId,
-				UserID: target,
-			},
-		}
-
-		if utils.IsAdmin(getChatMemberConfig) {
+		if utils.IsAdmin(chatId, target) {
 			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
 			sendMessage.ReplyToMessageID = messageId
 			msg, _ := bot.Arknights.Send(sendMessage)
@@ -52,8 +43,7 @@ func ReportHandle(update tgbotapi.Update) (bool, error) {
 
 		var text bytes.Buffer
 		text.WriteString(fmt.Sprintf("被举报人：[%s](tg://user?id=%d)\n", utils.EscapesMarkdownV2(name), target))
-		text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/%s/%d)\n", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
-		text.WriteString("召唤管理：")
+		text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/%s/%d)", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
 		charAdmins, _ := bot.Arknights.GetChatAdministrators(getAdmins)
 		var admins []int64
 		for _, admin := range charAdmins {
@@ -62,8 +52,8 @@ func ReportHandle(update tgbotapi.Update) (bool, error) {
 			}
 		}
 
-		for i, admin := range admins {
-			text.WriteString(fmt.Sprintf("[%d](tg://user?id=%d) ", i+1, admin))
+		for _, admin := range admins {
+			text.WriteString(fmt.Sprintf("[\u200b](tg://user?id=%d) ", admin))
 		}
 
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(

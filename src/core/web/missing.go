@@ -83,9 +83,15 @@ func Missing(r *gin.Engine) {
 			}
 		}
 
-		// 按稀有度排序
+		// 按稀有度、职业排序
 		sort.Slice(chars, func(i, j int) bool {
-			return chars[i].Rarity > chars[j].Rarity
+			if chars[i].Rarity > chars[j].Rarity {
+				return true
+			}
+			if chars[i].Rarity < chars[j].Rarity {
+				return false
+			}
+			return chars[i].Profession > chars[j].Profession
 		})
 
 		missingInfo.Name = playerData.Status.Name

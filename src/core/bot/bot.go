@@ -24,6 +24,7 @@ func Serve() {
 	bot.TeleBot.NewCallBackProcessor("verify", gatekeeper.CallBackData)
 	bot.TeleBot.NewCallBackProcessor("bind", account.ChoosePlayer)
 	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
+	bot.TeleBot.NewCallBackProcessor("setbtoken", account.ChooseBTokenPlayer)
 	bot.TeleBot.NewCallBackProcessor("sign", sign.SignPlayer)
 	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
 	bot.TeleBot.NewCallBackProcessor("report", system.Report)
@@ -45,13 +46,13 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.PlayerHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.ImportGachaHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.ExportGachaHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.PlayerHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.PlayerHandle)
 
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 	bot.TeleBot.NewWaitMessageProcessor("bToken", account.SetBToken)
 	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
-	bot.TeleBot.NewWaitMessageProcessor("importGacha", player.ImportGacha)
+	bot.TeleBot.NewWaitMessageProcessor("importGacha", player.PlayerHandle)
 
 	// 普通
 	bot.TeleBot.NewCommandProcessor("help", system.HelpHandle)
@@ -71,5 +72,6 @@ func Serve() {
 
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)
+	bot.TeleBot.NewCommandProcessor("news", system.NewsHandle)
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }

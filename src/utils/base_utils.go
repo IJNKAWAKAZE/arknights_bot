@@ -87,8 +87,19 @@ func SaveJoined(message *tgbotapi.Message) {
 	bot.DBEngine.Table("group_joined").Create(&groupJoined)
 }
 
+// GetJoinedByChatId 查询入群记录
+func GetJoinedByChatId(chatId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from group_joined where group_number = ? limit 1", chatId)
+}
+
 // IsAdmin 是否管理员
-func IsAdmin(getChatMemberConfig tgbotapi.GetChatMemberConfig) bool {
+func IsAdmin(chatId, userId int64) bool {
+	getChatMemberConfig := tgbotapi.GetChatMemberConfig{
+		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+			ChatID: chatId,
+			UserID: userId,
+		},
+	}
 	memberInfo, _ := bot.Arknights.GetChatMember(getChatMemberConfig)
 	if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
 		return false
@@ -113,6 +124,11 @@ func GetAccountByUserId(userId int64) *gorm.DB {
 // GetPlayersByUserId 查询绑定角色列表
 func GetPlayersByUserId(userId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_player where user_number = ?", userId)
+}
+
+// GetBPlayersByUserId 查询绑定B服角色列表
+func GetBPlayersByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_player where user_number = ? and server_name in('b服','bilibili服')", userId)
 }
 
 // GetPlayerByUserId 查询绑定角色
@@ -140,6 +156,11 @@ func GetJoinedGroups() []int64 {
 // GetUserGacha 获取角色抽卡记录
 func GetUserGacha(userId int64, uid string) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_gacha where user_number = ? and uid = ? order by ts desc, pool_order desc", userId, uid)
+}
+
+// GetUserPoolCount 获取角色卡池水位
+func GetUserPoolCount(userId int64, uid string) *gorm.DB {
+	return bot.DBEngine.Raw("select pool_name, count(1) pool_count, max(ts) ts from user_gacha where user_number = ? and uid = ? group by pool_name order by ts", userId, uid)
 }
 
 // RedisSet redis存值
@@ -247,23 +268,26 @@ func Screenshot(url string, waitTime float64) []byte {
 	}
 	browser, _ := pw.Chromium.Launch()
 	page, _ := browser.NewPage()
+	defer func() {
+		log.Println("关闭playwright")
+		page.Close()
+		browser.Close()
+		pw.Stop()
+	}()
 	log.Println("开始进行截图...")
 	page.Goto(url, playwright.PageGotoOptions{
 		WaitUntil: playwright.WaitUntilStateNetworkidle,
 	})
 	page.WaitForTimeout(waitTime)
 	locator, _ := page.Locator(".main")
-	screenshot, err := locator.Screenshot()
-	if err != nil {
-		log.Println(err)
-		page.Close()
-		browser.Close()
-		pw.Stop()
+	if v, _ := locator.IsVisible(); !v {
+		log.Println("元素未加载取消截图操作")
 		return nil
 	}
-	page.Close()
-	browser.Close()
-	pw.Stop()
+	screenshot, err := locator.Screenshot()
+	if err != nil {
+		return nil
+	}
 	log.Println("截图完成...")
 	return screenshot
 }
