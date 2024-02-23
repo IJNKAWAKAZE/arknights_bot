@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var Profession = make(map[string]string)
@@ -45,9 +46,28 @@ func UpdateDataSourceRunner() {
 	doc, _ := goquery.NewDocumentFromReader(response.Body)
 	doc.Find("#filter-data div").Each(func(i int, selection *goquery.Selection) {
 		var operator utils.Operator
-		operator.Name = selection.Nodes[0].Attr[0].Val
-		operator.Profession = Profession[selection.Nodes[0].Attr[1].Val]
-		operator.Rarity, _ = strconv.Atoi(selection.Nodes[0].Attr[2].Val)
+		attrs := selection.Nodes[0].Attr
+		operator.Name = attrs[0].Val
+		operator.Profession = Profession[attrs[1].Val]
+		operator.Rarity, _ = strconv.Atoi(attrs[2].Val)
+		operator.Race = attrs[6].Val
+		operator.NameEn = attrs[7].Val
+		operator.NameJa = attrs[8].Val
+		operator.Code = attrs[9].Val
+		operator.HP = attrs[10].Val
+		operator.ATK = attrs[11].Val
+		operator.DEF = attrs[12].Val
+		operator.Res = attrs[13].Val
+		operator.ReDeploy = attrs[14].Val
+		c := strings.Split(attrs[15].Val, "→")
+		operator.Cost = c[len(c)-1]
+		b := strings.Split(attrs[16].Val, "→")
+		operator.Block = b[len(b)-1]
+		operator.Interval = attrs[17].Val
+		operator.Sex = attrs[18].Val
+		operator.Tags = attrs[20].Val
+		operator.ObtainMethod = attrs[21].Val
+		operator.Nation = attrs[32].Val
 		// 头像
 		paintingName := fmt.Sprintf("头像_%s.png", operator.Name)
 		m := utils.Md5(paintingName)
