@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/tidwall/gjson"
 	"strings"
 )
 
@@ -26,25 +25,24 @@ type Operator struct {
 	Block        string   `json:"block"`        // 阻挡数
 	Interval     string   `json:"interval"`     // 攻击间隔
 	Sex          string   `json:"sex"`          // 性别
-	Nation       string   `json:"nation"`       // 阵营
+	Nation       string   `json:"nation"`       // 所属
 	ObtainMethod string   `json:"obtainMethod"` // 获取方式
 	Tags         string   `json:"tags"`         // 标签
 }
 
 var operatorMap = make(map[string]Operator)
 
-func GetOperators() []gjson.Result {
+func GetOperators() []Operator {
+	var operators []Operator
 	operatorsJson := RedisGet("data_source")
-	return gjson.Parse(operatorsJson).Array()
+	json.Unmarshal([]byte(operatorsJson), &operators)
+	return operators
 }
 
 func GetOperatorByName(name string) Operator {
 	if len(operatorMap) == 0 {
 		for _, op := range GetOperators() {
-			var operator Operator
-			opName := op.Get("name").String()
-			json.Unmarshal([]byte(op.String()), &operator)
-			operatorMap[opName] = operator
+			operatorMap[op.Name] = op
 		}
 	}
 	return operatorMap[name]
@@ -53,10 +51,8 @@ func GetOperatorByName(name string) Operator {
 func GetOperatorsByName(name string) []Operator {
 	var operatorList []Operator
 	for _, op := range GetOperators() {
-		if strings.Contains(strings.ToLower(op.Get("name").String()), strings.ToLower(name)) {
-			var operator Operator
-			json.Unmarshal([]byte(op.String()), &operator)
-			operatorList = append(operatorList, operator)
+		if strings.Contains(strings.ToLower(op.Name), strings.ToLower(name)) {
+			operatorList = append(operatorList, op)
 		}
 	}
 	return operatorList

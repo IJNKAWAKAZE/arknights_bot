@@ -49,11 +49,11 @@ func VerifyMember(message *tgbotapi.Message) {
 				}
 			}
 			operator := operatorsPool[operatorIndex]
-			shipName := operator.Get("name").String()
-			painting := operator.Get("skins").Array()[0].String()
+			operatorName := operator.Name
+			painting := operator.Skins[0]
 			if painting != "" {
 				options = append(options, utils.Operator{
-					Name:     shipName,
+					Name:     operatorName,
 					ThumbURL: painting,
 				})
 			} else {

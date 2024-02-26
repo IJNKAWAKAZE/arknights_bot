@@ -69,13 +69,13 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 			}
 		}
 		operator := operatorsPool[operatorIndex]
-		shipName := operator.Get("name").String()
-		skins := operator.Get("skins").Array()
+		operatorName := operator.Name
+		skins := operator.Skins
 		rsk, _ := rand.Int(rand.Reader, big.NewInt(int64(len(skins))))
-		painting := skins[rsk.Int64()].String()
+		painting := skins[rsk.Int64()]
 		if painting != "" {
 			options = append(options, utils.Operator{
-				Name:     shipName,
+				Name:     operatorName,
 				ThumbURL: painting,
 			})
 		} else {
