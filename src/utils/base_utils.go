@@ -259,7 +259,7 @@ func RedisDelSetItem(key string, val string) {
 }
 
 // Screenshot 屏幕截图
-func Screenshot(url string, waitTime float64) []byte {
+func Screenshot(url string, waitTime float64, scale float64) []byte {
 	pw, err := playwright.Run()
 	if err != nil {
 		log.Println("未检测到playwright，开始自动安装...")
@@ -267,7 +267,7 @@ func Screenshot(url string, waitTime float64) []byte {
 		pw, _ = playwright.Run()
 	}
 	browser, _ := pw.Chromium.Launch()
-	page, _ := browser.NewPage()
+	page, _ := browser.NewPage(playwright.BrowserNewContextOptions{DeviceScaleFactor: &scale})
 	defer func() {
 		log.Println("关闭playwright")
 		page.Close()
@@ -284,7 +284,7 @@ func Screenshot(url string, waitTime float64) []byte {
 		log.Println("元素未加载取消截图操作")
 		return nil
 	}
-	screenshot, err := locator.Screenshot()
+	screenshot, err := locator.Screenshot(playwright.LocatorScreenshotOptions{Type: playwright.ScreenshotTypeJpeg})
 	if err != nil {
 		return nil
 	}

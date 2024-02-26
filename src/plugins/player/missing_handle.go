@@ -33,7 +33,7 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 	}
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/missing?userId=%d&uid=%s&param=%s", port, userAccount.UserNumber, uid, param), 0)
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/missing?userId=%d&uid=%s&param=%s", port, userAccount.UserNumber, uid, param), 0, 1.5)
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重设token。")
 		sendMessage.ReplyToMessageID = messageId
@@ -41,7 +41,7 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 		return true, nil
 	}
 
-	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "missing.png"})
+	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "missing.jpg"})
 	sendDocument.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendDocument)
 	return true, nil

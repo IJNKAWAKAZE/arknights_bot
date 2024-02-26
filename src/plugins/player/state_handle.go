@@ -20,7 +20,7 @@ func (_ PlayerOperationState) Run(uid string, userAccount account.UserAccount, c
 	bot.Arknights.Send(sendAction)
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/state?userId=%d&uid=%s", port, userAccount.UserNumber, uid), 0)
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/state?userId=%d&uid=%s", port, userAccount.UserNumber, uid), 0, 1)
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重设token。")
 		sendMessage.ReplyToMessageID = messageId
