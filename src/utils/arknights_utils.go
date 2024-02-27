@@ -25,7 +25,7 @@ type Operator struct {
 	Block        string   `json:"block"`        // 阻挡数
 	Interval     string   `json:"interval"`     // 攻击间隔
 	Sex          string   `json:"sex"`          // 性别
-	Nation       string   `json:"nation"`       // 所属
+	Logo         string   `json:"logo"`         // 所属
 	ObtainMethod string   `json:"obtainMethod"` // 获取方式
 	Tags         string   `json:"tags"`         // 标签
 }

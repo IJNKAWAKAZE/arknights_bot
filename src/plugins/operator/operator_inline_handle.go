@@ -20,7 +20,7 @@ func InlineOperator(inlineQuery *tgbotapi.InlineQuery) {
 			Description: "查询" + operator.Name,
 			ThumbURL:    operator.ThumbURL,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
-				Text: "https://prts.wiki/w/" + operator.Name,
+				Text: "/operator " + operator.Name,
 			},
 		}
 		inlineQueryResults = append(inlineQueryResults, queryResult)

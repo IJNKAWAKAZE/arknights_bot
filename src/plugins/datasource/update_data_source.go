@@ -50,6 +50,7 @@ func UpdateDataSourceRunner() {
 		operator.Name = attrs[0].Val
 		operator.Profession = Profession[attrs[1].Val]
 		operator.Rarity, _ = strconv.Atoi(attrs[2].Val)
+		operator.Logo = attrs[3].Val
 		operator.Race = attrs[6].Val
 		operator.NameEn = attrs[7].Val
 		operator.NameJa = attrs[8].Val
@@ -67,7 +68,6 @@ func UpdateDataSourceRunner() {
 		operator.Sex = attrs[18].Val
 		operator.Tags = attrs[20].Val
 		operator.ObtainMethod = attrs[21].Val
-		operator.Nation = attrs[32].Val
 		// 头像
 		paintingName := fmt.Sprintf("头像_%s.png", operator.Name)
 		m := utils.Md5(paintingName)

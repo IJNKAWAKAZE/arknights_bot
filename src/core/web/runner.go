@@ -18,6 +18,7 @@ func Start() {
 	Card(r)
 	Base(r)
 	Headhunt(r)
+	Operator(r)
 	templates := []string{
 		"./template/Help.tmpl",
 		"./template/State.tmpl",
@@ -27,6 +28,7 @@ func Start() {
 		"./template/Card.tmpl",
 		"./template/Base.tmpl",
 		"./template/Headhunt.tmpl",
+		"./template/Operator.tmpl",
 	}
 	r.LoadHTMLFiles(templates...)
 	port := viper.GetString("http.port")

@@ -23,7 +23,6 @@ func UpdateHandle(update tgbotapi.Update) (bool, error) {
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		datasource.UpdateDataSourceRunner()
 		sendMessage = tgbotapi.NewMessage(chatId, "数据源更新结束")
-		sendMessage.ReplyToMessageID = messageId
 		msg, _ = bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return true, nil
