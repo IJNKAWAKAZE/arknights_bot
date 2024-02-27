@@ -75,16 +75,22 @@ func ParseOperator(name string) Operator {
 		doc, _ := goquery.NewDocumentFromReader(response.Body)
 
 		// 职业分支
-		doc.Find(".logo td").Each(func(i int, selection *goquery.Selection) {
-			if i == 0 {
-				operator.ProfessionBranch.Name = strings.ReplaceAll(selection.Text(), "\n", "")
-				paintingName := fmt.Sprintf("职业分支图标_%s.png", operator.ProfessionBranch.Name)
-				m := utils.Md5(paintingName)
-				path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
-				operator.ProfessionBranch.Pic = path + paintingName
-			}
-			if i == 1 {
-				operator.ProfessionBranch.Desc = strings.ReplaceAll(selection.Text(), "\n", "")
+		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
+			if selection.Text() == "特性" {
+				selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
+					tds := selection.Find("td")
+					operator.ProfessionBranch.Name = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
+					paintingName := fmt.Sprintf("职业分支图标_%s.png", operator.ProfessionBranch.Name)
+					m := utils.Md5(paintingName)
+					path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
+					operator.ProfessionBranch.Pic = path + paintingName
+					tds.Each(func(j int, selection *goquery.Selection) {
+						if _, b := selection.Attr("style"); !b {
+							operator.ProfessionBranch.Desc = strings.ReplaceAll(selection.Text(), "\n", "")
+							fmt.Println(j, "-", selection.Text())
+						}
+					})
+				})
 			}
 		})
 
