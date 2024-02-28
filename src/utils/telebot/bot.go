@@ -4,6 +4,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"strings"
+	"time"
 )
 
 var WaitMessage = make(map[int64]interface{})
@@ -11,6 +12,8 @@ var WaitMessage = make(map[int64]interface{})
 type Bot struct {
 	matchProcessorSlice []*matchProcessor
 }
+
+var now = time.Now().Unix()
 
 type matchProcessor struct {
 	MatchFunc func(tgbotapi.Update) bool
@@ -78,6 +81,9 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 		select {
 		case msg := <-updates:
 			//log.Printf("Bot.Run%#v\n", msg)
+			if msg.Message.Time().Unix() < now {
+				continue
+			}
 			for i := range b.matchProcessorSlice {
 				if b.matchProcessorSlice[i].MatchFunc(msg) {
 					log.Println("Bot.Match", i)
