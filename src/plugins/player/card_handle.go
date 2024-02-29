@@ -33,6 +33,8 @@ func (_ PlayerOperationCard) Run(uid string, userAccount account.UserAccount, ch
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
+	sendPhoto.Caption = "点击复制UID:`" + uid + "`"
+	sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendPhoto)
 	return true, nil
 }

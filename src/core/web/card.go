@@ -14,6 +14,7 @@ import (
 type PlayerCard struct {
 	Name              string `json:"name"`
 	Uid               string `json:"uid"`
+	ServerName        string `json:"serverName"`
 	Level             int    `json:"level"`
 	RegTime           int    `json:"regTime"`
 	MainStageProgress string `json:"mainStageProgress"`
@@ -49,6 +50,9 @@ func Card(r *gin.Engine) {
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		utils.GetAccountByUserId(userId).Scan(&userAccount)
+		var userPlayer account.UserPlayer
+		utils.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
+		playerCard.ServerName = userPlayer.ServerName
 		skAccount.Hypergryph.Token = userAccount.HypergryphToken
 		skAccount.Skland.Token = userAccount.SklandToken
 		skAccount.Skland.Cred = userAccount.SklandCred
