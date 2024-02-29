@@ -49,14 +49,15 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 		return true, nil
 	}
 
+	key := fmt.Sprintf("headhuntTimes:%d", userId)
 	if !update.Message.Chat.IsPrivate() {
-		key := fmt.Sprintf("headhuntTimes:%d", userId)
 		if !utils.RedisIsExists(key) {
 			utils.RedisSet(key, "1", 0)
 		} else {
 			times, _ := strconv.Atoi(utils.RedisGet(key))
 			headhuntTimes := bot.HeadhuntTimes
 			if times == headhuntTimes {
+				messagecleaner.AddDelQueue(chatId, messageId, 60)
 				sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
 				sendMessage.ReplyToMessageID = messageId
 				msg, _ := bot.Arknights.Send(sendMessage)
@@ -76,6 +77,8 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage.ReplyToMessageID = messageId
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
+		times, _ := strconv.Atoi(utils.RedisGet(key))
+		utils.RedisSet(key, strconv.Itoa(times-1), 0)
 		return true, nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})

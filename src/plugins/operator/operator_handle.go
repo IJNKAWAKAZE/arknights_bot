@@ -7,6 +7,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"log"
 )
 
 // OperatorHandle 干员查询
@@ -44,6 +45,19 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 
+	fileId := ""
+	key := "operator:" + name
+	if utils.RedisIsExists(key) {
+		fileId = utils.RedisGet(key)
+	}
+
+	if fileId != "" {
+		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(fileId))
+		sendPhoto.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendPhoto)
+		return true, nil
+	}
+
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/operator?name=%s", port, name), 0, 1.5)
 	if pic == nil {
@@ -56,7 +70,6 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 	url := viper.GetString("api.wiki") + name
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-
 			tgbotapi.InlineKeyboardButton{
 				Text: "查看详情",
 				URL:  &url,
@@ -65,6 +78,11 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 	)
 	sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 	sendPhoto.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendPhoto)
+	msg, err := bot.Arknights.Send(sendPhoto)
+	if err != nil {
+		log.Println(err)
+		return true, err
+	}
+	utils.RedisSet(key, msg.Photo[0].FileID, 0)
 	return true, nil
 }

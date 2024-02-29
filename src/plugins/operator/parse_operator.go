@@ -2,7 +2,6 @@ package operator
 
 import (
 	"arknights_bot/utils"
-	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
@@ -61,11 +60,6 @@ type Skill struct {
 // ParseOperator 解析干员数据
 func ParseOperator(name string) Operator {
 	var operator Operator
-	key := "operator:" + name
-	if utils.RedisIsExists(key) {
-		json.Unmarshal([]byte(utils.RedisGet(key)), &operator)
-		return operator
-	}
 	api := viper.GetString("api.wiki")
 	response, _ := http.Get(api + name)
 	op := utils.GetOperatorByName(name)
@@ -235,7 +229,5 @@ func ParseOperator(name string) Operator {
 			}
 		})
 	}
-	val, _ := json.Marshal(operator)
-	utils.RedisSet(key, val, 0)
 	return operator
 }

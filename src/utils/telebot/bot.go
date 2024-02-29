@@ -81,7 +81,7 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 		select {
 		case msg := <-updates:
 			//log.Printf("Bot.Run%#v\n", msg)
-			if msg.Message.Time().Unix() < now {
+			if msg.Message != nil && msg.Message.Time().Unix() < now {
 				continue
 			}
 			for i := range b.matchProcessorSlice {

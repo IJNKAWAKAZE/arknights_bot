@@ -73,5 +73,7 @@ func Serve() {
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)
 	bot.TeleBot.NewCommandProcessor("news", system.NewsHandle)
+	bot.TeleBot.NewCommandProcessor("clear", system.ClearHandle)
+	bot.TeleBot.NewCommandProcessor("kill", system.KillHandle)
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }

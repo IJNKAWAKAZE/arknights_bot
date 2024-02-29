@@ -22,7 +22,8 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 	messageId := message.MessageID
 	res := utils.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
 	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "不存在抽卡记录，请先同步！")
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("不存在抽卡记录，请先[同步](https://t.me/%s)。", viper.GetString("bot.name")))
+		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
 		return true, nil
