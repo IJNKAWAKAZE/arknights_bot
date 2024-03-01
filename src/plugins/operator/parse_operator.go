@@ -2,6 +2,7 @@ package operator
 
 import (
 	"arknights_bot/utils"
+	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
@@ -12,54 +13,59 @@ import (
 )
 
 type Operator struct {
-	OP               utils.Operator   `json:"op"`
-	Painting         string           `json:"painting"`
-	AttackRange      template.HTML    `json:"attackRange"`
-	ProfessionBranch ProfessionBranch `json:"professionBranch"`
-	Potentials       []Potential      `json:"potentials"`
-	Talents          []Talent         `json:"talents"`
-	BuildingSkills   []BuildingSkill  `json:"buildingSkills"`
-	Skills           []Skill          `json:"skills"`
+	OP               utils.Operator   `json:"op"`               // 基本信息
+	Painting         string           `json:"painting"`         // 立绘
+	AttackRange      template.HTML    `json:"attackRange"`      // 攻击范围
+	ProfessionBranch ProfessionBranch `json:"professionBranch"` // 职业分支
+	Potentials       []Potential      `json:"potentials"`       // 潜能
+	Talents          []Talent         `json:"talents"`          // 天赋
+	BuildingSkills   []BuildingSkill  `json:"buildingSkills"`   // 基建技能
+	Skills           []Skill          `json:"skills"`           // 技能
 }
 
 type ProfessionBranch struct {
-	Name string `json:"name"`
-	Pic  string `json:"pic"`
-	Desc string `json:"desc"`
+	Name string `json:"name"` // 名称
+	Pic  string `json:"pic"`  // 图片
+	Desc string `json:"desc"` // 描述
 }
 
 type Potential struct {
-	Rank int    `json:"rank"`
-	Desc string `json:"desc"`
+	Rank int    `json:"rank"` // 等级
+	Desc string `json:"desc"` // 描述
 }
 
 type Talent struct {
-	Evolve string `json:"evolve"`
-	Name   string `json:"name"`
-	Desc   string `json:"desc"`
+	Evolve string `json:"evolve"` // 精英级别
+	Name   string `json:"name"`   // 名称
+	Desc   string `json:"desc"`   // 描述
 }
 
 type BuildingSkill struct {
-	Evolve string `json:"evolve"`
-	Icon   string `json:"icon"`
-	Name   string `json:"name"`
-	Desc   string `json:"desc"`
+	Evolve string `json:"evolve"` // 精英级别
+	Icon   string `json:"icon"`   // 图标
+	Name   string `json:"name"`   // 名称
+	Desc   string `json:"desc"`   // 描述
 }
 
 type Skill struct {
-	Icon       string          `json:"icon"`
-	Name       string          `json:"name"`
-	Desc       string          `json:"desc"`
-	SkillRange template.HTML   `json:"skillRange"`
-	SpType     []template.HTML `json:"spType"`
-	SpInit     string          `json:"spInit"`
-	SpCost     string          `json:"spCost"`
-	Duration   string          `json:"duration"`
+	Icon       string          `json:"icon"`       // 图标
+	Name       string          `json:"name"`       // 名称
+	Desc       string          `json:"desc"`       // 描述
+	SkillRange template.HTML   `json:"skillRange"` // 技能范围
+	SpType     []template.HTML `json:"spType"`     // 回费类型
+	SpInit     string          `json:"spInit"`     // 初始费用
+	SpCost     string          `json:"spCost"`     // 所需费用
+	Duration   string          `json:"duration"`   // 持续时间
 }
 
 // ParseOperator 解析干员数据
 func ParseOperator(name string) Operator {
 	var operator Operator
+	key := "operator:" + name
+	if utils.RedisIsExists(key) {
+		json.Unmarshal([]byte(utils.RedisGet(key)), &operator)
+		return operator
+	}
 	api := viper.GetString("api.wiki")
 	response, _ := http.Get(api + name)
 	op := utils.GetOperatorByName(name)
@@ -229,5 +235,7 @@ func ParseOperator(name string) Operator {
 			}
 		})
 	}
+	val, _ := json.Marshal(operator)
+	utils.RedisSet(key, val, 0)
 	return operator
 }

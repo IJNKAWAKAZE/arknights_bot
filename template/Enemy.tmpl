@@ -1,0 +1,176 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>敌人信息</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            background-color: #8c8c8c;
+            width: 656px;
+            height: auto;
+            position: absolute;
+        }
+        #base {
+            width: 656px;
+            border-spacing: 0;
+        }
+        #base td {
+            text-align: center;
+            border: solid 1px black;
+        }
+        #name {
+            background-color: red;
+            color: white;
+            font-size: 25px;
+            font-weight: 600;
+        }
+        .level {
+            width: 656px;
+            border-spacing: 0;
+        }
+        .level td {
+            text-align: center;
+            border: solid 1px black;
+        }
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        a {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <table id="base">
+        <tr>
+            <td colspan="8" id="name">{{.Name}}</td>
+        </tr>
+        <tr>
+            <td><img src="{{.Pic}}"/></td>
+            <td colspan="7">{{.Desc}}</td>
+        </tr>
+        <tr>
+            <td colspan="2">种类</td>
+            <td colspan="2">地位级别</td>
+            <td colspan="2">攻击方式</td>
+            <td colspan="2">行动方式</td>
+        </tr>
+        <tr>
+            <td colspan="2">{{.EnemyRace}}</td>
+            <td colspan="2">{{.EnemyLevel}}</td>
+            <td colspan="2">{{.AttackType}}</td>
+            <td colspan="2">{{.Motion}}</td>
+        </tr>
+        <tr>
+            <td colspan="2">耐久</td>
+            <td colspan="2">攻击</td>
+            <td colspan="2">防御</td>
+            <td colspan="2">法抗</td>
+        </tr>
+        <tr>
+            <td colspan="2">{{.Endure}}</td>
+            <td colspan="2">{{.Attack}}</td>
+            <td colspan="2">{{.Defence}}</td>
+            <td colspan="2">{{.Resistance}}</td>
+        </tr>
+        <tr>
+            <td colspan="8" style="font-size: 20px;font-weight: 600;">能力</td>
+        </tr>
+        <tr>
+            {{.Ability}}
+        </tr>
+    </table>
+    {{range $i, $v := .Levels}}
+    <table class="level">
+        <tr>
+            <td class="title" colspan="6">级别{{$i}}</td>
+        </tr>
+        <tr>
+            <td>最大生命值</td>
+            <td>攻击力</td>
+            <td>防御力</td>
+            <td>法抗</td>
+            <td>攻击间隔</td>
+            <td>攻击范围半径</td>
+        </tr>
+        <tr>
+            <td>{{.HP}}</td>
+            <td>{{.ATK}}</td>
+            <td>{{.DEF}}</td>
+            <td>{{.Res}}</td>
+            <td>{{.Interval}}</td>
+            <td>{{.ATKRadius}}</td>
+        </tr>
+        <tr>
+            <td>进点损失</td>
+            <td>移动速度</td>
+            <td>重量等级</td>
+            <td>元素抗性</td>
+            <td>损伤抗性</td>
+            <td>生命恢复速度</td>
+        </tr>
+        <tr>
+            <td>{{.Point}}</td>
+            <td>{{.MoveSpeed}}</td>
+            <td>{{.Weight}}</td>
+            <td>{{.ElementRes}}</td>
+            <td>{{.DamageRes}}</td>
+            <td>{{.HpRecovery}}</td>
+        </tr>
+        <tr>
+            <td colspan="6" style="font-size: 20px;font-weight: 600;">异常抗性</td>
+        </tr>
+        <tr>
+            <td>沉默免疫</td>
+            <td>眩晕免疫</td>
+            <td>沉睡免疫</td>
+            <td>冻结免疫</td>
+            <td>浮空免疫</td>
+            <td>战栗免疫</td>
+        </tr>
+        <tr>
+            <td>{{.Silence}}</td>
+            <td>{{.Dizziness}}</td>
+            <td>{{.Sleep}}</td>
+            <td>{{.Freeze}}</td>
+            <td>{{.Float}}</td>
+            <td>{{.Tremble}}</td>
+        </tr>
+        {{if .Skills}}
+        <tr>
+            <td colspan="6" style="font-size: 20px;font-weight: 600;">异常抗性</td>
+        </tr>
+        <tr>
+            <td>名称</td>
+            <td>初始</td>
+            <td>消耗</td>
+            <td>类型</td>
+            <td colspan="2">效果</td>
+        </tr>
+        {{range .Skills}}
+        <tr>
+            <td style="white-space: nowrap;">{{.Name}}</td>
+            <td>{{.SpInit}}</td>
+            <td>{{.SpCost}}</td>
+            <td style="white-space: nowrap;">{{.SkillType}}</td>
+            <td colspan="2">{{.Desc}}</td>
+        </tr>
+        {{end}}
+        {{end}}
+        {{if .Talent}}
+        <tr>
+            <td colspan="6" style="font-size: 20px;font-weight: 600;">天赋&能力</td>
+        </tr>
+        <tr>
+            <td colspan="6">{{.Talent}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{end}}
+</div>
+</body>
+</html>

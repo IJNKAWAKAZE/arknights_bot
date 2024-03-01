@@ -94,10 +94,10 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 
 	record, err := skland.SignGamePlayer(&skPlayer, skAccount)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败", playerName))
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\nmsg:%s", playerName, err.Error()))
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		log.Println(err)
+		log.Println(playerName, err)
 		return true, err
 	}
 	// 今日已完成签到

@@ -73,6 +73,17 @@ func (b *Bot) NewWaitMessageProcessor(waitMessage string, processor func(update 
 	)
 }
 
+func (b *Bot) NewInlineQueryProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
+	b.matchProcessorSlice = append(b.matchProcessorSlice,
+		&matchProcessor{
+			MatchFunc: func(update tgbotapi.Update) bool {
+				return update.InlineQuery != nil && strings.HasPrefix(update.InlineQuery.Query, command)
+			},
+			Processor: processor,
+		},
+	)
+}
+
 func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 	if updates == nil {
 		panic("updates is nil")

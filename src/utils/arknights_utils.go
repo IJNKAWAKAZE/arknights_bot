@@ -2,6 +2,10 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
+	"io"
+	"net/http"
 	"strings"
 )
 
@@ -56,4 +60,20 @@ func GetOperatorsByName(name string) []Operator {
 		}
 	}
 	return operatorList
+}
+
+func GetEnemiesByName(name string) []string {
+	var enemyList []string
+	api := viper.GetString("api.enemy")
+	response, _ := http.Get(api)
+	e, _ := io.ReadAll(response.Body)
+	defer response.Body.Close()
+	enemyJson := gjson.ParseBytes(e)
+	for _, en := range enemyJson.Array() {
+		n := en.Get("name").String()
+		if strings.Contains(strings.ToLower(n), strings.ToLower(name)) {
+			enemyList = append(enemyList, n)
+		}
+	}
+	return enemyList
 }

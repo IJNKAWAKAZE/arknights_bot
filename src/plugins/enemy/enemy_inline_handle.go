@@ -1,4 +1,4 @@
-package operator
+package enemy
 
 import (
 	bot "arknights_bot/config"
@@ -8,20 +8,19 @@ import (
 	"strings"
 )
 
-func InlineOperator(update tgbotapi.Update) (bool, error) {
-	_, name, _ := strings.Cut(update.InlineQuery.Query, "干员-")
-	operatorList := utils.GetOperatorsByName(name)
+func InlineEnemy(update tgbotapi.Update) (bool, error) {
+	_, name, _ := strings.Cut(update.InlineQuery.Query, "敌人-")
+	enemyList := utils.GetEnemiesByName(name)
 	var inlineQueryResults []interface{}
-	for _, operator := range operatorList {
+	for _, enemy := range enemyList {
 		id, _ := gonanoid.New(32)
 		queryResult := tgbotapi.InlineQueryResultArticle{
 			ID:          id,
 			Type:        "article",
-			Title:       operator.Name,
-			Description: "查询" + operator.Name,
-			ThumbURL:    operator.ThumbURL,
+			Title:       enemy,
+			Description: "查询" + enemy,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
-				Text: "/operator " + operator.Name,
+				Text: "/enemy " + enemy,
 			},
 		}
 		inlineQueryResults = append(inlineQueryResults, queryResult)

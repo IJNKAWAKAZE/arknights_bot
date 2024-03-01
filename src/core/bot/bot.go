@@ -3,6 +3,7 @@ package bot
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
 	"arknights_bot/plugins/operator"
 	"arknights_bot/plugins/player"
@@ -35,9 +36,10 @@ func Serve() {
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && update.Message.LeftChatMember != nil
 	}, gatekeeper.LeftMemberHandle)
-	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
-		return update.InlineQuery != nil
-	}, gatekeeper.InlineQueryHandle)
+
+	// InlineQuery
+	bot.TeleBot.NewInlineQueryProcessor("干员", operator.InlineOperator)
+	bot.TeleBot.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
 	// 私聊
 	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
@@ -65,6 +67,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("base", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
+	bot.TeleBot.NewCommandProcessor("enemy", enemy.EnemyHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
 	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
 	bot.TeleBot.NewCommandProcessor("redeem", player.PlayerHandle)
