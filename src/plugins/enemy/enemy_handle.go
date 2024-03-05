@@ -7,6 +7,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
+	"log"
 	"net/url"
 )
 
@@ -45,15 +46,6 @@ func EnemyHandle(update tgbotapi.Update) (bool, error) {
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 
-	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/enemy?name=%s", port, name), 0, 1.5)
-	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
-		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
-		return true, nil
-	}
-	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "enemy.jpg"})
 	link := viper.GetString("api.wiki") + url.PathEscape(name)
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
@@ -63,8 +55,37 @@ func EnemyHandle(update tgbotapi.Update) (bool, error) {
 			},
 		),
 	)
+
+	fileId := ""
+	key := "enemy:" + name
+	if utils.RedisIsExists(key) {
+		fileId = utils.RedisGet(key)
+	}
+
+	if fileId != "" {
+		sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileID(fileId))
+		sendDocument.ReplyToMessageID = messageId
+		sendDocument.ReplyMarkup = inlineKeyboardMarkup
+		bot.Arknights.Send(sendDocument)
+		return true, nil
+	}
+
+	port := viper.GetString("http.port")
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/enemy?name=%s", port, name), 0, 1.5)
+	if pic == nil {
+		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
+		sendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendMessage)
+		return true, nil
+	}
+	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "enemy.jpg"})
 	sendDocument.ReplyMarkup = inlineKeyboardMarkup
 	sendDocument.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendDocument)
+	msg, err := bot.Arknights.Send(sendDocument)
+	if err != nil {
+		log.Println(err)
+		return true, err
+	}
+	utils.RedisSet(key, msg.Document.FileID, 0)
 	return true, nil
 }

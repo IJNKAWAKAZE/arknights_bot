@@ -2,7 +2,6 @@ package enemy
 
 import (
 	"arknights_bot/utils"
-	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
@@ -61,11 +60,6 @@ type Skill struct {
 
 func ParseEnemy(name string) Enemy {
 	var enemy Enemy
-	key := "enemy:" + name
-	if utils.RedisIsExists(key) {
-		json.Unmarshal([]byte(utils.RedisGet(key)), &enemy)
-		return enemy
-	}
 	api := viper.GetString("api.wiki")
 	resp, _ := http.Get(api + url.PathEscape(name))
 	doc, _ := goquery.NewDocumentFromReader(resp.Body)
@@ -266,7 +260,5 @@ func ParseEnemy(name string) Enemy {
 		}
 	})
 	enemy.Levels = levels
-	val, _ := json.Marshal(enemy)
-	utils.RedisSet(key, val, 0)
 	return enemy
 }
