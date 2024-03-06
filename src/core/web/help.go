@@ -20,6 +20,7 @@ type Cmd struct {
 
 func Help(r *gin.Engine) {
 	r.GET("/help", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Help.tmpl")
 		var helpCmd HelpCmd
 		var privateCmds []Cmd
 		var publicCmds []Cmd

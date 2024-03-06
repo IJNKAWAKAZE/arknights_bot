@@ -27,6 +27,7 @@ func init() {
 
 func Headhunt(r *gin.Engine) {
 	r.GET("/headhunt", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Headhunt.tmpl")
 		r6prob := 2.0
 		r5prob := 8.0
 		r4prob := 50.0

@@ -8,6 +8,7 @@ import (
 
 func Enemy(r *gin.Engine) {
 	r.GET("/enemy", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Enemy.tmpl")
 		name := c.Query("name")
 		enemyInfo := enemy.ParseEnemy(name)
 		c.HTML(http.StatusOK, "Enemy.tmpl", enemyInfo)

@@ -53,6 +53,7 @@ type PoolCount struct {
 
 func Gacha(r *gin.Engine) {
 	r.GET("/gacha", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Gacha.tmpl")
 		var gachaLog GachaLog
 		var userGacha []player.UserGacha
 		var gachaChars []GachaChar

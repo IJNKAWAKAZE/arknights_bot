@@ -25,6 +25,7 @@ type MissingChar struct {
 
 func Missing(r *gin.Engine) {
 	r.GET("/missing", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Missing.tmpl")
 		var missingInfo MissingInfo
 		param := c.Query("param")
 		var userAccount account.UserAccount

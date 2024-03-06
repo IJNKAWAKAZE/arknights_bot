@@ -20,19 +20,6 @@ func Start() {
 	Headhunt(r)
 	Operator(r)
 	Enemy(r)
-	templates := []string{
-		"./template/Help.tmpl",
-		"./template/State.tmpl",
-		"./template/Box.tmpl",
-		"./template/Missing.tmpl",
-		"./template/Gacha.tmpl",
-		"./template/Card.tmpl",
-		"./template/Base.tmpl",
-		"./template/Headhunt.tmpl",
-		"./template/Operator.tmpl",
-		"./template/Enemy.tmpl",
-	}
-	r.LoadHTMLFiles(templates...)
 	port := viper.GetString("http.port")
 	err := r.Run(":" + port)
 	if err != nil {

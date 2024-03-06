@@ -143,6 +143,7 @@ func init() {
 
 func Base(r *gin.Engine) {
 	r.GET("/base", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Base.tmpl")
 		var playerBase PlayerBase
 		var userAccount account.UserAccount
 		var skAccount skland.Account

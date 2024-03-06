@@ -44,6 +44,7 @@ type PlayerCard struct {
 
 func Card(r *gin.Engine) {
 	r.GET("/card", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Card.tmpl")
 		var playerCard PlayerCard
 		var userAccount account.UserAccount
 		var skAccount skland.Account

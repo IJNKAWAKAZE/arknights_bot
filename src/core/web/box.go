@@ -32,6 +32,7 @@ type Char struct {
 
 func Box(r *gin.Engine) {
 	r.GET("/box", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Box.tmpl")
 		var box BoxInfo
 		var userAccount account.UserAccount
 		var skAccount skland.Account

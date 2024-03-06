@@ -12,6 +12,7 @@ import (
 
 func State(r *gin.Engine) {
 	r.GET("/state", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/State.tmpl")
 		var userAccount account.UserAccount
 		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
