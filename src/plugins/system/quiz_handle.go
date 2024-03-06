@@ -31,7 +31,7 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 		}
 	}
 
-	if param != "" {
+	if param == "start" || param == "stop" {
 		if utils.IsAdmin(chatId, userId) {
 			text := ""
 			if param == "start" {
@@ -73,6 +73,9 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 		skins := operator.Skins
 		rsk, _ := rand.Int(rand.Reader, big.NewInt(int64(len(skins))))
 		painting := skins[rsk.Int64()]
+		if param == "h" {
+			painting = skins[0]
+		}
 		if painting != "" {
 			options = append(options, utils.Operator{
 				Name:     operatorName,
@@ -87,6 +90,9 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 	correct := options[r.Int64()]
 
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
+	if param == "h" {
+		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.ImgConvert(correct.ThumbURL)})
+	}
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
