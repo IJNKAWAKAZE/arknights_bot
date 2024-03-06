@@ -96,6 +96,7 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
+		return true, nil
 	}
 	messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
 	poll := tgbotapi.NewPoll(chatId, "请选择上图干员的正确名字")

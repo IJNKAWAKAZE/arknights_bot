@@ -351,8 +351,15 @@ func ImgConvert(url string) []byte {
 	dx := bounds.Dx()
 	dy := bounds.Dy()
 	newRgba := image.NewRGBA(bounds)
+	f := true
+	go overtime(&f)
+o:
 	for i := 0; i < dx; i++ {
 		for j := 0; j < dy; j++ {
+			if !f {
+				log.Println("图片转换超时")
+				break o
+			}
 			colorRgb := m.PickColor(i, j)
 			r, g, b, a := colorRgb.RGBA()
 			r_uint8 := uint8(r >> 8)
@@ -367,7 +374,15 @@ func ImgConvert(url string) []byte {
 			newRgba.SetRGBA(i, j, color.RGBA{R: r_uint8, G: g_uint8, B: b_uint8, A: a_uint8})
 		}
 	}
+	if !f {
+		return nil
+	}
 	buf := new(bytes.Buffer)
 	png.Encode(buf, newRgba)
 	return buf.Bytes()
+}
+
+func overtime(f *bool) {
+	time.Sleep(time.Second * 10)
+	*f = false
 }
