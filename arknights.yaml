@@ -1,7 +1,11 @@
 bot:
+  # 机器人userName
   name: PtiIopsis_bot
+  # 机器人token
   token:
+  # 拥有者userId
   owner:
+  # 消息删除延迟
   msg_del_delay: 10
 
 sticker:
@@ -28,6 +32,7 @@ http:
   port: 23333
 
 headhunt:
+  # 每日寻访次数限制
   times: 3
   up_weight: 70
   pool_up_6: 黍/左乐

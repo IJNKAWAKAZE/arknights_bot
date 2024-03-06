@@ -19,6 +19,12 @@
             margin-left: 5px;
             border-radius: 15px;
         }
+        .potential {
+            position: absolute;
+            width: 30px;
+            margin-top: 12px;
+            margin-left: 10px;
+        }
         .evolve {
             position: absolute;
             width: 30px;
@@ -116,7 +122,7 @@
     <table id="assistChars" style="border-spacing: 0">
         {{range .AssistChars}}
         <tr>
-            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png"/><img class="evolve" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/></td>
+            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png"/><img class="potential" src="/assets/box/Potential_{{.PotentialRank}}.png"/><img class="evolve" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/></td>
             <td colspan="2" style="width: 100px">{{.Name}}</td>
             <td style="text-align: center"><span class="level">{{.Level}}</span></td>
         </tr>
