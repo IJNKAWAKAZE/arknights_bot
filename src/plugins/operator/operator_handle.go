@@ -40,6 +40,7 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, bot.MsgDelDelay)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return true, nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
