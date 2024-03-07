@@ -6,11 +6,11 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"github.com/fishtailstudio/imgo"
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/playwright-community/playwright-go"
+	"golang.org/x/image/webp"
 	"gorm.io/gorm"
 	"image"
 	"image/color"
@@ -346,7 +346,16 @@ func Md5(str string) string {
 }
 
 func ImgConvert(url string) []byte {
-	m := imgo.Load(url).Grayscale()
+	pic, err := http.Get(url)
+	if err != nil {
+		log.Println("获取图片失败")
+		return nil
+	}
+	m, err := webp.Decode(pic.Body)
+	if err != nil {
+		log.Println("解析图片失败")
+		return nil
+	}
 	bounds := m.Bounds()
 	dx := bounds.Dx()
 	dy := bounds.Dy()
@@ -360,12 +369,16 @@ o:
 				log.Println("图片转换超时")
 				break o
 			}
-			colorRgb := m.PickColor(i, j)
+			colorRgb := m.At(i, j)
 			r, g, b, a := colorRgb.RGBA()
 			r_uint8 := uint8(r >> 8)
 			g_uint8 := uint8(g >> 8)
 			b_uint8 := uint8(b >> 8)
 			a_uint8 := uint8(a >> 8)
+
+			r_uint8 = g_uint8
+			b_uint8 = g_uint8
+			a_uint8 = 255
 			if r_uint8 != 0 || g_uint8 != 0 || b_uint8 != 0 {
 				r_uint8 = 255
 				g_uint8 = 255

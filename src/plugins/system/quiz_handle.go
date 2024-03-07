@@ -91,7 +91,11 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
 	if param == "h" {
-		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.ImgConvert(correct.ThumbURL)})
+		pic := utils.ImgConvert(correct.ThumbURL)
+		if pic == nil {
+			return true, nil
+		}
+		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	}
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {

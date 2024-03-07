@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-var FileId string
+var fileId string
 
 // HelpHandle 帮助
 func HelpHandle(update tgbotapi.Update) (bool, error) {
@@ -18,7 +18,7 @@ func HelpHandle(update tgbotapi.Update) (bool, error) {
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 
-	if FileId == "" {
+	if fileId == "" {
 		port := viper.GetString("http.port")
 		pic := utils.Screenshot("http://localhost:"+port+"/help", 0, 1.5)
 		if pic == nil {
@@ -34,10 +34,10 @@ func HelpHandle(update tgbotapi.Update) (bool, error) {
 			log.Println(err)
 			return true, err
 		}
-		FileId = msg.Photo[0].FileID
+		fileId = msg.Photo[0].FileID
 		return true, nil
 	}
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(FileId))
+	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(fileId))
 	sendPhoto.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendPhoto)
 	return true, nil
