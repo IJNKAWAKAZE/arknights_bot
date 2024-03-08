@@ -55,7 +55,7 @@ type Skill struct {
 	SpInit    string        `json:"spInit"`    // 初始sp
 	SpCost    string        `json:"spCost"`    // 所需sp
 	SkillType template.HTML `json:"skillType"` // 技能类型
-	Desc      string        `json:"desc"`      // 描述
+	Desc      template.HTML `json:"desc"`      // 描述
 }
 
 func ParseEnemy(name string) Enemy {
@@ -129,7 +129,8 @@ func ParseEnemy(name string) Enemy {
 								skill.SpCost = strings.ReplaceAll(tds.Eq(2).Text(), "\n", "")
 								skillType, _ := tds.Eq(3).Html()
 								skill.SkillType = template.HTML(skillType)
-								skill.Desc = strings.ReplaceAll(tds.Eq(4).Text(), "\n", "")
+								desc, _ := tds.Eq(4).Html()
+								skill.Desc = template.HTML(desc)
 								skills = append(skills, skill)
 							}
 							// 天赋&能力
@@ -186,7 +187,8 @@ func ParseEnemy(name string) Enemy {
 								skill.SpCost = strings.ReplaceAll(tds.Eq(2).Text(), "\n", "")
 								skillType, _ := tds.Eq(3).Html()
 								skill.SkillType = template.HTML(skillType)
-								skill.Desc = strings.ReplaceAll(tds.Eq(4).Text(), "\n", "")
+								desc, _ := tds.Eq(4).Html()
+								skill.Desc = template.HTML(desc)
 								skills = append(skills, skill)
 							}
 							// 天赋&能力
@@ -243,7 +245,8 @@ func ParseEnemy(name string) Enemy {
 								skill.SpCost = strings.ReplaceAll(tds.Eq(2).Text(), "\n", "")
 								skillType, _ := tds.Eq(3).Html()
 								skill.SkillType = template.HTML(skillType)
-								skill.Desc = strings.ReplaceAll(tds.Eq(4).Text(), "\n", "")
+								desc, _ := tds.Eq(4).Html()
+								skill.Desc = template.HTML(desc)
 								skills = append(skills, skill)
 							}
 							// 天赋&能力
