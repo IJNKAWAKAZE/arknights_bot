@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"log"
 )
@@ -24,10 +23,4 @@ func init() {
 	}
 	MsgDelDelay = viper.GetFloat64("bot.msg_del_delay")
 	HeadhuntTimes = viper.GetInt("headhunt.times")
-	viper.WatchConfig()
-	viper.OnConfigChange(func(e fsnotify.Event) {
-		MsgDelDelay = viper.GetFloat64("bot.msg_del_delay")
-		HeadhuntTimes = viper.GetInt("headhunt.times")
-		log.Println("Config file changed")
-	})
 }
