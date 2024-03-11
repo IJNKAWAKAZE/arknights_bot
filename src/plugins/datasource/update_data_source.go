@@ -176,6 +176,7 @@ func UpdateDataSourceRunner() {
 	}
 
 	defer response.Body.Close()
+	utils.OperatorMap = make(map[string]utils.Operator)
 	utils.RedisSet("data_source", json.MustMarshalString(operators), 0)
 	log.Println("数据源更新完毕")
 }

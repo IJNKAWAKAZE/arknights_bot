@@ -2,10 +2,12 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -34,7 +36,7 @@ type Operator struct {
 	Tags         string   `json:"tags"`         // 标签
 }
 
-var operatorMap = make(map[string]Operator)
+var OperatorMap = make(map[string]Operator)
 
 func GetOperators() []Operator {
 	var operators []Operator
@@ -44,12 +46,12 @@ func GetOperators() []Operator {
 }
 
 func GetOperatorByName(name string) Operator {
-	if len(operatorMap) == 0 {
+	if len(OperatorMap) == 0 {
 		for _, op := range GetOperators() {
-			operatorMap[op.Name] = op
+			OperatorMap[op.Name] = op
 		}
 	}
-	return operatorMap[name]
+	return OperatorMap[name]
 }
 
 func GetOperatorsByName(name string) []Operator {
@@ -62,8 +64,8 @@ func GetOperatorsByName(name string) []Operator {
 	return operatorList
 }
 
-func GetEnemiesByName(name string) []string {
-	var enemyList []string
+func GetEnemiesByName(name string) map[string]string {
+	var enemyList = make(map[string]string)
 	api := viper.GetString("api.enemy")
 	response, _ := http.Get(api)
 	e, _ := io.ReadAll(response.Body)
@@ -72,7 +74,11 @@ func GetEnemiesByName(name string) []string {
 	for _, en := range enemyJson.Array() {
 		n := en.Get("name").String()
 		if strings.Contains(strings.ToLower(n), strings.ToLower(name)) {
-			enemyList = append(enemyList, n)
+			paintingName := fmt.Sprintf("头像_敌人_%s.png", n)
+			m := Md5(paintingName)
+			path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
+			pic := path + url.PathEscape(paintingName)
+			enemyList[n] = pic
 		}
 	}
 	return enemyList

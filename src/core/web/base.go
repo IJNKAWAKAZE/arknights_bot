@@ -194,7 +194,7 @@ func Base(r *gin.Engine) {
 				}
 				trading.Chars = append(trading.Chars, baseChar)
 			}
-			trading.Current = t.StockLimit - len(t.Stock)
+			trading.Current = len(t.Stock)
 			trading.Total = t.StockLimit
 			if t.Strategy == "O_GOLD" {
 				trading.Strategy = "贵金属订单"

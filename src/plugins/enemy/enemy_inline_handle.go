@@ -12,15 +12,16 @@ func InlineEnemy(update tgbotapi.Update) (bool, error) {
 	_, name, _ := strings.Cut(update.InlineQuery.Query, "敌人-")
 	enemyList := utils.GetEnemiesByName(name)
 	var inlineQueryResults []interface{}
-	for _, enemy := range enemyList {
+	for k, v := range enemyList {
 		id, _ := gonanoid.New(32)
 		queryResult := tgbotapi.InlineQueryResultArticle{
 			ID:          id,
 			Type:        "article",
-			Title:       enemy,
-			Description: "查询" + enemy,
+			Title:       k,
+			Description: "查询" + k,
+			ThumbURL:    v,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
-				Text: "/enemy " + enemy,
+				Text: "/enemy " + k,
 			},
 		}
 		inlineQueryResults = append(inlineQueryResults, queryResult)
@@ -30,6 +31,9 @@ func InlineEnemy(update tgbotapi.Update) (bool, error) {
 		Results:       inlineQueryResults,
 		CacheTime:     0,
 	}
-	bot.Arknights.Send(answerInlineQuery)
+	_, err := bot.Arknights.Send(answerInlineQuery)
+	if err != nil {
+		return true, err
+	}
 	return true, nil
 }
