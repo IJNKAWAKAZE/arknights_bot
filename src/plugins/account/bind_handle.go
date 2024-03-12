@@ -41,7 +41,7 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 		bot.Arknights.Send(sendMessage)
 		return true, err
 	}
-	// 查查询账户是否存在
+	// 查询账户是否存在
 	var userAccount UserAccount
 	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected > 0 {

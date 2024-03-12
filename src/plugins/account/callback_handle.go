@@ -43,6 +43,7 @@ func ChoosePlayer(callBack tgbotapi.Update) (bool, error) {
 		bot.DBEngine.Table("user_player").Create(&userPlayer)
 	} else {
 		userPlayer.PlayerName = playerName
+		userPlayer.ServerName = serverName
 		bot.DBEngine.Table("user_player").Save(&userPlayer)
 		sendMessage := tgbotapi.NewMessage(chatId, "此角色已绑定，更新角色信息。")
 		bot.Arknights.Send(sendMessage)
@@ -94,5 +95,26 @@ func ChooseBTokenPlayer(callBack tgbotapi.Update) (bool, error) {
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)
 	WaitBToken(chatId, userId, uid)
+	return true, nil
+}
+
+// SetResume 设置名片签名
+func SetResume(callBack tgbotapi.Update) (bool, error) {
+	callbackQuery := callBack.CallbackQuery
+	data := callBack.CallbackData()
+	d := strings.Split(data, ",")
+
+	if len(d) < 2 {
+		return true, nil
+	}
+
+	userId := callbackQuery.From.ID
+	chatId := callbackQuery.Message.Chat.ID
+	messageId := callbackQuery.Message.MessageID
+	uid := d[1]
+
+	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+	bot.Arknights.Send(delMsg)
+	WaitResume(chatId, userId, uid)
 	return true, nil
 }
