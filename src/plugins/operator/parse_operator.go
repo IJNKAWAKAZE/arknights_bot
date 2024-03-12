@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/viper"
 	"html/template"
 	"net/http"
-	"regexp"
 	"strings"
 )
 
@@ -34,9 +33,9 @@ type Potential struct {
 }
 
 type Talent struct {
-	Evolve string `json:"evolve"` // 精英级别
-	Name   string `json:"name"`   // 名称
-	Desc   string `json:"desc"`   // 描述
+	Evolve string        `json:"evolve"` // 精英级别
+	Name   string        `json:"name"`   // 名称
+	Desc   template.HTML `json:"desc"`   // 描述
 }
 
 type BuildingSkill struct {
@@ -49,7 +48,7 @@ type BuildingSkill struct {
 type Skill struct {
 	Icon       string          `json:"icon"`       // 图标
 	Name       string          `json:"name"`       // 名称
-	Desc       string          `json:"desc"`       // 描述
+	Desc       template.HTML   `json:"desc"`       // 描述
 	SkillRange template.HTML   `json:"skillRange"` // 技能范围
 	SpType     []template.HTML `json:"spType"`     // 回费类型
 	SpInit     string          `json:"spInit"`     // 初始费用
@@ -134,10 +133,9 @@ func ParseOperator(name string) Operator {
 							var talent Talent
 							talentName := strings.ReplaceAll(selection.Text(), "\n", "")
 							talent.Evolve = strings.ReplaceAll(selection.Next().Text(), "\n", "")
-							desc := strings.ReplaceAll(selection.Next().Next().Text(), "\n", "")
-							reg := regexp.MustCompile("(\\[).*?(])")
+							desc, _ := selection.Next().Next().Html()
 							talent.Name = talentName
-							talent.Desc = reg.ReplaceAllString(desc, "")
+							talent.Desc = template.HTML(desc)
 							talents = append(talents, talent)
 						}
 					})
@@ -194,8 +192,8 @@ func ParseOperator(name string) Operator {
 							tds.Each(func(j int, selection *goquery.Selection) {
 								text := strings.ReplaceAll(selection.Text(), "\n", "")
 								if j == 1 {
-									reg := regexp.MustCompile("(\\[).*?(])")
-									skill.Desc = reg.ReplaceAllString(text, "")
+									desc, _ := selection.Html()
+									skill.Desc = template.HTML(desc)
 								}
 								if j == 2 {
 									skill.SpInit = text
@@ -219,11 +217,12 @@ func ParseOperator(name string) Operator {
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "攻击范围" {
 				selection.NextFilteredUntil(".nomobile ", "h2").Each(func(j int, selection *goquery.Selection) {
-					tds := selection.Find("td")
-					td := tds.Eq(len(tds.Nodes) - 1)
-					attackRange, _ := td.Children().Html()
-					operator.AttackRange = template.HTML(attackRange)
-					return
+					if j == 0 {
+						tds := selection.Find("td")
+						td := tds.Eq(len(tds.Nodes) - 1)
+						attackRange, _ := td.Children().Html()
+						operator.AttackRange = template.HTML(attackRange)
+					}
 				})
 			}
 		})
