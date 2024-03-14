@@ -35,21 +35,26 @@ func Recruit(r *gin.Engine) {
 			}
 		}
 		sort.Slice(tagList, func(i, j int) bool {
-			if strings.Contains(strings.Join(tagList[i], " "), "高级资深干员") {
+			if strings.Contains(strings.Join(tagList[i], " "), "高资") {
 				return true
 			}
 			return len(tagList[i]) > len(tagList[j])
 		})
 		for _, t := range tagList {
 			var recruit RecruitList
-			recruit.Tags = t
+			tl := strings.Join(t, " ")
+			replacer := strings.NewReplacer("机械", "支援机械", "资深", "资深干员", "高资", "高级资深干员")
+			recruit.Tags = strings.Split(replacer.Replace(tl), " ")
+			if strings.Contains(tl, "高资") && strings.Contains(tl, "资深") {
+				continue
+			}
 			for _, operator := range recruitOperatorList {
 				opTags := operator.Tags + " " + operator.ProfessionZH + " " + operator.Position
 				if operator.Rarity == 5 {
-					opTags += " 高级资深干员"
+					opTags += " 高资"
 				}
 				if operator.Rarity == 4 {
-					opTags += " 资深干员"
+					opTags += " 资深"
 				}
 				b := true
 				for _, tag := range t {
@@ -57,7 +62,7 @@ func Recruit(r *gin.Engine) {
 						b = false
 					}
 					if operator.Rarity == 5 {
-						if !strings.Contains(strings.Join(t, " "), "高级资深干员") {
+						if !strings.Contains(tl, "高资") {
 							b = false
 						}
 					}

@@ -13,17 +13,17 @@ import (
 var tagMap = make(map[string]string)
 
 func init() {
-	tagMap["高级资深干员"] = "高级资深干员"
-	tagMap["资深干员"] = "资深干员"
+	tagMap["高级资深干员"] = "高资"
+	tagMap["资深干员"] = "资深"
 	tagMap["新手"] = "新手"
-	tagMap["近卫"] = "近卫"
-	tagMap["狙击"] = "狙击"
-	tagMap["重装"] = "重装"
-	tagMap["医疗"] = "医疗"
-	tagMap["辅助"] = "辅助"
-	tagMap["术师"] = "术师"
-	tagMap["特种"] = "特种"
-	tagMap["先锋"] = "先锋"
+	tagMap["近卫干员"] = "近卫干员"
+	tagMap["狙击干员"] = "狙击干员"
+	tagMap["重装干员"] = "重装干员"
+	tagMap["医疗干员"] = "医疗干员"
+	tagMap["辅助干员"] = "辅助干员"
+	tagMap["术师干员"] = "术师干员"
+	tagMap["特种干员"] = "特种干员"
+	tagMap["先锋干员"] = "先锋干员"
 	tagMap["近战位"] = "远程位"
 	tagMap["支援机械"] = "机械"
 	tagMap["控场"] = "控场"
@@ -55,11 +55,13 @@ func RecruitHandle(update tgbotapi.Update) (bool, error) {
 	}
 	for _, result := range results {
 		if tagMap[result] != "" {
-			tags = append(tags, result)
+			tags = append(tags, tagMap[result])
 		}
 	}
-	if len(tags) < 5 {
-		log.Println("标签识别不全，请提升图片质量。")
+	if len(tags) != 5 {
+		sendMessage := tgbotapi.NewMessage(chatId, "标签数量错误，请更换图片。")
+		sendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendMessage)
 		return true, nil
 	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
