@@ -10,6 +10,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/playwright-community/playwright-go"
+	"github.com/tidwall/gjson"
 	"golang.org/x/image/webp"
 	"gorm.io/gorm"
 	"image"
@@ -17,6 +18,7 @@ import (
 	"image/png"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -398,4 +400,35 @@ o:
 func overtime(f *bool) {
 	time.Sleep(time.Second * 10)
 	*f = false
+}
+
+func OCR(file io.Reader) []string {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "test.png")
+	if err != nil {
+		log.Println("创建文件失败")
+		return nil
+	}
+	io.Copy(part, file)
+	writer.WriteField("language", "chs")
+	writer.WriteField("FileType", ".Auto")
+	writer.WriteField("OCREngine", "2")
+	writer.Close()
+	request, err := http.NewRequest("POST", "https://api.ocr.space/parse/image", body)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	request.Header.Add("Apikey", "helloworld")
+	resp, err := http.DefaultClient.Do(request)
+	if err != nil {
+		log.Println("ocr失败")
+		return nil
+	}
+	read, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	result := gjson.ParseBytes(read)
+	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), "\n")
 }

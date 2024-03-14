@@ -49,6 +49,7 @@ func UpdateDataSourceRunner() {
 		attrs := selection.Nodes[0].Attr
 		operator.Name = attrs[0].Val
 		operator.Profession = Profession[attrs[1].Val]
+		operator.ProfessionZH = attrs[1].Val + "干员"
 		operator.Rarity, _ = strconv.Atoi(attrs[2].Val)
 		operator.Logo = attrs[3].Val
 		operator.Race = attrs[6].Val
@@ -66,7 +67,8 @@ func UpdateDataSourceRunner() {
 		operator.Block = b[len(b)-1]
 		operator.Interval = attrs[17].Val
 		operator.Sex = attrs[18].Val
-		operator.Tags = attrs[20].Val
+		operator.Position = attrs[19].Val
+		operator.Tags = strings.ReplaceAll(attrs[20].Val, "支援机械", "机械")
 		operator.ObtainMethod = attrs[21].Val
 		// 头像
 		paintingName := fmt.Sprintf("头像_%s.png", operator.Name)
@@ -177,6 +179,7 @@ func UpdateDataSourceRunner() {
 
 	defer response.Body.Close()
 	utils.OperatorMap = make(map[string]utils.Operator)
+	utils.RecruitOperatorList = nil
 	utils.RedisSet("data_source", json.MustMarshalString(operators), 0)
 	log.Println("数据源更新完毕")
 }

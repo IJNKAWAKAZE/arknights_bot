@@ -18,6 +18,7 @@ type Operator struct {
 	Code         string   `json:"code"`         // 编号
 	Race         string   `json:"race"`         // 种族
 	Profession   string   `json:"profession"`   // 职业
+	ProfessionZH string   `json:"professionZH"` // 职业
 	Rarity       int      `json:"rarity"`       // 稀有度
 	Avatar       string   `json:"avatar"`       // 头像
 	ThumbURL     string   `json:"thumbURL"`     // 半身像
@@ -31,12 +32,14 @@ type Operator struct {
 	Block        string   `json:"block"`        // 阻挡数
 	Interval     string   `json:"interval"`     // 攻击间隔
 	Sex          string   `json:"sex"`          // 性别
+	Position     string   `json:"position"`     // 部署位
 	Logo         string   `json:"logo"`         // 所属
 	ObtainMethod string   `json:"obtainMethod"` // 获取方式
 	Tags         string   `json:"tags"`         // 标签
 }
 
 var OperatorMap = make(map[string]Operator)
+var RecruitOperatorList []Operator
 
 func GetOperators() []Operator {
 	var operators []Operator
@@ -62,6 +65,17 @@ func GetOperatorsByName(name string) []Operator {
 		}
 	}
 	return operatorList
+}
+
+func GetRecruitOperatorList() []Operator {
+	if len(RecruitOperatorList) == 0 {
+		for _, op := range GetOperators() {
+			if strings.Contains(op.ObtainMethod, "公开招募") {
+				RecruitOperatorList = append(RecruitOperatorList, op)
+			}
+		}
+	}
+	return RecruitOperatorList
 }
 
 func GetEnemiesByName(name string) map[string]string {

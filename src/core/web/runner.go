@@ -20,6 +20,7 @@ func Start() {
 	Headhunt(r)
 	Operator(r)
 	Enemy(r)
+	Recruit(r)
 	port := viper.GetString("http.port")
 	err := r.Run(":" + port)
 	if err != nil {

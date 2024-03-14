@@ -22,6 +22,14 @@ func Serve() {
 
 	// 注册处理器
 	bot.TeleBot = &telebot.Bot{}
+	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
+		return update.Message != nil && len(update.Message.NewChatMembers) > 0
+	}, gatekeeper.NewMemberHandle)
+	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
+		return update.Message != nil && update.Message.LeftChatMember != nil
+	}, gatekeeper.LeftMemberHandle)
+
+	// callback
 	bot.TeleBot.NewCallBackProcessor("verify", gatekeeper.CallBackData)
 	bot.TeleBot.NewCallBackProcessor("bind", account.ChoosePlayer)
 	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
@@ -31,16 +39,10 @@ func Serve() {
 	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
 	bot.TeleBot.NewCallBackProcessor("report", system.Report)
 
-	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
-		return update.Message != nil && len(update.Message.NewChatMembers) > 0
-	}, gatekeeper.NewMemberHandle)
-	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
-		return update.Message != nil && update.Message.LeftChatMember != nil
-	}, gatekeeper.LeftMemberHandle)
-
 	// InlineQuery
 	bot.TeleBot.NewInlineQueryProcessor("干员", operator.InlineOperator)
 	bot.TeleBot.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
+
 	// 私聊
 	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
@@ -53,6 +55,7 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.PlayerHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.PlayerHandle)
 
+	// wait
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 	bot.TeleBot.NewWaitMessageProcessor("bToken", account.SetBToken)
 	bot.TeleBot.NewWaitMessageProcessor("resume", account.Resume)
@@ -75,6 +78,9 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
 	bot.TeleBot.NewCommandProcessor("redeem", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("headhunt", system.HeadhuntHandle)
+
+	// 图片
+	bot.TeleBot.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)
 
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)
