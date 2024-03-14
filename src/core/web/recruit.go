@@ -22,7 +22,7 @@ func Recruit(r *gin.Engine) {
 		var tagList [][]string
 		n := len(tags)
 		nBit := 1 << n
-		for i := 0; i < nBit; i++ {
+		for i := 1; i < nBit; i++ {
 			var ts []string
 			for j := 0; j < n; j++ {
 				tmp := 1 << j
@@ -30,9 +30,7 @@ func Recruit(r *gin.Engine) {
 					ts = append(ts, tags[j])
 				}
 			}
-			if ts != nil {
-				tagList = append(tagList, ts)
-			}
+			tagList = append(tagList, ts)
 		}
 		sort.Slice(tagList, func(i, j int) bool {
 			if strings.Contains(strings.Join(tagList[i], " "), "高资") {
