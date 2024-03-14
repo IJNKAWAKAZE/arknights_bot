@@ -38,12 +38,13 @@ type GachaChar struct {
 	Ts       int64  `json:"ts"`
 }
 type Star6Info struct {
-	Name     string `json:"name"`
-	Avatar   string `json:"avatar"`
-	Ts       int64  `json:"ts"`
-	Count    int    `json:"count"`
-	IsNew    bool   `json:"isNew"`
-	PoolName string `json:"poolName"`
+	Name      string `json:"name"`
+	Avatar    string `json:"avatar"`
+	Ts        int64  `json:"ts"`
+	Count     int    `json:"count"`
+	IsNew     bool   `json:"isNew"`
+	PoolName  string `json:"poolName"`
+	PoolOrder int    `json:"poolOrder"`
 }
 
 type PoolCount struct {
@@ -88,11 +89,12 @@ func Gacha(r *gin.Engine) {
 			case 5:
 				star6++
 				star6Info = append(star6Info, Star6Info{
-					Name:     c.CharName,
-					Count:    0,
-					Ts:       c.Ts,
-					IsNew:    c.IsNew,
-					PoolName: c.PoolName,
+					Name:      c.CharName,
+					Count:     0,
+					Ts:        c.Ts,
+					IsNew:     c.IsNew,
+					PoolName:  c.PoolName,
+					PoolOrder: c.PoolOrder,
 				})
 			case 4:
 				star5++
@@ -144,7 +146,7 @@ func Gacha(r *gin.Engine) {
 
 		for i, s6 := range star6Info {
 			for _, m := range PoolMap[s6.PoolName] {
-				if s6.Name == m.CharName && s6.Ts == m.Ts {
+				if s6.Name == m.CharName && s6.Ts == m.Ts && s6.PoolOrder == m.PoolOrder {
 					star6Info[i].Count, _ = strconv.Atoi(m.Remark)
 				}
 			}
