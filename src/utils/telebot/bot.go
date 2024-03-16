@@ -80,6 +80,12 @@ func (b *Bot) addProcessor(command string, processor callbackFunction, funcMap m
 	funcMap[command] = processor
 }
 func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
+	// generic first
+	for _, k := range b.matchProcessorSlice {
+		if k.MatchFunc(msg) {
+			return k.Processor
+		}
+	}
 	if msg.Message != nil {
 		// wait msg
 		if msg.Message.Chat.IsPrivate() {
