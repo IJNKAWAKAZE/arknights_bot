@@ -2,6 +2,7 @@ package telebot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 	"log"
 	"strings"
 	"time"
@@ -92,7 +93,10 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 		}
 		//photo related cmd
 		if len(msg.Message.Photo) > 0 {
-			result, ok := b.photoCommandProcess[msg.Message.Caption]
+			//update.Message.Caption == command+"@"+)
+			suffix := "@" + viper.GetString("bot.name")
+			command, _ := strings.CutSuffix(msg.Message.Caption, suffix)
+			result, ok := b.photoCommandProcess[command]
 			if ok {
 				return result
 			}
