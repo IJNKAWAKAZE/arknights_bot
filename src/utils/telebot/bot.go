@@ -2,6 +2,7 @@ package telebot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 	"log"
 	"strings"
 	"time"
@@ -77,7 +78,7 @@ func (b *Bot) NewPhotoMessageProcessor(command string, processor func(update tgb
 	b.matchProcessorSlice = append(b.matchProcessorSlice,
 		&matchProcessor{
 			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.Message != nil && len(update.Message.Photo) > 0 && update.Message.Caption == command
+				return update.Message != nil && len(update.Message.Photo) > 0 && (update.Message.Caption == command || update.Message.Caption == command+"@"+viper.GetString("bot.name"))
 			},
 			Processor: processor,
 		},
