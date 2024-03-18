@@ -22,6 +22,14 @@ type Bot struct {
 
 var now = time.Now().Unix()
 
+func (b *Bot) InitMap() {
+	b.callbackQueryProcess = make(map[string]callbackFunction)
+	b.commandProcessor = make(map[string]callbackFunction)
+	b.privateCommandProcessor = make(map[string]callbackFunction)
+	b.waitMsgProcess = make(map[string]callbackFunction)
+	b.photoCommandProcess = make(map[string]callbackFunction)
+}
+
 type callbackFunction = func(update tgbotapi.Update) (bool, error) // isBreak,error
 type inlineMatcher struct {
 	prefix    string
@@ -99,7 +107,6 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 		}
 		//photo related cmd
 		if len(msg.Message.Photo) > 0 {
-			//update.Message.Caption == command+"@"+)
 			suffix := "@" + viper.GetString("bot.name")
 			command, _ := strings.CutSuffix(msg.Message.Caption, suffix)
 			result, ok := b.photoCommandProcess[command]

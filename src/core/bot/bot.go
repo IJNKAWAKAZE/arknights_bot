@@ -22,6 +22,7 @@ func Serve() {
 
 	// 注册处理器
 	bot.TeleBot = &telebot.Bot{}
+	bot.TeleBot.InitMap()
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && len(update.Message.NewChatMembers) > 0
 	}, gatekeeper.NewMemberHandle)
