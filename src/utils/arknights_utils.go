@@ -38,6 +38,12 @@ type Operator struct {
 	Tags         string   `json:"tags"`         // 标签
 }
 
+type Stage struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
 var OperatorMap = make(map[string]Operator)
 var RecruitOperatorList []Operator
 

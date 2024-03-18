@@ -14,7 +14,7 @@ type OperationI interface {
 	//this requirement of the string it can change base on the role of the user
 	CheckRequirementsAndPrepare(update tgbotapi.Update) bool
 	// run this operation (This function must be implemented by subClass)
-	Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error)
+	Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error
 	// when the argument did not match the requirement ask why
 	HintOnRequirementsFailed() (string, bool)
 	HintWordForPlayerSelection() string
@@ -41,7 +41,7 @@ func (operation OperationAbstract) HintOnRequirementsFailed() (string, bool) {
 func (operation OperationAbstract) GetCallBackFunctionOnMultiPlayer(update tgbotapi.Update, account account.UserAccount, chatId int64, getTypeName string) MultiuserCallBackFunction {
 	newOP := OperationTypeMaps[getTypeName]
 	return NewMultiuserCallBackFunction(
-		func(uid string) (bool, error) {
+		func(uid string) error {
 			return newOP.Run(uid, account, chatId, update.Message)
 		},
 		update.Message.From.ID)

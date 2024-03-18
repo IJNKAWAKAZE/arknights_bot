@@ -17,7 +17,7 @@ type PlayerOperationGacha struct {
 
 // BoxHandle 我的干员
 
-func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	var userGacha []UserGacha
 	messageId := message.MessageID
 	res := utils.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
@@ -26,7 +26,7 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
@@ -38,11 +38,11 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "gacha.jpg"})
 	sendDocument.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendDocument)
-	return true, nil
+	return nil
 }

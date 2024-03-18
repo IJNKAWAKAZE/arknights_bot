@@ -12,7 +12,7 @@ import (
 )
 
 // EnemyHandle 敌人查询
-func EnemyHandle(update tgbotapi.Update) (bool, error) {
+func EnemyHandle(update tgbotapi.Update) error {
 	text := "敌人-"
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
@@ -32,7 +32,7 @@ func EnemyHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 	enemy := ParseEnemy(name)
 	if enemy.Name == "" {
@@ -41,7 +41,7 @@ func EnemyHandle(update tgbotapi.Update) (bool, error) {
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, bot.MsgDelDelay)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
@@ -68,7 +68,7 @@ func EnemyHandle(update tgbotapi.Update) (bool, error) {
 		sendDocument.ReplyToMessageID = messageId
 		sendDocument.ReplyMarkup = inlineKeyboardMarkup
 		bot.Arknights.Send(sendDocument)
-		return true, nil
+		return nil
 	}
 
 	port := viper.GetString("http.port")
@@ -77,7 +77,7 @@ func EnemyHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "enemy.jpg"})
 	sendDocument.ReplyMarkup = inlineKeyboardMarkup
@@ -85,8 +85,8 @@ func EnemyHandle(update tgbotapi.Update) (bool, error) {
 	msg, err := bot.Arknights.Send(sendDocument)
 	if err != nil {
 		log.Println(err)
-		return true, err
+		return err
 	}
 	utils.RedisSet(key, msg.Document.FileID, 0)
-	return true, nil
+	return nil
 }

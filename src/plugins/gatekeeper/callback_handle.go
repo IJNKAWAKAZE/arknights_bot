@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-func CallBackData(callBack tgbotapi.Update) (bool, error) {
+func CallBackData(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
 	if len(d) < 4 {
-		return true, nil
+		return nil
 	}
 
 	userId, _ := strconv.ParseInt(d[1], 10, 64)
@@ -28,7 +28,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 		if !utils.IsAdmin(chatId, callbackQuery.From.ID) {
 			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
 			bot.Arknights.Send(answer)
-			return true, nil
+			return nil
 		}
 
 		if d[2] == "PASS" {
@@ -40,7 +40,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 			ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
 		}
 
-		return true, nil
+		return nil
 	}
 
 	joinMessageId, _ = strconv.Atoi(d[4])
@@ -48,7 +48,7 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 	if userId != callbackQuery.From.ID {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的验证！")
 		bot.Arknights.Send(answer)
-		return true, nil
+		return nil
 	}
 
 	if d[2] != d[3] {
@@ -57,14 +57,14 @@ func CallBackData(callBack tgbotapi.Update) (bool, error) {
 		chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
 		ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
 		go unban(chatMember)
-		return true, nil
+		return nil
 	}
 
 	answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
 	bot.Arknights.Send(answer)
 	pass(chatId, userId, callbackQuery, false)
 
-	return true, nil
+	return nil
 }
 
 func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) string {

@@ -11,7 +11,7 @@ import (
 )
 
 // OperatorHandle 干员查询
-func OperatorHandle(update tgbotapi.Update) (bool, error) {
+func OperatorHandle(update tgbotapi.Update) error {
 	text := "干员-"
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
@@ -31,7 +31,7 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 	operator := ParseOperator(name)
 	if operator.OP.Name == "" {
@@ -40,7 +40,7 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, bot.MsgDelDelay)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
@@ -67,7 +67,7 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 		sendPhoto.ReplyToMessageID = messageId
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 		bot.Arknights.Send(sendPhoto)
-		return true, nil
+		return nil
 	}
 
 	port := viper.GetString("http.port")
@@ -76,7 +76,7 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyMarkup = inlineKeyboardMarkup
@@ -84,8 +84,8 @@ func OperatorHandle(update tgbotapi.Update) (bool, error) {
 	msg, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Println(err)
-		return true, err
+		return err
 	}
 	utils.RedisSet(key, msg.Photo[0].FileID, 0)
-	return true, nil
+	return nil
 }

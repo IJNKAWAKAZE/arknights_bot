@@ -12,7 +12,7 @@ import (
 )
 
 // QuizHandle 云玩家检测
-func QuizHandle(update tgbotapi.Update) (bool, error) {
+func QuizHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
@@ -27,7 +27,7 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 			sendMessage := tgbotapi.NewMessage(chatId, "云玩家检测功能已关闭！")
 			msg, _ := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return true, nil
+			return nil
 		}
 	}
 
@@ -44,12 +44,12 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 			sendMessage := tgbotapi.NewMessage(chatId, text)
 			msg, _ := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return true, nil
+			return nil
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
@@ -93,14 +93,14 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 	if param == "h" {
 		pic := utils.ImgConvert(correct.ThumbURL)
 		if pic == nil {
-			return true, nil
+			return nil
 		}
 		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	}
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
-		return true, nil
+		return nil
 	}
 	messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
 	poll := tgbotapi.NewPoll(chatId, "请选择上图干员的正确名字")
@@ -114,5 +114,5 @@ func QuizHandle(update tgbotapi.Update) (bool, error) {
 	poll.Options = pollOptions
 	p, _ := bot.Arknights.Send(poll)
 	messagecleaner.AddDelQueue(chatId, p.MessageID, 300)
-	return true, nil
+	return nil
 }

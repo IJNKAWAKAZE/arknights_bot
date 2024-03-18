@@ -10,7 +10,7 @@ import (
 
 // SetTokenHandle 重设token
 
-func SetTokenHandle(update tgbotapi.Update) (bool, error) {
+func SetTokenHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 
@@ -21,7 +21,7 @@ func SetTokenHandle(update tgbotapi.Update) (bool, error) {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入新token或使用 /cancel 指令取消操作。")
 	bot.Arknights.Send(sendMessage)
@@ -32,11 +32,11 @@ func SetTokenHandle(update tgbotapi.Update) (bool, error) {
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
 	telebot.WaitMessage[chatId] = "resetToken"
-	return true, nil
+	return nil
 }
 
 // ResetToken 重设token
-func ResetToken(update tgbotapi.Update) (bool, error) {
+func ResetToken(update tgbotapi.Update) error {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -49,7 +49,7 @@ func ResetToken(update tgbotapi.Update) (bool, error) {
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
 		bot.Arknights.Send(sendMessage)
-		return true, err
+		return err
 	}
 	// 查查询账户信息
 	var userAccount UserAccount
@@ -64,5 +64,5 @@ func ResetToken(update tgbotapi.Update) (bool, error) {
 		bot.Arknights.Send(sendMessage)
 	}
 	delete(telebot.WaitMessage, chatId)
-	return true, nil
+	return nil
 }

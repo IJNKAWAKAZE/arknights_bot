@@ -14,7 +14,7 @@ type PlayerOperationState struct {
 	commandoperation.OperationAbstract
 }
 
-func (_ PlayerOperationState) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationState) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
@@ -26,10 +26,10 @@ func (_ PlayerOperationState) Run(uid string, userAccount account.UserAccount, c
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendPhoto)
-	return true, nil
+	return nil
 }

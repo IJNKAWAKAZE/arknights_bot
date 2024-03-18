@@ -6,6 +6,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 	"github.com/starudream/go-lib/core/v2/codec/json"
+	"github.com/tidwall/gjson"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -181,5 +183,47 @@ func UpdateDataSourceRunner() {
 	utils.OperatorMap = make(map[string]utils.Operator)
 	utils.RecruitOperatorList = nil
 	utils.RedisSet("data_source", json.MustMarshalString(operators), 0)
+	//stage()
 	log.Println("数据源更新完毕")
+}
+
+func stage() {
+	var stages []utils.Stage
+	api := viper.GetString("api.wiki")
+	// 主线地图
+	res, _ := http.Get(viper.GetString("api.stage"))
+	read, _ := io.ReadAll(res.Body)
+	j := gjson.ParseBytes(read)
+	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(j.Get("parse.text.*").String()))
+	doc.Find(".mw-redirect").Each(func(i int, selection *goquery.Selection) {
+		if selection.Children().Children().Text() != "" && !strings.HasPrefix(selection.Children().Text(), "TR") {
+			parentAttr, _ := selection.Parent().Parent().Parent().Parent().Parent().Attr("class")
+			if parentAttr != "mw-collapsible mw-collapsed" {
+				title, _ := selection.Attr("title")
+				name := strings.ReplaceAll(selection.Children().Children().Text(), "\n", "")
+				stages = append(stages, utils.Stage{
+					Code: title,
+					Name: name,
+					Path: title + "_" + name,
+				})
+			}
+		}
+	})
+	// 活动地图
+	res, _ = http.Get(api + "关卡一览/活动关卡")
+	doc, _ = goquery.NewDocumentFromReader(res.Body)
+	doc.Find(".mw-redirect").Each(func(i int, selection *goquery.Selection) {
+		if selection.Children().Text() != "" {
+			title, _ := selection.Attr("title")
+			name := strings.ReplaceAll(selection.Children().Children().Text(), "\n", "")
+			if !strings.Contains(selection.Parent().Parent().Parent().Parent().Prev().Text(), "复刻") && !strings.Contains(title, "bossrush") {
+				stages = append(stages, utils.Stage{
+					Code: title,
+					Name: name,
+					Path: title + "_" + name,
+				})
+			}
+		}
+	})
+	utils.RedisSet("stageList", json.MustMarshalString(stages), 0)
 }

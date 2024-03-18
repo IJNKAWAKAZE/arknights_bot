@@ -43,7 +43,7 @@ func init() {
 	tagMap["召唤"] = "召唤"
 }
 
-func RecruitHandle(update tgbotapi.Update) (bool, error) {
+func RecruitHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
 	var tags []string
@@ -52,7 +52,7 @@ func RecruitHandle(update tgbotapi.Update) (bool, error) {
 	results := utils.OCR(file)
 	if results == nil {
 		log.Println("图片识别失败")
-		return true, nil
+		return nil
 	}
 	for _, result := range results {
 		if tagMap[result] != "" {
@@ -64,14 +64,14 @@ func RecruitHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage.ReplyToMessageID = messageId
 		_, err := bot.Arknights.Send(sendMessage)
 		if err != nil {
-			return true, err
+			return err
 		}
-		return true, nil
+		return nil
 	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	_, err := bot.Arknights.Send(sendAction)
 	if err != nil {
-		return true, err
+		return err
 	}
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s", port, strings.Join(tags, " ")), 0, 1.5)
@@ -80,15 +80,15 @@ func RecruitHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage.ReplyToMessageID = messageId
 		_, err := bot.Arknights.Send(sendMessage)
 		if err != nil {
-			return true, err
+			return err
 		}
-		return true, nil
+		return nil
 	}
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "recruit.jpg"})
 	sendDocument.ReplyToMessageID = messageId
-	_, err2 := bot.Arknights.Send(sendDocument)
-	if err2 != nil {
-		return true, err
+	_, err = bot.Arknights.Send(sendDocument)
+	if err != nil {
+		return err
 	}
-	return true, nil
+	return nil
 }

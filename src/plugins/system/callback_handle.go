@@ -9,13 +9,13 @@ import (
 )
 
 // Report 举报
-func Report(callBack tgbotapi.Update) (bool, error) {
+func Report(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
 	if len(d) < 3 {
-		return true, nil
+		return nil
 	}
 
 	userId := callbackQuery.From.ID
@@ -26,7 +26,7 @@ func Report(callBack tgbotapi.Update) (bool, error) {
 	if !utils.IsAdmin(chatId, userId) {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
 		bot.Arknights.Send(answer)
-		return true, nil
+		return nil
 	}
 
 	if d[1] == "BAN" {
@@ -47,5 +47,5 @@ func Report(callBack tgbotapi.Update) (bool, error) {
 		bot.Arknights.Send(delMsg)
 	}
 
-	return true, nil
+	return nil
 }

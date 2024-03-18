@@ -8,7 +8,7 @@ import (
 )
 
 // PingHandle 存活测试
-func PingHandle(update tgbotapi.Update) (bool, error) {
+func PingHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
 	sendSticker := tgbotapi.NewSticker(chatId, tgbotapi.FileID(viper.GetString("sticker.ping")))
@@ -16,5 +16,5 @@ func PingHandle(update tgbotapi.Update) (bool, error) {
 	msg, _ := bot.Arknights.Send(sendSticker)
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	return true, nil
+	return nil
 }

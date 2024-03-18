@@ -36,7 +36,7 @@ type PlayerOperationSyncGacha struct {
 
 // SyncGachaHandle 同步抽卡记录
 
-func (_ PlayerOperationSyncGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationSyncGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	token := userAccount.HypergryphToken
 	channelId := "1"
@@ -53,7 +53,7 @@ func (_ PlayerOperationSyncGacha) Run(uid string, userAccount account.UserAccoun
 			msg, _ := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(chatId, messageId, 5)
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return true, nil
+			return nil
 		}
 	}
 	// 获取角色抽卡记录
@@ -64,7 +64,7 @@ func (_ PlayerOperationSyncGacha) Run(uid string, userAccount account.UserAccoun
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, err
+		return err
 	}
 
 	// 获取上次更新时间
@@ -94,5 +94,5 @@ func (_ PlayerOperationSyncGacha) Run(uid string, userAccount account.UserAccoun
 	sendMessage := tgbotapi.NewMessage(chatId, "抽卡记录同步成功！")
 	sendMessage.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }

@@ -11,7 +11,7 @@ import (
 )
 
 // HeadhuntHandle 寻访模拟
-func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
+func HeadhuntHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
@@ -24,7 +24,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 			sendMessage := tgbotapi.NewMessage(chatId, "模拟寻访功能已关闭！")
 			msg, _ := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return true, nil
+			return nil
 		}
 	}
 
@@ -41,12 +41,12 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 			sendMessage := tgbotapi.NewMessage(chatId, text)
 			msg, _ := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return true, nil
+			return nil
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	key := fmt.Sprintf("headhuntTimes:%d", userId)
@@ -62,7 +62,7 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 				sendMessage.ReplyToMessageID = messageId
 				msg, _ := bot.Arknights.Send(sendMessage)
 				messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
-				return true, nil
+				return nil
 			}
 			utils.RedisSet(key, strconv.Itoa(times+1), 0)
 		}
@@ -79,13 +79,13 @@ func HeadhuntHandle(update tgbotapi.Update) (bool, error) {
 		messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
 		times, _ := strconv.Atoi(utils.RedisGet(key))
 		utils.RedisSet(key, strconv.Itoa(times-1), 0)
-		return true, nil
+		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendPhoto)
 	//messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
-	return true, nil
+	return nil
 }
 func ResetHeadhuntTimes() func() {
 	resetHeadhuntTimes := func() {

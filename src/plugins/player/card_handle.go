@@ -17,7 +17,7 @@ type PlayerOperationCard struct {
 
 // BoxHandle 我的干员
 
-func (_ PlayerOperationCard) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationCard) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
@@ -29,12 +29,12 @@ func (_ PlayerOperationCard) Run(uid string, userAccount account.UserAccount, ch
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
 	sendPhoto.Caption = "点击复制UID:`" + uid + "`"
 	sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendPhoto)
-	return true, nil
+	return nil
 }

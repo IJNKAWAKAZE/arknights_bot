@@ -10,13 +10,13 @@ import (
 )
 
 // SignPlayer 选择签到角色
-func SignPlayer(callBack tgbotapi.Update) (bool, error) {
+func SignPlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
 	if len(d) < 3 {
-		return true, nil
+		return nil
 	}
 
 	userId := callbackQuery.From.ID
@@ -27,7 +27,7 @@ func SignPlayer(callBack tgbotapi.Update) (bool, error) {
 	if userId != clickUserId {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
 		bot.Arknights.Send(answer)
-		return true, nil
+		return nil
 	}
 
 	var userAccount account.UserAccount

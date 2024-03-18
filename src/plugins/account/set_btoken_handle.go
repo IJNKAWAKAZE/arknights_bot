@@ -12,7 +12,7 @@ import (
 var bToken = make(map[int64]string)
 
 // SetBTokenHandle 设置btoken
-func SetBTokenHandle(update tgbotapi.Update) (bool, error) {
+func SetBTokenHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 
@@ -21,7 +21,7 @@ func SetBTokenHandle(update tgbotapi.Update) (bool, error) {
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定B服角色！")
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
@@ -35,7 +35,7 @@ func SetBTokenHandle(update tgbotapi.Update) (bool, error) {
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要解绑的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }
 
 func WaitBToken(chatId, userId int64, uid string) {
@@ -51,7 +51,7 @@ func WaitBToken(chatId, userId int64, uid string) {
 }
 
 // SetBToken 设置btoken
-func SetBToken(update tgbotapi.Update) (bool, error) {
+func SetBToken(update tgbotapi.Update) error {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -64,7 +64,7 @@ func SetBToken(update tgbotapi.Update) (bool, error) {
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "请检查token是否正确。")
 		bot.Arknights.Send(sendMessage)
-		return true, err
+		return err
 	}
 
 	bot.DBEngine.Exec("update user_player set b_token = ? where user_number = ? and uid = ?", token, userId, bToken[userId])
@@ -72,5 +72,5 @@ func SetBToken(update tgbotapi.Update) (bool, error) {
 	bot.Arknights.Send(sendMessage)
 	delete(telebot.WaitMessage, chatId)
 	delete(bToken, userId)
-	return true, nil
+	return nil
 }

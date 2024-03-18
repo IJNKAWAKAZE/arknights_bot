@@ -11,7 +11,7 @@ import (
 
 var setResume = make(map[int64]string)
 
-func ResumeHandle(update tgbotapi.Update) (bool, error) {
+func ResumeHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	var players []UserPlayer
@@ -19,7 +19,7 @@ func ResumeHandle(update tgbotapi.Update) (bool, error) {
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
@@ -33,7 +33,7 @@ func ResumeHandle(update tgbotapi.Update) (bool, error) {
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要设置的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }
 
 func WaitResume(chatId, userId int64, uid string) {
@@ -44,7 +44,7 @@ func WaitResume(chatId, userId int64, uid string) {
 }
 
 // Resume 设置签名
-func Resume(update tgbotapi.Update) (bool, error) {
+func Resume(update tgbotapi.Update) error {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -53,7 +53,7 @@ func Resume(update tgbotapi.Update) (bool, error) {
 	if utf8.RuneCountInString(resume) > 30 {
 		sendMessage := tgbotapi.NewMessage(chatId, "超出签名长度限制")
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	if resume == "null" {
 		resume = ""
@@ -63,5 +63,5 @@ func Resume(update tgbotapi.Update) (bool, error) {
 	bot.Arknights.Send(sendMessage)
 	delete(telebot.WaitMessage, chatId)
 	delete(setResume, userId)
-	return true, nil
+	return nil
 }

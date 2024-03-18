@@ -30,7 +30,7 @@ func (b *Bot) InitMap() {
 	b.photoCommandProcess = make(map[string]callbackFunction)
 }
 
-type callbackFunction = func(update tgbotapi.Update) (bool, error) // isBreak,error
+type callbackFunction = func(update tgbotapi.Update) error
 type inlineMatcher struct {
 	prefix    string
 	processor callbackFunction
@@ -40,7 +40,7 @@ type genericMatchProcessor struct {
 	Processor callbackFunction
 }
 
-func (b *Bot) NewProcessor(match func(tgbotapi.Update) bool, processor func(update tgbotapi.Update) (bool, error)) {
+func (b *Bot) NewProcessor(match func(tgbotapi.Update) bool, processor func(update tgbotapi.Update) error) {
 	b.matchProcessorSlice = append(b.matchProcessorSlice,
 		&genericMatchProcessor{
 			MatchFunc: match,
@@ -49,27 +49,27 @@ func (b *Bot) NewProcessor(match func(tgbotapi.Update) bool, processor func(upda
 	)
 }
 
-func (b *Bot) NewCallBackProcessor(callBackType string, processor func(update tgbotapi.Update) (bool, error)) {
+func (b *Bot) NewCallBackProcessor(callBackType string, processor func(update tgbotapi.Update) error) {
 
 	b.addProcessor(callBackType, processor, b.callbackQueryProcess)
 }
 
-func (b *Bot) NewCommandProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
+func (b *Bot) NewCommandProcessor(command string, processor func(update tgbotapi.Update) error) {
 
 	b.addProcessor(command, processor, b.commandProcessor)
 }
 
-func (b *Bot) NewPrivateCommandProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
+func (b *Bot) NewPrivateCommandProcessor(command string, processor func(update tgbotapi.Update) error) {
 
 	b.addProcessor(command, processor, b.privateCommandProcessor)
 }
 
-func (b *Bot) NewWaitMessageProcessor(waitMessage string, processor func(update tgbotapi.Update) (bool, error)) {
+func (b *Bot) NewWaitMessageProcessor(waitMessage string, processor func(update tgbotapi.Update) error) {
 
 	b.addProcessor(waitMessage, processor, b.waitMsgProcess)
 }
 
-func (b *Bot) NewPhotoMessageProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
+func (b *Bot) NewPhotoMessageProcessor(command string, processor func(update tgbotapi.Update) error) {
 
 	b.addProcessor(command, processor, b.photoCommandProcess)
 }
@@ -157,12 +157,9 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 		process := b.selectFunction(msg)
-		isBreak, err := process(msg)
+		err := process(msg)
 		if err != nil {
 			log.Println("Plugin Error", err.Error())
-		}
-		if isBreak {
-			break
 		}
 	}
 }

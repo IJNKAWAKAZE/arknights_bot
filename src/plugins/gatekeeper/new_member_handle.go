@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewMemberHandle(update tgbotapi.Update) (bool, error) {
+func NewMemberHandle(update tgbotapi.Update) error {
 	message := update.Message
 	for _, member := range message.NewChatMembers {
 		if member.ID == message.From.ID { // 自己加入群组
@@ -21,5 +21,5 @@ func NewMemberHandle(update tgbotapi.Update) (bool, error) {
 		// 邀请加入群组，无需进行验证
 		utils.SaveInvite(message, &member)
 	}
-	return true, nil
+	return nil
 }

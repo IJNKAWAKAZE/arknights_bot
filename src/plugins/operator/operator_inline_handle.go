@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func InlineOperator(update tgbotapi.Update) (bool, error) {
+func InlineOperator(update tgbotapi.Update) error {
 	_, name, _ := strings.Cut(update.InlineQuery.Query, "干员-")
 	operatorList := utils.GetOperatorsByName(name)
 	var inlineQueryResults []interface{}
@@ -32,5 +32,5 @@ func InlineOperator(update tgbotapi.Update) (bool, error) {
 		CacheTime:     0,
 	}
 	bot.Arknights.Send(answerInlineQuery)
-	return true, nil
+	return nil
 }

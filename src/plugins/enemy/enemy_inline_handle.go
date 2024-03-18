@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func InlineEnemy(update tgbotapi.Update) (bool, error) {
+func InlineEnemy(update tgbotapi.Update) error {
 	_, name, _ := strings.Cut(update.InlineQuery.Query, "敌人-")
 	enemyList := utils.GetEnemiesByName(name)
 	var inlineQueryResults []interface{}
@@ -33,7 +33,7 @@ func InlineEnemy(update tgbotapi.Update) (bool, error) {
 	}
 	_, err := bot.Arknights.Send(answerInlineQuery)
 	if err != nil {
-		return true, err
+		return err
 	}
-	return true, nil
+	return nil
 }

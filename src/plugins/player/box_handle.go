@@ -17,7 +17,7 @@ type PlayerOperationBox struct {
 
 // BoxHandle 我的干员
 
-func (_ PlayerOperationBox) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationBox) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	param := message.CommandArguments()
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
@@ -28,7 +28,7 @@ func (_ PlayerOperationBox) Run(uid string, userAccount account.UserAccount, cha
 		sendMessage := tgbotapi.NewMessage(chatId, "参数错误")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	port := viper.GetString("http.port")
@@ -38,11 +38,11 @@ func (_ PlayerOperationBox) Run(uid string, userAccount account.UserAccount, cha
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "box.jpg"})
 	sendDocument.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendDocument)
-	return true, nil
+	return nil
 }

@@ -23,13 +23,13 @@ func (_ PlayerOperationExport) hintWordForPlayerSelection() string {
 
 // BoxHandle 我的干员
 
-func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	var userGacha []UserGacha
 	res := utils.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "不存在抽卡记录！")
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
@@ -56,5 +56,5 @@ func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, 
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: b, Name: fileName})
 	sendDocument.Caption = "抽卡记录导出成功！"
 	bot.Arknights.Send(sendDocument)
-	return true, nil
+	return nil
 }

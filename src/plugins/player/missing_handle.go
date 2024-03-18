@@ -18,7 +18,7 @@ type PlayerOperationMissing struct {
 
 // BoxHandle 我的干员
 
-func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
 	bot.Arknights.Send(sendAction)
@@ -29,7 +29,7 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 		sendMessage := tgbotapi.NewMessage(chatId, "参数错误")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	port := viper.GetString("http.port")
@@ -39,11 +39,11 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "missing.jpg"})
 	sendDocument.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendDocument)
-	return true, nil
+	return nil
 }

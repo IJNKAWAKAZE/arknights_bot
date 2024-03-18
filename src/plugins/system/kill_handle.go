@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func KillHandle(update tgbotapi.Update) (bool, error) {
+func KillHandle(update tgbotapi.Update) error {
 	owner := viper.GetInt64("bot.owner")
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
@@ -19,12 +19,12 @@ func KillHandle(update tgbotapi.Update) (bool, error) {
 	if owner == userId {
 		log.Println("关闭机器人")
 		os.Exit(0)
-		return true, nil
+		return nil
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 	sendMessage.ReplyToMessageID = messageId
 	msg, _ := bot.Arknights.Send(sendMessage)
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	return true, nil
+	return nil
 }

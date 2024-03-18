@@ -25,10 +25,10 @@ type PlayerOperationImportS1 struct {
 	commandoperation.MultiStepOperation
 }
 
-func (o PlayerOperationImportS1) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (o PlayerOperationImportS1) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	utils.SendMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。", true, nil)
 	commandoperation.AddNextStep(chatId, *o.NextStepOperation(uid, userAccount, message.CommandArguments()), "importGacha")
-	return true, nil
+	return nil
 }
 func (_ PlayerOperationImportS1) NextStepOperation(playerUID string, userAccount account.UserAccount, param string) *commandoperation.NextStepOperation {
 	return &commandoperation.NextStepOperation{
@@ -43,7 +43,7 @@ type PlayerOperationImportS2 struct {
 	commandoperation.OperationAbstract
 }
 
-func (o PlayerOperationImportS2) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (o PlayerOperationImportS2) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	var importGachaData ImportGachaData
 	var k = *message.Document
 	f, _ := utils.DownloadFile(k.FileID)
@@ -53,13 +53,13 @@ func (o PlayerOperationImportS2) Run(uid string, userAccount account.UserAccount
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "解析抽卡记录失败！")
 		bot.Arknights.Send(sendMessage)
-		return true, err
+		return err
 	}
 
 	go addGacha(importGachaData, userAccount.UserNumber, uid, utils.GetFullName(message.From))
 	sendMessage := tgbotapi.NewMessage(chatId, "抽卡记录导入成功！")
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }
 func (o PlayerOperationImportS2) CheckRequirementsAndPrepare(update tgbotapi.Update) bool {
 	doc := update.Message.Document

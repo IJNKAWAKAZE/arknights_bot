@@ -11,7 +11,7 @@ import (
 )
 
 // BindHandle 绑定角色
-func BindHandle(update tgbotapi.Update) (bool, error) {
+func BindHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
 	bot.Arknights.Send(sendMessage)
@@ -22,11 +22,11 @@ func BindHandle(update tgbotapi.Update) (bool, error) {
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
 	telebot.WaitMessage[chatId] = "setToken"
-	return true, nil
+	return nil
 }
 
 // SetToken 设置token
-func SetToken(update tgbotapi.Update) (bool, error) {
+func SetToken(update tgbotapi.Update) error {
 	message := update.Message
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -39,7 +39,7 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
 		bot.Arknights.Send(sendMessage)
-		return true, err
+		return err
 	}
 	// 查询账户是否存在
 	var userAccount UserAccount
@@ -69,7 +69,7 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	if err != nil || len(players) == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定角色！")
 		bot.Arknights.Send(sendMessage)
-		return true, err
+		return err
 	}
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
@@ -84,14 +84,14 @@ func SetToken(update tgbotapi.Update) (bool, error) {
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }
 
 // CancelHandle 取消操作
-func CancelHandle(update tgbotapi.Update) (bool, error) {
+func CancelHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	delete(telebot.WaitMessage, chatId)
 	sendMessage := tgbotapi.NewMessage(chatId, "已取消操作")
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }
