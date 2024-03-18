@@ -62,21 +62,33 @@ func RecruitHandle(update tgbotapi.Update) (bool, error) {
 	if len(tags) != 5 {
 		sendMessage := tgbotapi.NewMessage(chatId, "标签数量错误，请更换图片。")
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		_, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return true, err
+		}
 		return true, nil
 	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	bot.Arknights.Send(sendAction)
+	_, err := bot.Arknights.Send(sendAction)
+	if err != nil {
+		return true, err
+	}
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s", port, strings.Join(tags, " ")), 0, 1.5)
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		_, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return true, err
+		}
 		return true, nil
 	}
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "recruit.jpg"})
 	sendDocument.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendDocument)
+	_, err2 := bot.Arknights.Send(sendDocument)
+	if err2 != nil {
+		return true, err
+	}
 	return true, nil
 }

@@ -11,19 +11,30 @@ import (
 var WaitMessage = make(map[int64]interface{})
 
 type Bot struct {
-	matchProcessorSlice []*matchProcessor
+	matchProcessorSlice     []*genericMatchProcessor
+	commandProcessor        map[string]callbackFunction
+	privateCommandProcessor map[string]callbackFunction
+	photoCommandProcess     map[string]callbackFunction
+	inlineQueryProcess      []*inlineMatcher
+	callbackQueryProcess    map[string]callbackFunction
+	waitMsgProcess          map[string]callbackFunction
 }
 
 var now = time.Now().Unix()
 
-type matchProcessor struct {
+type callbackFunction = func(update tgbotapi.Update) (bool, error) // isBreak,error
+type inlineMatcher struct {
+	prefix    string
+	processor callbackFunction
+}
+type genericMatchProcessor struct {
 	MatchFunc func(tgbotapi.Update) bool
-	Processor func(update tgbotapi.Update) (bool, error) // isBreak,error
+	Processor callbackFunction
 }
 
 func (b *Bot) NewProcessor(match func(tgbotapi.Update) bool, processor func(update tgbotapi.Update) (bool, error)) {
 	b.matchProcessorSlice = append(b.matchProcessorSlice,
-		&matchProcessor{
+		&genericMatchProcessor{
 			MatchFunc: match,
 			Processor: processor,
 		},
@@ -31,69 +42,102 @@ func (b *Bot) NewProcessor(match func(tgbotapi.Update) bool, processor func(upda
 }
 
 func (b *Bot) NewCallBackProcessor(callBackType string, processor func(update tgbotapi.Update) (bool, error)) {
-	b.matchProcessorSlice = append(b.matchProcessorSlice,
-		&matchProcessor{
-			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.CallbackQuery != nil && strings.Split(update.CallbackData(), ",")[0] == callBackType
-			},
-			Processor: processor,
-		},
-	)
+
+	b.addProcessor(callBackType, processor, b.callbackQueryProcess)
 }
 
 func (b *Bot) NewCommandProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
-	b.matchProcessorSlice = append(b.matchProcessorSlice,
-		&matchProcessor{
-			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.Message != nil && update.Message.IsCommand() && update.Message.Command() == command
-			},
-			Processor: processor,
-		},
-	)
+
+	b.addProcessor(command, processor, b.commandProcessor)
 }
 
 func (b *Bot) NewPrivateCommandProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
-	b.matchProcessorSlice = append(b.matchProcessorSlice,
-		&matchProcessor{
-			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.Message != nil && update.Message.IsCommand() && update.Message.Command() == command && update.Message.Chat.IsPrivate()
-			},
-			Processor: processor,
-		},
-	)
+
+	b.addProcessor(command, processor, b.privateCommandProcessor)
 }
 
 func (b *Bot) NewWaitMessageProcessor(waitMessage string, processor func(update tgbotapi.Update) (bool, error)) {
-	b.matchProcessorSlice = append(b.matchProcessorSlice,
-		&matchProcessor{
-			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.Message != nil && update.Message.Chat.IsPrivate() && WaitMessage[update.Message.From.ID] == waitMessage
-			},
-			Processor: processor,
-		},
-	)
+
+	b.addProcessor(waitMessage, processor, b.waitMsgProcess)
 }
 
 func (b *Bot) NewPhotoMessageProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
-	b.matchProcessorSlice = append(b.matchProcessorSlice,
-		&matchProcessor{
-			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.Message != nil && len(update.Message.Photo) > 0 && (update.Message.Caption == command || update.Message.Caption == command+"@"+viper.GetString("bot.name"))
-			},
-			Processor: processor,
-		},
-	)
+
+	b.addProcessor(command, processor, b.photoCommandProcess)
 }
 
-func (b *Bot) NewInlineQueryProcessor(command string, processor func(update tgbotapi.Update) (bool, error)) {
-	b.matchProcessorSlice = append(b.matchProcessorSlice,
-		&matchProcessor{
-			MatchFunc: func(update tgbotapi.Update) bool {
-				return update.InlineQuery != nil && strings.HasPrefix(update.InlineQuery.Query, command)
-			},
-			Processor: processor,
-		},
-	)
+func (b *Bot) NewInlineQueryProcessor(command string, processor callbackFunction) {
+	b.inlineQueryProcess = append(b.inlineQueryProcess, &inlineMatcher{
+		prefix:    command,
+		processor: processor,
+	})
+}
+func (b *Bot) addProcessor(command string, processor callbackFunction, funcMap map[string]callbackFunction) {
+	_, ok := funcMap[command]
+	if ok {
+		log.Printf("command %s is already added overriding \n", command)
+	}
+	funcMap[command] = processor
+}
+func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
+	// generic first
+	for _, k := range b.matchProcessorSlice {
+		if k.MatchFunc(msg) {
+			return k.Processor
+		}
+	}
+	if msg.Message != nil {
+		// wait msg
+		if msg.Message.Chat.IsPrivate() {
+			res, ok := WaitMessage[msg.Message.From.ID]
+			if ok {
+				waitMsg, is_str := res.(string)
+				if is_str {
+					return b.waitMsgProcess[waitMsg]
+				}
+			}
+		}
+		//photo related cmd
+		if len(msg.Message.Photo) > 0 {
+			//update.Message.Caption == command+"@"+)
+			suffix := "@" + viper.GetString("bot.name")
+			command, _ := strings.CutSuffix(msg.Message.Caption, suffix)
+			result, ok := b.photoCommandProcess[command]
+			if ok {
+				return result
+			}
+		}
+		//private cmd
+		command := msg.Message.Command()
+		if msg.Message.Chat.IsPrivate() {
+			result, ok := b.privateCommandProcessor[command]
+			if ok {
+				return result
+			}
+		}
+		//normal command
+		result, ok := b.commandProcessor[command]
+		if ok {
+			return result
+		}
+	}
+	// callback
+	if msg.CallbackQuery != nil {
+		callback_q := strings.Split(msg.CallbackData(), ",")[0]
+		result, ok := b.callbackQueryProcess[callback_q]
+		if ok {
+			return result
+		}
+	}
+	//inline Q
+	if msg.InlineQuery != nil {
+		for _, v := range b.inlineQueryProcess {
+			if strings.HasPrefix(msg.InlineQuery.Query, v.prefix) {
+				return v.processor
+			}
+		}
+	}
+	return nil
 }
 
 func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
@@ -101,24 +145,17 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 		panic("updates is nil")
 	}
 	for {
-		select {
-		case msg := <-updates:
-			//log.Printf("Bot.Run%#v\n", msg)
-			if msg.Message != nil && msg.Message.Time().Unix() < now {
-				continue
-			}
-			for i := range b.matchProcessorSlice {
-				if b.matchProcessorSlice[i].MatchFunc(msg) {
-					log.Println("Bot.Match", i)
-					isBreak, err := b.matchProcessorSlice[i].Processor(msg)
-					if err != nil {
-						log.Println("Bot.Match Error", err.Error())
-					}
-					if isBreak {
-						break
-					}
-				}
-			}
+		msg := <-updates
+		if msg.Message != nil && msg.Message.Time().Unix() < now {
+			continue
+		}
+		process := b.selectFunction(msg)
+		isBreak, err := process(msg)
+		if err != nil {
+			log.Println("Plugin Error", err.Error())
+		}
+		if isBreak {
+			break
 		}
 	}
 }
