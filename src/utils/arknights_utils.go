@@ -38,12 +38,6 @@ type Operator struct {
 	Tags         string   `json:"tags"`         // 标签
 }
 
-type Stage struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
-	Path string `json:"path"`
-}
-
 var OperatorMap = make(map[string]Operator)
 var RecruitOperatorList []Operator
 
@@ -102,4 +96,23 @@ func GetEnemiesByName(name string) map[string]string {
 		}
 	}
 	return enemyList
+}
+
+func GetItemByName(name string) map[string]string {
+	var materialList = make(map[string]string)
+	res, _ := http.Get(viper.GetString("api.stage_result"))
+	read, _ := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	j := gjson.ParseBytes(read)
+	for _, d := range j.Get("data.recommendedStageList").Array() {
+		itemType := d.Get("itemType").String()
+		if strings.Contains(strings.ToLower(itemType), strings.ToLower(name)) {
+			paintingName := fmt.Sprintf("道具_%s.png", itemType)
+			m := Md5(paintingName)
+			path := "https://prts.wiki" + fmt.Sprintf("/images/thumb/%s/%s/", m[:1], m[:2])
+			pic := path + paintingName + "/75px-" + paintingName
+			materialList[itemType] = pic
+		}
+	}
+	return materialList
 }

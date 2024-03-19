@@ -5,6 +5,7 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
+	"arknights_bot/plugins/material"
 	"arknights_bot/plugins/operator"
 	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/sign"
@@ -43,6 +44,7 @@ func Serve() {
 	// InlineQuery
 	bot.TeleBot.NewInlineQueryProcessor("干员", operator.InlineOperator)
 	bot.TeleBot.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
+	bot.TeleBot.NewInlineQueryProcessor("材料", material.InlineMaterial)
 
 	// 私聊
 	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
@@ -75,6 +77,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
 	bot.TeleBot.NewCommandProcessor("enemy", enemy.EnemyHandle)
+	bot.TeleBot.NewCommandProcessor("material", material.MaterialHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
 	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
 	bot.TeleBot.NewCommandProcessor("redeem", player.PlayerHandle)

@@ -1,4 +1,4 @@
-package enemy
+package material
 
 import (
 	bot "arknights_bot/config"
@@ -8,9 +8,9 @@ import (
 	"strings"
 )
 
-func InlineEnemy(update tgbotapi.Update) error {
-	_, name, _ := strings.Cut(update.InlineQuery.Query, "敌人-")
-	enemyList := utils.GetEnemiesByName(name)
+func InlineMaterial(update tgbotapi.Update) error {
+	_, name, _ := strings.Cut(update.InlineQuery.Query, "材料-")
+	enemyList := utils.GetItemByName(name)
 	var inlineQueryResults []interface{}
 	for k, v := range enemyList {
 		id, _ := gonanoid.New(32)
@@ -21,7 +21,7 @@ func InlineEnemy(update tgbotapi.Update) error {
 			Description: "查询" + k,
 			ThumbURL:    v,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
-				Text: "/enemy " + k,
+				Text: "/material " + k,
 			},
 		}
 		inlineQueryResults = append(inlineQueryResults, queryResult)

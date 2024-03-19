@@ -15,7 +15,8 @@ api:
   user_agent: Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36 EdgA/118.0.2088.66
   wiki: https://prts.wiki/w/
   enemy: https://prts.wiki/index.php?title=%E6%95%8C%E4%BA%BA%E4%B8%80%E8%A7%88%2F%E6%95%B0%E6%8D%AE&action=raw
-  stage: https://prts.wiki/api.php?action=parse&format=json&page=%E5%85%B3%E5%8D%A1%E4%B8%80%E8%A7%88%2F%E4%B8%BB%E9%A2%98%E6%9B%B2
+  item: https://backend.yituliu.cn/item/value?expCoefficient=0.625
+  stage_result: https://backend.yituliu.cn/stage/result?expCoefficient=0.625
   bilibili_buvid: https://api.bilibili.com/x/frontend/finger/spi
   bilibili_register_buvid: https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi
   bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly
