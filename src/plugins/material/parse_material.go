@@ -40,8 +40,14 @@ func ParseMaterial(name string) Material {
 			itemMap[item.Get("itemId").String()] = item.Get("itemName").String()
 		}
 	}
-	res, _ := http.Get(viper.GetString("api.stage_result"))
-	read, _ := io.ReadAll(res.Body)
+	res, err := http.Get(viper.GetString("api.stage_result"))
+	if err != nil {
+		return material
+	}
+	read, err := io.ReadAll(res.Body)
+	if err != nil {
+		return material
+	}
 	defer res.Body.Close()
 	j := gjson.ParseBytes(read)
 	for _, d := range j.Get("data.recommendedStageList").Array() {

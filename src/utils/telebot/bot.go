@@ -157,9 +157,11 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 		process := b.selectFunction(msg)
-		err := process(msg)
-		if err != nil {
-			log.Println("Plugin Error", err.Error())
+		if process != nil {
+			err := process(msg)
+			if err != nil {
+				log.Println("Plugin Error", err.Error())
+			}
 		}
 	}
 }

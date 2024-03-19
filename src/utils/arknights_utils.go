@@ -100,8 +100,14 @@ func GetEnemiesByName(name string) map[string]string {
 
 func GetItemByName(name string) map[string]string {
 	var materialList = make(map[string]string)
-	res, _ := http.Get(viper.GetString("api.stage_result"))
-	read, _ := io.ReadAll(res.Body)
+	res, err := http.Get(viper.GetString("api.stage_result"))
+	if err != nil {
+		return materialList
+	}
+	read, err := io.ReadAll(res.Body)
+	if err != nil {
+		return materialList
+	}
 	defer res.Body.Close()
 	j := gjson.ParseBytes(read)
 	for _, d := range j.Get("data.recommendedStageList").Array() {
