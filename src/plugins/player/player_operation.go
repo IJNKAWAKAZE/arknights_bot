@@ -14,7 +14,6 @@ var (
 		"export_gacha": PlayerOperationExport{},
 		"missing":      PlayerOperationMissing{},
 		"base":         PlayerOperationBase{},
-		"sync_gacha":   PlayerOperationSyncGacha{},
 		"redeem":       PlayerOperationRedeem{},
 	}
 )

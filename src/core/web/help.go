@@ -33,7 +33,6 @@ func Help(r *gin.Engine) {
 		privateCmds = append(privateCmds, Cmd{Cmd: "/cancel", Desc: "取消操作", Param: "", IsBind: false})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/reset_token", Desc: "重设token", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/btoken", Desc: "设置BToken", Param: "", IsBind: true})
-		privateCmds = append(privateCmds, Cmd{Cmd: "/sync_gacha", Desc: "同步抽卡记录", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/import_gacha", Desc: "导入抽卡记录", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/export_gacha", Desc: "导出抽卡记录", Param: "", IsBind: true})
 
