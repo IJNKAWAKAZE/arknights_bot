@@ -38,12 +38,24 @@ type Operator struct {
 	Tags         string   `json:"tags"`         // 标签
 }
 
+type Material struct {
+	ZoneName          string `json:"zoneName"`          // 关卡
+	Code              string `json:"code"`              // 编码
+	Name              string `json:"name"`              // 主材料名称
+	Icon              string `json:"icon"`              // 主材料图标
+	KnockRating       string `json:"knockRating"`       // 主产物掉率
+	ApExpect          string `json:"apExpect"`          // 期望理智
+	SecondaryItem     string `json:"SecondaryItem"`     // 副产物名称
+	SecondaryItemIcon string `json:"SecondaryItemIcon"` // 副产物图标
+	StageEfficiency   string `json:"stageEfficiency"`   // 关卡效率
+}
+
 var OperatorMap = make(map[string]Operator)
 var RecruitOperatorList []Operator
 
 func GetOperators() []Operator {
 	var operators []Operator
-	operatorsJson := RedisGet("data_source")
+	operatorsJson := RedisGet("operatorList")
 	json.Unmarshal([]byte(operatorsJson), &operators)
 	return operators
 }
@@ -98,27 +110,27 @@ func GetEnemiesByName(name string) map[string]string {
 	return enemyList
 }
 
-func GetItemByName(name string) map[string]string {
-	var materialList = make(map[string]string)
-	res, err := http.Get(viper.GetString("api.stage_result"))
-	if err != nil {
-		return materialList
-	}
-	read, err := io.ReadAll(res.Body)
-	if err != nil {
-		return materialList
-	}
-	defer res.Body.Close()
-	j := gjson.ParseBytes(read)
-	for _, d := range j.Get("data.recommendedStageList").Array() {
-		itemType := d.Get("itemType").String()
-		if strings.Contains(strings.ToLower(itemType), strings.ToLower(name)) {
-			paintingName := fmt.Sprintf("道具_%s.png", itemType)
-			m := Md5(paintingName)
-			path := "https://prts.wiki" + fmt.Sprintf("/images/thumb/%s/%s/", m[:1], m[:2])
-			pic := path + paintingName + "/75px-" + paintingName
-			materialList[itemType] = pic
+func GetItemsByName(name string) map[string]string {
+	var materialMap = make(map[string]string)
+	materialJson := RedisGet("materialMap")
+	gjson.Parse(materialJson).ForEach(func(key, value gjson.Result) bool {
+		if strings.Contains(strings.ToLower(key.String()), strings.ToLower(name)) {
+			materialMap[key.String()] = value.Get("0.icon").String()
 		}
-	}
-	return materialList
+		return true
+	})
+	return materialMap
+}
+
+func GetItemByName(name string) []Material {
+	var materials []Material
+	materialJson := RedisGet("materialMap")
+	gjson.Parse(materialJson).ForEach(func(key, value gjson.Result) bool {
+		if strings.ToLower(key.String()) == strings.ToLower(name) {
+			json.Unmarshal([]byte(value.String()), &materials)
+			return false
+		}
+		return true
+	})
+	return materials
 }

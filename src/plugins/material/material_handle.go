@@ -33,8 +33,8 @@ func MaterialHandle(update tgbotapi.Update) error {
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
-	material := ParseMaterial(name)
-	if material.Name == "" {
+	materials := utils.GetItemByName(name)
+	if len(materials) == 0 {
 		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "未查询到此材料，请输入正确的材料名称。")
 		sendMessage.ReplyToMessageID = messageId
 		msg, _ := bot.Arknights.Send(sendMessage)
@@ -53,9 +53,9 @@ func MaterialHandle(update tgbotapi.Update) error {
 	}
 
 	if fileId != "" {
-		sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileID(fileId))
-		sendDocument.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendDocument)
+		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(fileId))
+		sendPhoto.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendPhoto)
 		return nil
 	}
 
@@ -67,13 +67,13 @@ func MaterialHandle(update tgbotapi.Update) error {
 		bot.Arknights.Send(sendMessage)
 		return nil
 	}
-	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "material.jpg"})
-	sendDocument.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendDocument)
+	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
+	sendPhoto.ReplyToMessageID = messageId
+	msg, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	utils.RedisSet(key, msg.Document.FileID, 0)
+	utils.RedisSet(key, msg.Photo[0].FileID, 0)
 	return nil
 }

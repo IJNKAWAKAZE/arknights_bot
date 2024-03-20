@@ -10,9 +10,9 @@ import (
 
 func InlineMaterial(update tgbotapi.Update) error {
 	_, name, _ := strings.Cut(update.InlineQuery.Query, "材料-")
-	enemyList := utils.GetItemByName(name)
+	itemList := utils.GetItemsByName(name)
 	var inlineQueryResults []interface{}
-	for k, v := range enemyList {
+	for k, v := range itemList {
 		id, _ := gonanoid.New(32)
 		queryResult := tgbotapi.InlineQueryResultArticle{
 			ID:          id,

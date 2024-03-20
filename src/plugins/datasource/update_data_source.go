@@ -6,6 +6,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 	"github.com/starudream/go-lib/core/v2/codec/json"
+	"github.com/tidwall/gjson"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -180,6 +182,66 @@ func UpdateDataSourceRunner() {
 	defer response.Body.Close()
 	utils.OperatorMap = make(map[string]utils.Operator)
 	utils.RecruitOperatorList = nil
-	utils.RedisSet("data_source", json.MustMarshalString(operators), 0)
+	utils.RedisSet("operatorList", json.MustMarshalString(operators), 0)
+	MaterialInfo()
 	log.Println("数据源更新完毕")
+}
+
+func MaterialInfo() {
+	var itemMap = make(map[string]string)
+	var materialMap = make(map[string][]utils.Material)
+	res, err := http.Get(viper.GetString("api.item"))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	read, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer res.Body.Close()
+	j := gjson.ParseBytes(read)
+	for _, item := range j.Get("data").Array() {
+		itemMap[item.Get("itemId").String()] = item.Get("itemName").String()
+	}
+
+	res, err = http.Get(viper.GetString("api.stage_result"))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	read, err = io.ReadAll(res.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer res.Body.Close()
+	j = gjson.ParseBytes(read)
+	for _, d := range j.Get("data.recommendedStageList").Array() {
+		for _, item := range d.Get("stageResultList").Array() {
+			var material utils.Material
+			material.ZoneName = item.Get("zoneName").String()
+			material.Code = item.Get("stageCode").String()
+			material.Name = item.Get("itemName").String()
+			paintingName := fmt.Sprintf("道具_%s.png", material.Name)
+			m := utils.Md5(paintingName)
+			path := "https://prts.wiki" + fmt.Sprintf("/images/thumb/%s/%s/", m[:1], m[:2])
+			pic := path + paintingName + "/75px-" + paintingName
+			material.Icon = pic
+			material.ApExpect = fmt.Sprintf("%.1f", item.Get("apExpect").Float())
+			material.KnockRating = fmt.Sprintf("%.1f%%", item.Get("knockRating").Float()*100)
+			material.SecondaryItem = itemMap[item.Get("secondaryItemId").String()]
+			if material.SecondaryItem != "" {
+				paintingName := fmt.Sprintf("道具_%s.png", material.SecondaryItem)
+				m := utils.Md5(paintingName)
+				path := "https://prts.wiki" + fmt.Sprintf("/images/thumb/%s/%s/", m[:1], m[:2])
+				pic := path + paintingName + "/75px-" + paintingName
+				material.SecondaryItemIcon = pic
+			}
+			material.StageEfficiency = fmt.Sprintf("%.1f%%", item.Get("stageEfficiency").Float()*100)
+			materialMap[material.Name] = append(materialMap[material.Name], material)
+		}
+	}
+	utils.RedisSet("materialMap", json.MustMarshalString(materialMap), 0)
 }
