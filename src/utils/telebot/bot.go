@@ -156,6 +156,9 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 		if msg.Message != nil && msg.Message.Time().Unix() < now {
 			continue
 		}
+		if msg.Message != nil && msg.Message.IsCommand() && msg.Message.SenderChat != nil {
+			tgbotapi.NewDeleteMessage(msg.FromChat().ID, msg.Message.MessageID)
+		}
 		process := b.selectFunction(msg)
 		if process != nil {
 			err := process(msg)
