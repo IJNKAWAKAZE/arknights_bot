@@ -90,5 +90,5 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("news", system.NewsHandle)
 	bot.TeleBot.NewCommandProcessor("clear", system.ClearHandle)
 	bot.TeleBot.NewCommandProcessor("kill", system.KillHandle)
-	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
+	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u), bot.Arknights)
 }

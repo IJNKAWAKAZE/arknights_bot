@@ -147,7 +147,7 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 	return nil
 }
 
-func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
+func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
 	if updates == nil {
 		panic("updates is nil")
 	}
@@ -157,7 +157,12 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 			continue
 		}
 		if msg.Message != nil && msg.Message.IsCommand() && msg.Message.From.ID == 136817688 {
-			tgbotapi.NewDeleteMessage(msg.FromChat().ID, msg.Message.MessageID)
+			k := tgbotapi.NewDeleteMessage(msg.FromChat().ID, msg.Message.MessageID)
+			_, err := ark.Send(k)
+			if err != nil {
+				log.Println("Delete Error", err.Error())
+			}
+			continue
 		}
 		process := b.selectFunction(msg)
 		if process != nil {
