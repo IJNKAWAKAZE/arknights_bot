@@ -158,7 +158,7 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
 		}
 		if msg.Message != nil && msg.Message.IsCommand() && msg.Message.From.ID == 136817688 {
 			k := tgbotapi.NewDeleteMessage(msg.FromChat().ID, msg.Message.MessageID)
-			_, err := ark.Send(k)
+			_, err := ark.Request(k)
 			if err != nil {
 				log.Println("Delete Error", err.Error())
 			}
