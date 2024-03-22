@@ -73,7 +73,7 @@ func QuizHandle(update tgbotapi.Update) error {
 		skins := operator.Skins
 		rsk, _ := rand.Int(rand.Reader, big.NewInt(int64(len(skins))))
 		painting := skins[rsk.Int64()]
-		if param == "h" {
+		if param == "h" || param == "ex" {
 			painting = skins[0]
 		}
 		if painting != "" {
