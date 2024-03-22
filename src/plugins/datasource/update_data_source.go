@@ -92,11 +92,13 @@ func UpdateDataSourceRunner() {
 		img, _ := url.QueryUnescape(selection.Nodes[0].FirstChild.Attr[0].Val)
 		compileRegex := regexp.MustCompile("_(.*?)_")
 		match := compileRegex.FindStringSubmatch(img)
-		name := match[1]
-		if skinCount[name] == 0 {
-			skinCount[name] = 1
-		} else {
-			skinCount[name] = skinCount[name] + 1
+		if len(match) > 1 {
+			name := match[1]
+			if skinCount[name] == 0 {
+				skinCount[name] = 1
+			} else {
+				skinCount[name] = skinCount[name] + 1
+			}
 		}
 	})
 
