@@ -91,7 +91,12 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 
 	if !adminPass {
 		// 新人发送box提醒
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。\n建议阅读群公约：[点击阅读](https://t.me/%s/14713)", utils.EscapesMarkdownV2(utils.GetFullName(callbackQuery.From)), callbackQuery.From.ID, callbackQuery.Message.Chat.UserName))
+		text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。\n", utils.EscapesMarkdownV2(utils.GetFullName(callbackQuery.From)), callbackQuery.From.ID)
+		id := utils.RedisGet(fmt.Sprintf("regulation:%d", chatId))
+		if id != "" {
+			text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%s)", callbackQuery.Message.Chat.UserName, id)
+		}
+		sendMessage := tgbotapi.NewMessage(chatId, text)
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		bot.Arknights.Send(sendMessage)
 	}
