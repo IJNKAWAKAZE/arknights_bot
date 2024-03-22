@@ -397,6 +397,24 @@ o:
 	return buf.Bytes()
 }
 
+func CutImg(url string) []byte {
+	pic, err := http.Get(url)
+	if err != nil {
+		log.Println("获取图片失败", err)
+		return nil
+	}
+	m, err := webp.Decode(pic.Body)
+	if err != nil {
+		log.Println("解析图片失败", err)
+		return nil
+	}
+	rgba := m.(*image.NYCbCrA)
+	subImage := rgba.SubImage(image.Rect(0, m.Bounds().Dy(), m.Bounds().Dx(), int(float64(m.Bounds().Dy())/1.5))).(*image.NYCbCrA)
+	buf := new(bytes.Buffer)
+	png.Encode(buf, subImage)
+	return buf.Bytes()
+}
+
 func overtime(f *bool) {
 	time.Sleep(time.Second * 10)
 	*f = false

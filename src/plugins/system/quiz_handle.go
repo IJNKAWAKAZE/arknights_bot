@@ -97,6 +97,13 @@ func QuizHandle(update tgbotapi.Update) error {
 		}
 		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	}
+	if param == "ex" {
+		pic := utils.CutImg(correct.ThumbURL)
+		if pic == nil {
+			return nil
+		}
+		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
+	}
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
