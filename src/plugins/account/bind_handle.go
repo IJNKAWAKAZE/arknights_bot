@@ -60,6 +60,7 @@ func SetToken(update tgbotapi.Update) error {
 			HypergryphToken: token,
 			SklandToken:     account.Skland.Token,
 			SklandCred:      account.Skland.Cred,
+			SklandId:        account.UserId,
 		}
 		bot.DBEngine.Table("user_account").Create(&userAccount)
 	}

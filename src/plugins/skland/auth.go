@@ -74,6 +74,7 @@ func Login(token string) (Account, error) {
 	if err != nil {
 		return account, fmt.Errorf("auth login by code error: %w", err)
 	}
+	account.UserId = res1.UserId
 	account.Skland.Cred = res1.Cred
 	account.Skland.Token = res1.Token
 	return account, nil
@@ -93,7 +94,7 @@ func authLoginByCode(code string) (*GenCredByCodeData, error) {
 
 // RefreshToken 刷新 token
 func RefreshToken(uid string, account Account) (Account, error) {
-	_, err := getUser(account.Skland)
+	_, err := GetUser(account.Skland)
 	if err == nil {
 		return account, nil
 	}
@@ -107,7 +108,7 @@ func RefreshToken(uid string, account Account) (Account, error) {
 	}
 	account.Skland.Token = res.Token
 
-	_, err = getUser(account.Skland)
+	_, err = GetUser(account.Skland)
 	if err != nil {
 		if !IsUnauthorized(err) {
 			return account, fmt.Errorf("get user error: %w", err)
@@ -133,7 +134,7 @@ func RefreshToken(uid string, account Account) (Account, error) {
 }
 
 // 获取用户信息
-func getUser(skland AccountSkland) (*User, error) {
+func GetUser(skland AccountSkland) (*User, error) {
 	return SklandRequest[*User](SKR(), "GET", "/api/v1/user", skland)
 }
 

@@ -9,6 +9,7 @@ type UserAccount struct {
 	HypergryphToken string    `json:"hypergryphToken"`
 	SklandToken     string    `json:"sklandToken"`
 	SklandCred      string    `json:"sklandCred"`
+	SklandId        string    `json:"sklandId"`
 	CreateTime      time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime      time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark          string    `json:"remark"`
