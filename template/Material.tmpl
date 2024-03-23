@@ -1,0 +1,61 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>材料查询</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            position: absolute;
+        }
+        tr {
+            box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.14),0 1px 5px rgba(0,0,0,.12);
+        }
+        td {
+            white-space: nowrap;
+            text-align: center;
+        }
+        img {
+            max-height: 60px;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <table>
+        <tr>
+            <th>关卡</th>
+            <th>主产物</th>
+            <th>主产物掉率</th>
+            <th>期望理智</th>
+            <th>副产物</th>
+            <th>综合效率</th>
+        </tr>
+        {{range .}}
+        <tr>
+            <td>
+                <div>{{.ZoneName}}</div>
+                <div>{{.Code}}</div>
+            </td>
+            <td><img class="icon" src="{{.Icon}}"/></td>
+            <td>{{.KnockRating}}</td>
+            <td>{{.ApExpect}}</td>
+            <td>
+                {{if .SecondaryItemIcon}}
+                <img class="icon" src="{{.SecondaryItemIcon}}"/>
+                {{end}}
+            </td>
+            <td>{{.StageEfficiency}}</td>
+        </tr>
+        {{end}}
+        <tr>
+            <td colspan="6">
+                <div style="text-align:left;color: #00a1d6">*主产物/副产物：价值占比最高/第二高的产物</div>
+                <div style="text-align:left;color: #00a1d6">*综合效率：产物的总价值 / 关卡理智消耗，长期囤材料建议以这个为参考依据</div>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

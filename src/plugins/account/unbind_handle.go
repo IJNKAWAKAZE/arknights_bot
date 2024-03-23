@@ -8,7 +8,7 @@ import (
 )
 
 // UnbindHandle 解绑角色
-func UnbindHandle(update tgbotapi.Update) (bool, error) {
+func UnbindHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	var players []UserPlayer
@@ -16,7 +16,7 @@ func UnbindHandle(update tgbotapi.Update) (bool, error) {
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
@@ -30,5 +30,5 @@ func UnbindHandle(update tgbotapi.Update) (bool, error) {
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要解绑的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }

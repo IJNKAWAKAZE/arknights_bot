@@ -25,6 +25,7 @@ type MissingChar struct {
 
 func Missing(r *gin.Engine) {
 	r.GET("/missing", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Missing.tmpl")
 		var missingInfo MissingInfo
 		param := c.Query("param")
 		var userAccount account.UserAccount
@@ -65,18 +66,18 @@ func Missing(r *gin.Engine) {
 		}
 
 		for _, operator := range operatorList {
-			name := operator.Get("name").String()
+			name := operator.Name
 			if name == "阿米娅(近卫)" {
 				continue
 			}
-			rarity := int(operator.Get("rarity").Int())
+			rarity := operator.Rarity
 			if filter(param, rarity) {
 				if _, has := myOperators[name]; !has {
 					char := MissingChar{
-						SkinId:     operator.Get("thumbURL").String(),
+						SkinId:     operator.ThumbURL,
 						Name:       name,
 						Rarity:     rarity,
-						Profession: operator.Get("profession").String(),
+						Profession: operator.Profession,
 					}
 					chars = append(chars, char)
 				}

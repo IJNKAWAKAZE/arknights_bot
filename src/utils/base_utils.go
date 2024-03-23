@@ -10,9 +10,15 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/playwright-community/playwright-go"
+	"github.com/tidwall/gjson"
+	"golang.org/x/image/webp"
 	"gorm.io/gorm"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -259,7 +265,7 @@ func RedisDelSetItem(key string, val string) {
 }
 
 // Screenshot 屏幕截图
-func Screenshot(url string, waitTime float64) []byte {
+func Screenshot(url string, waitTime float64, scale float64) []byte {
 	pw, err := playwright.Run()
 	if err != nil {
 		log.Println("未检测到playwright，开始自动安装...")
@@ -267,7 +273,7 @@ func Screenshot(url string, waitTime float64) []byte {
 		pw, _ = playwright.Run()
 	}
 	browser, _ := pw.Chromium.Launch()
-	page, _ := browser.NewPage()
+	page, _ := browser.NewPage(playwright.BrowserNewContextOptions{DeviceScaleFactor: &scale})
 	defer func() {
 		log.Println("关闭playwright")
 		page.Close()
@@ -284,7 +290,7 @@ func Screenshot(url string, waitTime float64) []byte {
 		log.Println("元素未加载取消截图操作")
 		return nil
 	}
-	screenshot, err := locator.Screenshot()
+	screenshot, err := locator.Screenshot(playwright.LocatorScreenshotOptions{Type: playwright.ScreenshotTypeJpeg})
 	if err != nil {
 		return nil
 	}
@@ -339,4 +345,108 @@ func Md5(str string) string {
 	m5 := md5.Sum([]byte(str))
 	m5str := hex.EncodeToString(m5[:])
 	return m5str
+}
+
+func ImgConvert(url string) []byte {
+	pic, err := http.Get(url)
+	if err != nil {
+		log.Println("获取图片失败")
+		return nil
+	}
+	m, err := webp.Decode(pic.Body)
+	if err != nil {
+		log.Println("解析图片失败")
+		return nil
+	}
+	bounds := m.Bounds()
+	dx := bounds.Dx()
+	dy := bounds.Dy()
+	newRgba := image.NewRGBA(bounds)
+	f := true
+	go overtime(&f)
+o:
+	for i := 0; i < dx; i++ {
+		for j := 0; j < dy; j++ {
+			if !f {
+				log.Println("图片转换超时")
+				break o
+			}
+			colorRgb := m.At(i, j)
+			r, g, b, a := colorRgb.RGBA()
+			r_uint8 := uint8(r >> 8)
+			g_uint8 := uint8(g >> 8)
+			b_uint8 := uint8(b >> 8)
+			a_uint8 := uint8(a >> 8)
+
+			r_uint8 = g_uint8
+			b_uint8 = g_uint8
+			a_uint8 = 255
+			if r_uint8 != 0 || g_uint8 != 0 || b_uint8 != 0 {
+				r_uint8 = 255
+				g_uint8 = 255
+				b_uint8 = 255
+			}
+			newRgba.SetRGBA(i, j, color.RGBA{R: r_uint8, G: g_uint8, B: b_uint8, A: a_uint8})
+		}
+	}
+	if !f {
+		return nil
+	}
+	buf := new(bytes.Buffer)
+	png.Encode(buf, newRgba)
+	return buf.Bytes()
+}
+
+func CutImg(url string) []byte {
+	pic, err := http.Get(url)
+	if err != nil {
+		log.Println("获取图片失败", err)
+		return nil
+	}
+	m, err := webp.Decode(pic.Body)
+	if err != nil {
+		log.Println("解析图片失败", err)
+		return nil
+	}
+	rgba := m.(*image.NYCbCrA)
+	subImage := rgba.SubImage(image.Rect(0, m.Bounds().Dy(), m.Bounds().Dx(), int(float64(m.Bounds().Dy())/1.5))).(*image.NYCbCrA)
+	buf := new(bytes.Buffer)
+	png.Encode(buf, subImage)
+	return buf.Bytes()
+}
+
+func overtime(f *bool) {
+	time.Sleep(time.Second * 10)
+	*f = false
+}
+
+func OCR(file io.Reader) []string {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "test.png")
+	if err != nil {
+		log.Println("创建文件失败")
+		return nil
+	}
+	io.Copy(part, file)
+	writer.WriteField("language", "chs")
+	writer.WriteField("FileType", ".Auto")
+	writer.WriteField("OCREngine", "2")
+	writer.Close()
+	request, err := http.NewRequest("POST", "https://api.ocr.space/parse/image", body)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	request.Header.Add("Apikey", "helloworld")
+	resp, err := http.DefaultClient.Do(request)
+	if err != nil {
+		log.Println("ocr失败")
+		return nil
+	}
+	read, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	result := gjson.ParseBytes(read)
+	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), "\n")
 }

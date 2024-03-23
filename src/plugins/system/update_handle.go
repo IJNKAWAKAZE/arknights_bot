@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func UpdateHandle(update tgbotapi.Update) (bool, error) {
+func UpdateHandle(update tgbotapi.Update) error {
 	owner := viper.GetInt64("bot.owner")
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
@@ -23,15 +23,14 @@ func UpdateHandle(update tgbotapi.Update) (bool, error) {
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		datasource.UpdateDataSourceRunner()
 		sendMessage = tgbotapi.NewMessage(chatId, "数据源更新结束")
-		sendMessage.ReplyToMessageID = messageId
 		msg, _ = bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 	sendMessage.ReplyToMessageID = messageId
 	msg, _ := bot.Arknights.Send(sendMessage)
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	return true, nil
+	return nil
 }

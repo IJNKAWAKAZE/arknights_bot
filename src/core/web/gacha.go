@@ -38,12 +38,13 @@ type GachaChar struct {
 	Ts       int64  `json:"ts"`
 }
 type Star6Info struct {
-	Name     string `json:"name"`
-	Avatar   string `json:"avatar"`
-	Ts       int64  `json:"ts"`
-	Count    int    `json:"count"`
-	IsNew    bool   `json:"isNew"`
-	PoolName string `json:"poolName"`
+	Name      string `json:"name"`
+	Avatar    string `json:"avatar"`
+	Ts        int64  `json:"ts"`
+	Count     int    `json:"count"`
+	IsNew     bool   `json:"isNew"`
+	PoolName  string `json:"poolName"`
+	PoolOrder int    `json:"poolOrder"`
 }
 
 type PoolCount struct {
@@ -53,11 +54,13 @@ type PoolCount struct {
 
 func Gacha(r *gin.Engine) {
 	r.GET("/gacha", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Gacha.tmpl")
 		var gachaLog GachaLog
 		var userGacha []player.UserGacha
 		var gachaChars []GachaChar
 		var star6Info []Star6Info
 		var poolCount []PoolCount
+		var PoolMap = make(map[string][]player.UserGacha)
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		res := utils.GetUserGacha(userId, uid).Scan(&userGacha)
@@ -71,8 +74,6 @@ func Gacha(r *gin.Engine) {
 		star4 := 0
 		star3 := 0
 
-		count := 1
-
 		for i := range userGacha {
 			var gachaChar GachaChar
 			gachaChar.PoolName = userGacha[i].PoolName
@@ -82,18 +83,19 @@ func Gacha(r *gin.Engine) {
 			gachaChar.Ts = userGacha[i].Ts
 
 			c := userGacha[len(userGacha)-i-1]
+			operatorList := PoolMap[c.PoolName]
+			PoolMap[c.PoolName] = append(operatorList, c)
 			switch c.Rarity {
 			case 5:
 				star6++
 				star6Info = append(star6Info, Star6Info{
-					Name:     c.CharName,
-					Count:    count,
-					Ts:       c.Ts,
-					IsNew:    c.IsNew,
-					PoolName: c.PoolName,
+					Name:      c.CharName,
+					Count:     0,
+					Ts:        c.Ts,
+					IsNew:     c.IsNew,
+					PoolName:  c.PoolName,
+					PoolOrder: c.PoolOrder,
 				})
-				count = 1
-				continue
 			case 4:
 				star5++
 			case 3:
@@ -101,7 +103,6 @@ func Gacha(r *gin.Engine) {
 			case 2:
 				star3++
 			}
-			count++
 			gachaChars = append(gachaChars, gachaChar)
 		}
 
@@ -130,6 +131,26 @@ func Gacha(r *gin.Engine) {
 		utils.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
 		gachaLog.Name = userPlayer.PlayerName
 
+		count := 1
+		for k, v := range PoolMap {
+			count = 1
+			for i, s := range v {
+				if s.Rarity == 5 {
+					PoolMap[k][i].Remark = strconv.Itoa(count)
+					count = 1
+					continue
+				}
+				count++
+			}
+		}
+
+		for i, s6 := range star6Info {
+			for _, m := range PoolMap[s6.PoolName] {
+				if s6.Name == m.CharName && s6.Ts == m.Ts && s6.PoolOrder == m.PoolOrder {
+					star6Info[i].Count, _ = strconv.Atoi(m.Remark)
+				}
+			}
+		}
 		utils.ReverseSlice(star6Info)
 		gachaLog.Star6Info = star6Info
 		if len(star6Info) > 20 {

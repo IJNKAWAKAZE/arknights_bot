@@ -10,7 +10,7 @@ import (
 )
 
 // ReportHandle 举报
-func ReportHandle(update tgbotapi.Update) (bool, error) {
+func ReportHandle(update tgbotapi.Update) error {
 	message := update.Message
 	chatId := message.Chat.ID
 	messageId := message.MessageID
@@ -29,7 +29,7 @@ func ReportHandle(update tgbotapi.Update) (bool, error) {
 			sendMessage.ReplyToMessageID = messageId
 			msg, _ := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return true, nil
+			return nil
 		}
 
 		// 获取全部管理员
@@ -71,5 +71,5 @@ func ReportHandle(update tgbotapi.Update) (bool, error) {
 		bot.Arknights.Send(sendMessage)
 	}
 
-	return true, nil
+	return nil
 }

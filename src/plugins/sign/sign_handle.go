@@ -14,7 +14,7 @@ import (
 )
 
 // SignHandle 森空岛签到
-func SignHandle(update tgbotapi.Update) (bool, error) {
+func SignHandle(update tgbotapi.Update) error {
 	param := update.Message.CommandArguments()
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
@@ -32,7 +32,7 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	// 获取绑定角色
@@ -42,7 +42,7 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	if param != "" {
@@ -53,7 +53,7 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 			// 关闭自动签到
 			stopSign(update)
 		}
-		return true, nil
+		return nil
 	}
 
 	if res.RowsAffected > 1 {
@@ -75,10 +75,10 @@ func SignHandle(update tgbotapi.Update) (bool, error) {
 		// 绑定单个角色执行签到
 		return Sign(players[0], userAccount, chatId)
 	}
-	return true, nil
+	return nil
 }
 
-func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) (bool, error) {
+func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) error {
 	var skPlayer skland.Player
 	var skAccount skland.Account
 	playerName := player.PlayerName
@@ -94,22 +94,22 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 
 	record, err := skland.SignGamePlayer(&skPlayer, skAccount)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败", playerName))
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\nmsg:%s", playerName, err.Error()))
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		log.Println(err)
-		return true, err
+		log.Println(playerName, err)
+		return err
 	}
 	// 今日已完成签到
 	if record.HasSigned {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", playerName))
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	// 签到成功
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, record.Award))
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }
 
 // 开启自动签到

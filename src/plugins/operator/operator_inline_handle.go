@@ -5,10 +5,11 @@ import (
 	"arknights_bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"strings"
 )
 
-func InlineOperator(inlineQuery *tgbotapi.InlineQuery) {
-	name := inlineQuery.Query
+func InlineOperator(update tgbotapi.Update) error {
+	_, name, _ := strings.Cut(update.InlineQuery.Query, "干员-")
 	operatorList := utils.GetOperatorsByName(name)
 	var inlineQueryResults []interface{}
 	for _, operator := range operatorList {
@@ -20,15 +21,16 @@ func InlineOperator(inlineQuery *tgbotapi.InlineQuery) {
 			Description: "查询" + operator.Name,
 			ThumbURL:    operator.ThumbURL,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
-				Text: "https://prts.wiki/w/" + operator.Name,
+				Text: "/operator " + operator.Name,
 			},
 		}
 		inlineQueryResults = append(inlineQueryResults, queryResult)
 	}
 	answerInlineQuery := tgbotapi.InlineConfig{
-		InlineQueryID: inlineQuery.ID,
+		InlineQueryID: update.InlineQuery.ID,
 		Results:       inlineQueryResults,
 		CacheTime:     0,
 	}
 	bot.Arknights.Send(answerInlineQuery)
+	return nil
 }

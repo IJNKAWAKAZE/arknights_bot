@@ -18,7 +18,7 @@ type PlayerOperationMissing struct {
 
 // BoxHandle 我的干员
 
-func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
 	bot.Arknights.Send(sendAction)
@@ -29,20 +29,21 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 		sendMessage := tgbotapi.NewMessage(chatId, "参数错误")
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/missing?userId=%d&uid=%s&param=%s", port, userAccount.UserNumber, uid, param), 0)
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/missing?userId=%d&uid=%s&param=%s", port, userAccount.UserNumber, uid, param), 0, 1.5)
 	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，token可能已失效请重设token。")
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("生成图片失败，token可能已失效请[重设token](https://t.me/%s)。", viper.GetString("bot.name")))
+		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 
-	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "missing.png"})
+	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "missing.jpg"})
 	sendDocument.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendDocument)
-	return true, nil
+	return nil
 }

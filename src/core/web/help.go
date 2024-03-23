@@ -20,6 +20,7 @@ type Cmd struct {
 
 func Help(r *gin.Engine) {
 	r.GET("/help", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Help.tmpl")
 		var helpCmd HelpCmd
 		var privateCmds []Cmd
 		var publicCmds []Cmd
@@ -28,10 +29,10 @@ func Help(r *gin.Engine) {
 		// 私聊指令
 		privateCmds = append(privateCmds, Cmd{Cmd: "/bind", Desc: "绑定角色", Param: "", IsBind: false})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/unbind", Desc: "解绑角色", Param: "", IsBind: true})
+		privateCmds = append(privateCmds, Cmd{Cmd: "/resume", Desc: "设置名片签名", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/cancel", Desc: "取消操作", Param: "", IsBind: false})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/reset_token", Desc: "重设token", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/btoken", Desc: "设置BToken", Param: "", IsBind: true})
-		privateCmds = append(privateCmds, Cmd{Cmd: "/sync_gacha", Desc: "同步抽卡记录", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/import_gacha", Desc: "导入抽卡记录", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/export_gacha", Desc: "导出抽卡记录", Param: "", IsBind: true})
 
@@ -52,10 +53,14 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/base", Desc: "基建信息", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/gacha", Desc: "抽卡记录", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/operator", Desc: "干员查询", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/enemy", Desc: "敌人查询", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/material", Desc: "材料查询", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/report", Desc: "举报", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/quiz", Desc: "云玩家检测", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/quiz", Desc: "云玩家检测(困难)", Param: "h", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/redeem", Desc: "CDK兑换", Param: "[CDK]", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/headhunt", Desc: "寻访模拟", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/recruit", Desc: "公招计算(图片附带)", Param: "", IsBind: false})
 
 		// 管理员指令
 		adminCmds = append(adminCmds, Cmd{Cmd: "/update", Desc: "更新数据源", Param: "", IsBind: false})
@@ -64,6 +69,7 @@ func Help(r *gin.Engine) {
 		adminCmds = append(adminCmds, Cmd{Cmd: "/quiz", Desc: "关闭云玩家检测", Param: "stop", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/headhunt", Desc: "开启寻访模拟", Param: "start", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/headhunt", Desc: "关闭寻访模拟", Param: "stop", IsBind: false})
+		adminCmds = append(adminCmds, Cmd{Cmd: "/reg", Desc: "回复消息设置为群规", Param: "", IsBind: false})
 
 		helpCmd.PrivateCmds = privateCmds
 		helpCmd.PublicCmds = publicCmds

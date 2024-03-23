@@ -17,6 +17,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	github.com/u2takey/ffmpeg-go v0.5.0
 	github.com/xuri/excelize/v2 v2.8.0
+	golang.org/x/image v0.11.0
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.24.3
 )

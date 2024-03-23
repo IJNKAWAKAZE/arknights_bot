@@ -27,7 +27,7 @@ func (_ PlayerOperationRedeem) HintOnRequirementsFailed() (string, bool) {
 func (_ PlayerOperationRedeem) HintWordForPlayerSelection() string {
 	return "请选择要兑换的角色"
 }
-func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) (bool, error) {
+func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	cdk := message.CommandArguments()
 	cdk = strings.ToUpper(cdk)
@@ -46,7 +46,7 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 			msg, _ := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(chatId, messageId, 5)
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return true, nil
+			return nil
 		}
 	}
 	result, err := skland.GetPlayerRedeem(token, cdk, channelId)
@@ -54,16 +54,16 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 		SendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		SendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(SendMessage)
-		return true, err
+		return err
 	}
 	if result != "" {
 		SendMessage := tgbotapi.NewMessage(chatId, result)
 		SendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(SendMessage)
-		return true, fmt.Errorf(result)
+		return fmt.Errorf(result)
 	}
 	SendMessage := tgbotapi.NewMessage(chatId, "CDK兑换成功，请进入游戏领取奖励。")
 	SendMessage.ReplyToMessageID = messageId
 	bot.Arknights.Send(SendMessage)
-	return true, nil
+	return nil
 }

@@ -9,13 +9,13 @@ import (
 )
 
 // ChoosePlayer 选择绑定角色
-func ChoosePlayer(callBack tgbotapi.Update) (bool, error) {
+func ChoosePlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
 	if len(d) < 4 {
-		return true, nil
+		return nil
 	}
 
 	userId := callbackQuery.From.ID
@@ -43,24 +43,25 @@ func ChoosePlayer(callBack tgbotapi.Update) (bool, error) {
 		bot.DBEngine.Table("user_player").Create(&userPlayer)
 	} else {
 		userPlayer.PlayerName = playerName
+		userPlayer.ServerName = serverName
 		bot.DBEngine.Table("user_player").Save(&userPlayer)
 		sendMessage := tgbotapi.NewMessage(chatId, "此角色已绑定，更新角色信息。")
 		bot.Arknights.Send(sendMessage)
-		return true, nil
+		return nil
 	}
 	sendMessage := tgbotapi.NewMessage(chatId, "角色绑定成功！")
 	bot.Arknights.Send(sendMessage)
-	return true, nil
+	return nil
 }
 
 // UnbindPlayer 解绑角色
-func UnbindPlayer(callBack tgbotapi.Update) (bool, error) {
+func UnbindPlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
 	if len(d) < 2 {
-		return true, nil
+		return nil
 	}
 
 	userId := callbackQuery.From.ID
@@ -73,17 +74,17 @@ func UnbindPlayer(callBack tgbotapi.Update) (bool, error) {
 	bot.Arknights.Send(sendMessage)
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)
-	return true, nil
+	return nil
 }
 
 // ChooseBTokenPlayer 选择设置BToken角色
-func ChooseBTokenPlayer(callBack tgbotapi.Update) (bool, error) {
+func ChooseBTokenPlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
 	if len(d) < 2 {
-		return true, nil
+		return nil
 	}
 
 	userId := callbackQuery.From.ID
@@ -94,5 +95,26 @@ func ChooseBTokenPlayer(callBack tgbotapi.Update) (bool, error) {
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)
 	WaitBToken(chatId, userId, uid)
-	return true, nil
+	return nil
+}
+
+// SetResume 设置名片签名
+func SetResume(callBack tgbotapi.Update) error {
+	callbackQuery := callBack.CallbackQuery
+	data := callBack.CallbackData()
+	d := strings.Split(data, ",")
+
+	if len(d) < 2 {
+		return nil
+	}
+
+	userId := callbackQuery.From.ID
+	chatId := callbackQuery.Message.Chat.ID
+	messageId := callbackQuery.Message.MessageID
+	uid := d[1]
+
+	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+	bot.Arknights.Send(delMsg)
+	WaitResume(chatId, userId, uid)
+	return nil
 }

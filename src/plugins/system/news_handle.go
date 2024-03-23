@@ -7,7 +7,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func NewsHandle(update tgbotapi.Update) (bool, error) {
+func NewsHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
@@ -26,12 +26,12 @@ func NewsHandle(update tgbotapi.Update) (bool, error) {
 		sendMessage.ReplyToMessageID = messageId
 		msg, _ := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return true, nil
+		return nil
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 	sendMessage.ReplyToMessageID = messageId
 	msg, _ := bot.Arknights.Send(sendMessage)
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-	return true, nil
+	return nil
 }

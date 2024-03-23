@@ -60,9 +60,9 @@ func sign(user UserSign) {
 				record, err := skland.SignGamePlayer(&skPlayer, skAccount)
 				if err != nil {
 					// 签到失败
-					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!", player.PlayerName))
+					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\nmsg:%s", player.PlayerName, err.Error()))
 					bot.Arknights.Send(sendMessage)
-					log.Println(err)
+					log.Println(player.PlayerName, err)
 					return
 				}
 				// 今日已完成签到

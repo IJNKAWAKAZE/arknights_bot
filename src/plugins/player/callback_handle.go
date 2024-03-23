@@ -9,7 +9,7 @@ import (
 )
 
 // PlayerData 角色数据
-func PlayerData(callBack tgbotapi.Update) (bool, error) {
+func PlayerData(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
@@ -22,14 +22,14 @@ func PlayerData(callBack tgbotapi.Update) (bool, error) {
 		if !ok {
 			log.Printf("Unable to Call Back %s", d[1])
 		}
-		return true, nil
+		return nil
 	}
 	userId := callbackQuery.From.ID
 	clickUserId := callback.UserId
 	if userId != clickUserId {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
 		bot.Arknights.Send(answer)
-		return true, nil
+		return nil
 	} else {
 		return callback.Function(playerId)
 	}

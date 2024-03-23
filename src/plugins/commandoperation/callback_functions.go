@@ -61,7 +61,7 @@ func AddCallback(callBackHash string, function MultiuserCallBackFunction) bool {
 }
 
 type MultiuserCallBackFunction struct {
-	Function func(uid string) (bool, error)
+	Function func(uid string) error
 	UserId   int64
 }
 type NextStepOperation struct {
@@ -77,7 +77,7 @@ func (op NextStepOperation) Run(update tgbotapi.Update) error {
 	var err error
 	if op.NextOperation.CheckRequirementsAndPrepare(update) {
 
-		_, err = op.NextOperation.Run(op.PlayerID, op.Account, chatId, update.Message)
+		err = op.NextOperation.Run(op.PlayerID, op.Account, chatId, update.Message)
 		if err != nil {
 			utils.SendMessage(chatId, "未知错误，请重试。", false, &messageID)
 		}
@@ -89,7 +89,7 @@ func (op NextStepOperation) Run(update tgbotapi.Update) error {
 	return err
 }
 
-func NewMultiuserCallBackFunction(Function func(uid string) (bool, error), UserId int64) MultiuserCallBackFunction {
+func NewMultiuserCallBackFunction(Function func(uid string) error, UserId int64) MultiuserCallBackFunction {
 	return MultiuserCallBackFunction{
 		Function: Function,
 		UserId:   UserId,

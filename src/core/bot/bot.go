@@ -3,7 +3,9 @@ package bot
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
+	"arknights_bot/plugins/material"
 	"arknights_bot/plugins/operator"
 	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/sign"
@@ -21,36 +23,44 @@ func Serve() {
 
 	// 注册处理器
 	bot.TeleBot = &telebot.Bot{}
-	bot.TeleBot.NewCallBackProcessor("verify", gatekeeper.CallBackData)
-	bot.TeleBot.NewCallBackProcessor("bind", account.ChoosePlayer)
-	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
-	bot.TeleBot.NewCallBackProcessor("setbtoken", account.ChooseBTokenPlayer)
-	bot.TeleBot.NewCallBackProcessor("sign", sign.SignPlayer)
-	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
-	bot.TeleBot.NewCallBackProcessor("report", system.Report)
-
+	bot.TeleBot.InitMap()
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && len(update.Message.NewChatMembers) > 0
 	}, gatekeeper.NewMemberHandle)
 	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
 		return update.Message != nil && update.Message.LeftChatMember != nil
 	}, gatekeeper.LeftMemberHandle)
-	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
-		return update.InlineQuery != nil
-	}, gatekeeper.InlineQueryHandle)
+
+	// callback
+	bot.TeleBot.NewCallBackProcessor("verify", gatekeeper.CallBackData)
+	bot.TeleBot.NewCallBackProcessor("bind", account.ChoosePlayer)
+	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
+	bot.TeleBot.NewCallBackProcessor("resume", account.SetResume)
+	bot.TeleBot.NewCallBackProcessor("setbtoken", account.ChooseBTokenPlayer)
+	bot.TeleBot.NewCallBackProcessor("sign", sign.SignPlayer)
+	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
+	bot.TeleBot.NewCallBackProcessor("report", system.Report)
+
+	// InlineQuery
+	bot.TeleBot.NewInlineQueryProcessor("干员", operator.InlineOperator)
+	bot.TeleBot.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
+	bot.TeleBot.NewInlineQueryProcessor("材料", material.InlineMaterial)
+
 	// 私聊
 	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
+	bot.TeleBot.NewPrivateCommandProcessor("resume", account.ResumeHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("sync_gacha", player.PlayerHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.PlayerHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.PlayerHandle)
 
+	// wait
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 	bot.TeleBot.NewWaitMessageProcessor("bToken", account.SetBToken)
+	bot.TeleBot.NewWaitMessageProcessor("resume", account.Resume)
 	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
 	bot.TeleBot.NewWaitMessageProcessor("importGacha", player.PlayerHandle)
 
@@ -65,13 +75,21 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("base", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
+	bot.TeleBot.NewCommandProcessor("enemy", enemy.EnemyHandle)
+	bot.TeleBot.NewCommandProcessor("material", material.MaterialHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
 	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
 	bot.TeleBot.NewCommandProcessor("redeem", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("headhunt", system.HeadhuntHandle)
 
+	// 图片
+	bot.TeleBot.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)
+
 	// 权限
 	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)
 	bot.TeleBot.NewCommandProcessor("news", system.NewsHandle)
-	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
+	bot.TeleBot.NewCommandProcessor("reg", system.RegulationHandle)
+	bot.TeleBot.NewCommandProcessor("clear", system.ClearHandle)
+	bot.TeleBot.NewCommandProcessor("kill", system.KillHandle)
+	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u), bot.Arknights)
 }

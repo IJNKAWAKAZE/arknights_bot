@@ -11,6 +11,7 @@ type UserPlayer struct {
 	ServerName string    `json:"serverName"`
 	PlayerName string    `json:"playerName"`
 	BToken     string    `json:"BToken"`
+	Resume     string    `json:"resume"`
 	CreateTime time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark     string    `json:"remark"`

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"arknights_bot/config"
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
@@ -12,21 +13,9 @@ import (
 	"strings"
 )
 
-var PoolUP = make(map[int]string)
-var Pool = make(map[int]string)
-
-func init() {
-	PoolUP[7] = viper.GetString("headhunt.pool_up_6_1")
-	PoolUP[6] = viper.GetString("headhunt.pool_up_6")
-	PoolUP[5] = viper.GetString("headhunt.pool_up_5")
-	Pool[6] = viper.GetString("headhunt.pool_6")
-	Pool[5] = viper.GetString("headhunt.pool_5")
-	Pool[4] = viper.GetString("headhunt.pool_4")
-	Pool[3] = viper.GetString("headhunt.pool_3")
-}
-
 func Headhunt(r *gin.Engine) {
 	r.GET("/headhunt", func(c *gin.Context) {
+		r.LoadHTMLFiles("./template/Headhunt.tmpl")
 		r6prob := 2.0
 		r5prob := 8.0
 		r4prob := 50.0
@@ -107,20 +96,20 @@ func randChar(rank int) string {
 	charRand := getRandomInt(1, 10000)
 	getChar := ""
 	if charRand <= charaProb && (rank == 5 || rank == 6) {
-		charUpName := PoolUP[rank]
+		charUpName := config.PoolUP[rank]
 		getChar = randomChar(charUpName)
 	} else {
-		if PoolUP[7] != "" && rank == 6 {
+		if config.PoolUP[7] != "" && rank == 6 {
 			charRand := getRandomInt(1, 10000-charaProb)
 			if charRand <= (10000-charaProb)/6*5 {
-				charUpName := PoolUP[7]
+				charUpName := config.PoolUP[7]
 				getChar = randomChar(charUpName)
 			} else {
-				charUpName := Pool[rank]
+				charUpName := config.Pool[rank]
 				getChar = randomChar(charUpName)
 			}
 		} else {
-			charName := Pool[rank]
+			charName := config.Pool[rank]
 			getChar = randomChar(charName)
 		}
 	}

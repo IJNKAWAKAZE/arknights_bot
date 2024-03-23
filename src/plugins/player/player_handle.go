@@ -11,7 +11,7 @@ import (
 var inited = false
 
 // PlayerHandle 角色信息查询
-func PlayerHandle(update tgbotapi.Update) (bool, error) {
+func PlayerHandle(update tgbotapi.Update) error {
 	if !inited {
 		initFactory()
 		inited = true
@@ -23,18 +23,18 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	var operationP *commandoperation.OperationI
 	userAccountP, playersP, err := getAccountAndPlayers(update)
 	if err != nil || userAccountP == nil || playersP == nil {
-		return true, err
+		return err
 	}
 	command := update.Message.Command()
 	if commandoperation.HaveNextStep(chatId) {
-		return true, commandoperation.GetStep(chatId).Run(update)
+		return commandoperation.GetStep(chatId).Run(update)
 	}
 	if len(command) != 0 {
 		operationP = playerOperationFactory(command)
 	}
 	if operationP == nil {
 		log.Printf("Unmatched Handle %s", update.Message.Command())
-		return true, nil
+		return nil
 	}
 	operation := *operationP
 	players = playersP
@@ -45,10 +45,10 @@ func PlayerHandle(update tgbotapi.Update) (bool, error) {
 	if !operation.CheckRequirementsAndPrepare(update) {
 		msg, isMarkDown := operation.HintOnRequirementsFailed()
 		utils.SendMessage(chatId, msg, isMarkDown, &messageId)
-		return true, nil
+		return nil
 	}
 	if len(players) > 1 {
-		return true, playerSelector(update, userAccount, players, operation, command)
+		return playerSelector(update, userAccount, players, operation, command)
 	}
 	return operation.Run(players[0].Uid, userAccount, chatId, update.Message)
 }

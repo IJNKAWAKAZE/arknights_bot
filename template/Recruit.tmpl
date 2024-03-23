@@ -1,0 +1,73 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>公招计算</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .main {
+            position: absolute;
+            width: 900px;
+        }
+        tr {
+            box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.14),0 1px 5px rgba(0,0,0,.12);
+        }
+        .tag {
+            display: inline-flex;
+            background-color: #313131;
+            color: white;
+            box-shadow: 0 3px 5px gray;
+            height: 28px;
+            padding: 0 8px;
+            margin: 4px;
+            align-items: center;
+        }
+        .op {
+            display: inline-flex;
+        }
+        .avatar {
+            width: 100px;
+        }
+        .profession {
+            position: absolute;
+            width: 30px;
+        }
+        .rarity {
+            position: absolute;
+            height: 20px;
+            margin-left: 30px;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <table>
+        <tr>
+            <th>标签</th>
+            <th>干员</th>
+        </tr>
+        {{range .}}
+        <tr>
+            <td style="white-space: nowrap;text-align: center;">
+                {{range .Tags}}
+                <div class="tag">
+                    {{.}}
+                </div>
+                {{end}}
+            </td>
+            <td>
+                {{range .Operators}}
+                <div class="op">
+                    <img class="avatar" src="{{.Avatar}}"/>
+                    <img class="profession" src="/assets/box/{{.Profession}}.png"/>
+                    <img class="rarity" src="/assets/box/Rarity_{{.Rarity}}.png"/>
+                </div>
+                {{end}}
+            </td>
+        </tr>
+        {{end}}
+    </table>
+</div>
+</body>
+</html>
