@@ -9,7 +9,7 @@ import (
 
 func GetPlayerInfo(uid string, account Account) (*PlayerData, Account, error) {
 	var playerData *PlayerData
-	account, err := RefreshToken(uid, account)
+	account, err := RefreshToken(account)
 	if err != nil {
 		log.Println(err.Error())
 		return playerData, account, err
@@ -36,7 +36,7 @@ func getPlayerInfoStr(uid string, skland AccountSkland) (string, error) {
 
 func GetPlayerStatistic(uid string, account Account) (*PlayerStatistic, Account, error) {
 	var playerStatistic *PlayerStatistic
-	account, err := RefreshToken(uid, account)
+	account, err := RefreshToken(account)
 	if err != nil {
 		log.Println(err.Error())
 		return playerStatistic, account, err

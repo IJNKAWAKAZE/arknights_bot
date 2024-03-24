@@ -32,6 +32,7 @@ func init() {
 	tagMap["治疗"] = "治疗"
 	tagMap["支援"] = "支援"
 	tagMap["费用回复"] = "费用回复"
+	tagMap["發用回复"] = "费用回复"
 	tagMap["输出"] = "输出"
 	tagMap["生存"] = "生存"
 	tagMap["群攻"] = "群攻"
@@ -69,10 +70,8 @@ func RecruitHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	_, err := bot.Arknights.Send(sendAction)
-	if err != nil {
-		return err
-	}
+	bot.Arknights.Send(sendAction)
+
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s", port, strings.Join(tags, " ")), 0, 1.5)
 	if pic == nil {
@@ -86,7 +85,7 @@ func RecruitHandle(update tgbotapi.Update) error {
 	}
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "recruit.jpg"})
 	sendDocument.ReplyToMessageID = messageId
-	_, err = bot.Arknights.Send(sendDocument)
+	_, err := bot.Arknights.Send(sendDocument)
 	if err != nil {
 		return err
 	}

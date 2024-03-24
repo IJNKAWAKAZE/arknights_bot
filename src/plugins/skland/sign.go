@@ -66,7 +66,7 @@ type CalendarRecords []*CalendarRecord
 type SignGameAwards []*SignGameAward
 
 func SignGamePlayer(player *Player, account Account) (record SignGameRecord, err error) {
-	account, err = RefreshToken(player.Uid, account)
+	account, err = RefreshToken(account)
 	if err != nil {
 		return
 	}
