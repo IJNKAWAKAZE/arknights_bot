@@ -430,7 +430,7 @@ func overtime(f *bool) {
 	*f = false
 }
 
-func OCR(file io.Reader) []string {
+func OCR(file io.Reader, lang, engine, sep string) []string {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	part, err := writer.CreateFormFile("file", "test.png")
@@ -439,9 +439,9 @@ func OCR(file io.Reader) []string {
 		return nil
 	}
 	io.Copy(part, file)
-	writer.WriteField("language", "chs")
+	writer.WriteField("language", lang)
 	writer.WriteField("FileType", ".Auto")
-	writer.WriteField("OCREngine", "2")
+	writer.WriteField("OCREngine", engine)
 	writer.Close()
 	request, err := http.NewRequest("POST", "https://api.ocr.space/parse/image", body)
 	if err != nil {
@@ -458,5 +458,6 @@ func OCR(file io.Reader) []string {
 	read, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	result := gjson.ParseBytes(read)
-	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), "\n")
+	log.Println("识别结果：", result.String())
+	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), sep)
 }

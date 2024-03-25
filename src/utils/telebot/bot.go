@@ -112,6 +112,7 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 		if len(msg.Message.Photo) > 0 {
 			suffix := "@" + viper.GetString("bot.name")
 			command, _ := strings.CutSuffix(msg.Message.Caption, suffix)
+			command = strings.Split(command, " ")[0]
 			result, ok := b.photoCommandProcess[command]
 			if ok {
 				return result
