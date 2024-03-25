@@ -33,7 +33,7 @@ func SignPlayer(callBack tgbotapi.Update) error {
 	var userAccount account.UserAccount
 	var player account.UserPlayer
 
-	utils.GetAccountByUserId(userId).Scan(&userAccount)
+	utils.GetAccountByUid(userId, uid).Scan(&userAccount)
 	utils.GetPlayerByUserId(userId, uid).Scan(&player)
 
 	return Sign(player, userAccount, chatId)

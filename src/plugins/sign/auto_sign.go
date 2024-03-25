@@ -37,20 +37,17 @@ func sign(user UserSign) {
 	var players []account.UserPlayer
 	res := utils.GetPlayersByUserId(user.UserNumber).Scan(&players)
 	if res.RowsAffected > 0 {
-
-		// 用户绑定了角色
-		var skAccount skland.Account
-		var userAccount account.UserAccount
-		res := utils.GetAccountByUserId(user.UserNumber).Scan(&userAccount)
-		if res.RowsAffected > 0 {
-
+		// 对所有绑定角色执行签到
+		for _, player := range players {
+			var skAccount skland.Account
+			var userAccount account.UserAccount
 			// 获取用户账号信息
-			skAccount.Hypergryph.Token = userAccount.HypergryphToken
-			skAccount.Skland.Token = userAccount.SklandToken
-			skAccount.Skland.Cred = userAccount.SklandCred
+			res := utils.GetAccountByUid(user.UserNumber, player.Uid).Scan(&userAccount)
+			if res.RowsAffected > 0 {
+				skAccount.Hypergryph.Token = userAccount.HypergryphToken
+				skAccount.Skland.Token = userAccount.SklandToken
+				skAccount.Skland.Cred = userAccount.SklandCred
 
-			// 对所有绑定角色执行签到
-			for _, player := range players {
 				var skPlayer skland.Player
 				skPlayer.NickName = player.PlayerName
 				skPlayer.ChannelName = player.ServerName

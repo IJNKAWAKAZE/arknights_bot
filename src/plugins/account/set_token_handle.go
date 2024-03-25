@@ -53,7 +53,7 @@ func ResetToken(update tgbotapi.Update) error {
 	}
 	// 查查询账户信息
 	var userAccount UserAccount
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := utils.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token

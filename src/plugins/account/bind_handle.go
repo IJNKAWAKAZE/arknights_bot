@@ -43,7 +43,7 @@ func SetToken(update tgbotapi.Update) error {
 	}
 	// 查询账户是否存在
 	var userAccount UserAccount
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := utils.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
@@ -73,6 +73,7 @@ func SetToken(update tgbotapi.Update) error {
 		return err
 	}
 
+	sklandIdMap[chatId] = account.UserId
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(

@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var sklandIdMap = make(map[int64]string)
+
 // ChoosePlayer 选择绑定角色
 func ChoosePlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
@@ -24,10 +26,11 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 	uid := d[1]
 	serverName := d[2]
 	playerName := d[3]
+	sklandId := sklandIdMap[chatId]
 
 	var userAccount UserAccount
 	var userPlayer UserPlayer
-	utils.GetAccountByUserId(userId).Scan(&userAccount)
+	utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
 	res := utils.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
 	if res.RowsAffected == 0 {
 		id, _ := gonanoid.New(32)
@@ -51,6 +54,7 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 	}
 	sendMessage := tgbotapi.NewMessage(chatId, "角色绑定成功！")
 	bot.Arknights.Send(sendMessage)
+	delete(sklandIdMap, chatId)
 	return nil
 }
 

@@ -39,7 +39,8 @@ func Box(r *gin.Engine) {
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		param := c.Query("param")
-		utils.GetAccountByUserId(userId).Scan(&userAccount)
+		sklandId := c.Query("sklandId")
+		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
 		skAccount.Hypergryph.Token = userAccount.HypergryphToken
 		skAccount.Skland.Token = userAccount.SklandToken
 		skAccount.Skland.Cred = userAccount.SklandCred

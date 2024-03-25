@@ -73,6 +73,7 @@ func SignHandle(update tgbotapi.Update) error {
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	} else {
 		// 绑定单个角色执行签到
+		utils.GetAccountByUid(userId, players[0].Uid).Scan(&userAccount)
 		return Sign(players[0], userAccount, chatId)
 	}
 	return nil

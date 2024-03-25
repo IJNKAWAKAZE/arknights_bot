@@ -127,6 +127,16 @@ func GetAccountByUserId(userId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_account where user_number = ?", userId)
 }
 
+// GetAccountByUserIdAndSklandId 查询账号信息
+func GetAccountByUserIdAndSklandId(userId int64, sklandId string) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_account where user_number = ? and skland_id = ?", userId, sklandId)
+}
+
+// GetAccountByUid 查询账号信息
+func GetAccountByUid(userId int64, uid string) *gorm.DB {
+	return bot.DBEngine.Raw("select t.* from user_account t, user_player t1 where t.id = t1.account_id and t.user_number = ? and t1.uid = ? limit 1", userId, uid)
+}
+
 // GetPlayersByUserId 查询绑定角色列表
 func GetPlayersByUserId(userId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_player where user_number = ?", userId)
