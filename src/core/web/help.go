@@ -53,6 +53,7 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/base", Desc: "基建信息", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/gacha", Desc: "抽卡记录", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/operator", Desc: "干员查询", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/skin", Desc: "干员皮肤查询", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/enemy", Desc: "敌人查询", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/material", Desc: "材料查询", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/report", Desc: "举报", Param: "", IsBind: false})

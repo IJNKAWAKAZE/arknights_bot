@@ -10,6 +10,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/playwright-community/playwright-go"
+	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"golang.org/x/image/webp"
 	"gorm.io/gorm"
@@ -407,6 +408,7 @@ o:
 	return buf.Bytes()
 }
 
+// CutImg 图片裁剪
 func CutImg(url string) []byte {
 	pic, err := http.Get(url)
 	if err != nil {
@@ -430,6 +432,7 @@ func overtime(f *bool) {
 	*f = false
 }
 
+// OCR OCR识别
 func OCR(file io.Reader, lang, engine, sep string) []string {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -460,4 +463,24 @@ func OCR(file io.Reader, lang, engine, sep string) []string {
 	result := gjson.ParseBytes(read)
 	log.Println("识别结果：", result.String())
 	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), sep)
+}
+
+// CreateTelegraphPage 创建telegraph页面
+func CreateTelegraphPage(content, title string) string {
+	api := viper.GetString("api.telegraph")
+	request, _ := http.NewRequest("GET", api, nil)
+	params := request.URL.Query()
+	params.Add("access_token", viper.GetString("telegraph.token"))
+	params.Add("title", title)
+	params.Add("content", content)
+	request.URL.RawQuery = params.Encode()
+	response, _ := http.DefaultClient.Do(request)
+	readAll, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+	jsonStr := string(readAll)
+	skinUrl := gjson.Get(jsonStr, "result.url").String()
+	return skinUrl
 }

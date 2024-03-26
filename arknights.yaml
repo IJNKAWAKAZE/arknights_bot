@@ -20,6 +20,7 @@ api:
   bilibili_buvid: https://api.bilibili.com/x/frontend/finger/spi
   bilibili_register_buvid: https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi
   bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly
+  telegraph: https://api.telegra.ph/createPage
 
 mysql:
   dsn: root:root@tcp(localhost:3306)/arknights?charset=utf8mb4&parseTime=True&loc=Local
@@ -32,6 +33,9 @@ redis:
 
 http:
   port: 23333
+
+telegraph :
+  token: d3b25feccb89e508a9114afb82aa421fe2a9712b963b387cc5ad71e58722
 
 headhunt:
   # 每日寻访次数限制
