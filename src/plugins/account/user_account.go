@@ -2,6 +2,14 @@ package account
 
 import "time"
 
+type UserToken struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data struct {
+		Content string `json:"content"`
+	} `json:"data"`
+}
+
 type UserAccount struct {
 	Id              string    `json:"id" gorm:"primaryKey"`
 	UserName        string    `json:"userName"`
