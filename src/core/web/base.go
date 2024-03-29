@@ -285,18 +285,21 @@ func Base(r *gin.Engine) {
 		// 训练室
 		var training Training
 		training.Level = building.Training.Level
-		training.Chars = append(training.Chars, BaseChar{
-			Name:   charMap[building.Training.Trainee.CharID].Name,
-			Avatar: getCharSkinID(building.Training.Trainee.CharID, playerData),
-			AP:     getAp(building.Training.Trainee.Ap),
-		})
-
-		training.Chars = append(training.Chars, BaseChar{
-			Name:   charMap[building.Training.Trainer.CharID].Name,
-			Avatar: getCharSkinID(building.Training.Trainer.CharID, playerData),
-			AP:     getAp(building.Training.Trainer.Ap),
-		})
-		training.Skill, training.SpecializeLevel = getCharSkillID(building.Training.Trainee.CharID, playerData, building.Training.Trainee.TargetSkill)
+		if building.Training.Trainee.CharID != "" {
+			training.Chars = append(training.Chars, BaseChar{
+				Name:   charMap[building.Training.Trainee.CharID].Name,
+				Avatar: getCharSkinID(building.Training.Trainee.CharID, playerData),
+				AP:     getAp(building.Training.Trainee.Ap),
+			})
+			training.Skill, training.SpecializeLevel = getCharSkillID(building.Training.Trainee.CharID, playerData, building.Training.Trainee.TargetSkill)
+		}
+		if building.Training.Trainer.CharID != "" {
+			training.Chars = append(training.Chars, BaseChar{
+				Name:   charMap[building.Training.Trainer.CharID].Name,
+				Avatar: getCharSkinID(building.Training.Trainer.CharID, playerData),
+				AP:     getAp(building.Training.Trainer.Ap),
+			})
+		}
 
 		playerBase.Training = training
 
