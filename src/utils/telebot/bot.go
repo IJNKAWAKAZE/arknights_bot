@@ -97,11 +97,11 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 	if msg.Message != nil {
 		// wait msg
 		if msg.Message.Chat.IsPrivate() {
-			if msg.Message.Command() == "cancel" {
-				return b.privateCommandProcessor["cancel"]
-			}
 			res, ok := WaitMessage[msg.Message.From.ID]
 			if ok {
+				if msg.Message.Command() == "cancel" {
+					return b.privateCommandProcessor["cancel"]
+				}
 				waitMsg, is_str := res.(string)
 				if is_str {
 					return b.waitMsgProcess[waitMsg]
