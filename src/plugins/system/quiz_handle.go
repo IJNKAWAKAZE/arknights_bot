@@ -119,7 +119,10 @@ func QuizHandle(update tgbotapi.Update) error {
 		pollOptions = append(pollOptions, v.Name)
 	}
 	poll.Options = pollOptions
-	p, _ := bot.Arknights.Send(poll)
+	p, err := bot.Arknights.Send(poll)
+	if err != nil {
+		return err
+	}
 	messagecleaner.AddDelQueue(chatId, p.MessageID, 300)
 	return nil
 }

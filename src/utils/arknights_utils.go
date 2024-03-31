@@ -102,7 +102,7 @@ func GetEnemiesByName(name string) map[string]string {
 		if strings.Contains(strings.ToLower(n), strings.ToLower(name)) {
 			paintingName := fmt.Sprintf("头像_敌人_%s.png", n)
 			m := Md5(paintingName)
-			path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
+			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			pic := path + url.PathEscape(paintingName)
 			enemyList[n] = pic
 		}

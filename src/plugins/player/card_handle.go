@@ -15,8 +15,6 @@ type PlayerOperationCard struct {
 	commandoperation.OperationAbstract
 }
 
-// BoxHandle 我的干员
-
 func (_ PlayerOperationCard) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")

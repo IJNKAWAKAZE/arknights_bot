@@ -87,8 +87,8 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 		return err
 	}
 	if !update.Message.Chat.IsPrivate() {
-		messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
-		messagecleaner.AddDelQueue(chatId, messageId, 60)
+		messagecleaner.AddDelQueue(chatId, msg.MessageID, 600)
+		messagecleaner.AddDelQueue(chatId, messageId, 600)
 	}
 	return nil
 }

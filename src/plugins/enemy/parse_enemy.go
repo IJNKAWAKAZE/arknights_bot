@@ -68,7 +68,7 @@ func ParseEnemy(name string) Enemy {
 	enemy.Name = strings.ReplaceAll(trs.Eq(0).Text(), "\n", "")
 	paintingName := fmt.Sprintf("头像_敌人_%s.png", enemy.Name)
 	m := utils.Md5(paintingName)
-	path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
+	path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 	enemy.Pic = path + paintingName
 	enemy.Desc = strings.ReplaceAll(trs.Eq(1).Find("td").Eq(1).Text(), "\n", "")
 	td3 := trs.Eq(3).Find("td")

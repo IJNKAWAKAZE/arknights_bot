@@ -36,8 +36,6 @@ type UserGacha struct {
 	Remark     string    `json:"remark"`
 }
 
-// BoxHandle 我的干员
-
 func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	token := userAccount.HypergryphToken

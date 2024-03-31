@@ -21,8 +21,6 @@ func (_ PlayerOperationExport) hintWordForPlayerSelection() string {
 	return "请选择要导出的角色"
 }
 
-// BoxHandle 我的干员
-
 func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	var userGacha []UserGacha
 	res := utils.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)

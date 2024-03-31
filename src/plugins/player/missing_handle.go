@@ -16,8 +16,6 @@ type PlayerOperationMissing struct {
 	commandoperation.OperationAbstract
 }
 
-// BoxHandle 我的干员
-
 func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
