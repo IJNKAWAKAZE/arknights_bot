@@ -106,7 +106,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		}
 		val := fmt.Sprintf("%d%d", chatId, userId)
 		//utils.RedisAddSet("verify", val)
-		verifySet.add(chatId, userId)
+		verifySet.add(userId, chatId)
 		go verify(val, chatId, userId, photo.MessageID, messageId)
 	}
 }
