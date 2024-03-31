@@ -17,7 +17,6 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	param := update.Message.CommandArguments()
 	headhuntKey := fmt.Sprintf("headhuntFlag:%d", chatId)
-	//messagecleaner.AddDelQueue(chatId, messageId, 60)
 
 	if param == "" {
 		if utils.RedisIsExists(headhuntKey) && utils.RedisGet(headhuntKey) == "stop" {
@@ -83,8 +82,14 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendPhoto)
-	//messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
+	msg, err := bot.Arknights.Send(sendPhoto)
+	if err != nil {
+		return err
+	}
+	if !update.Message.Chat.IsPrivate() {
+		messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
+		messagecleaner.AddDelQueue(chatId, messageId, 60)
+	}
 	return nil
 }
 func ResetHeadhuntTimes() func() {

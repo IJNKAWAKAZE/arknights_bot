@@ -2,6 +2,7 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -32,7 +33,8 @@ func CallBackData(callBack tgbotapi.Update) error {
 		}
 		if verifySet.checkExistAndRemove(userId, chatId) {
 			if d[2] == "PASS" {
-				pass(chatId, userId, callbackQuery, true)
+				err := pass(chatId, userId, callbackQuery, true)
+				return err
 			}
 
 			if d[2] == "BAN" {
@@ -62,12 +64,13 @@ func CallBackData(callBack tgbotapi.Update) error {
 
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
 		bot.Arknights.Send(answer)
-		pass(chatId, userId, callbackQuery, false)
+		err := pass(chatId, userId, callbackQuery, false)
+		return err
 	}
 	return nil
 }
 
-func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) string {
+func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) error {
 	bot.Arknights.Send(tgbotapi.RestrictChatMemberConfig{
 		Permissions: &tgbotapi.ChatPermissions{
 			CanSendMessages:       true,
@@ -98,9 +101,13 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, text)
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, msg.MessageID, 3600)
+		if err != nil {
+			return err
+		}
 	}
-	return val
+	return nil
 }
 
 func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chatMember tgbotapi.ChatMemberConfig, joinMessageId int) {

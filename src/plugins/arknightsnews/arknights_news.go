@@ -25,77 +25,75 @@ type Pic struct {
 	Height int64  `json:"height"`
 }
 
-func BilibiliNews() func() {
-	return func() {
-		text, pics := ParseBilibiliDynamic()
-		if len(text) == 0 {
-			return
-		}
-		groups := utils.GetJoinedGroups()
-		if pics == nil {
-			for _, group := range groups {
-				sendMessage := tgbotapi.NewMessage(group, text)
-				config.Arknights.Send(sendMessage)
-			}
-			return
-		}
-
-		if len(pics) == 1 {
-			for _, group := range groups {
-				if pics[0].Height > 3000 {
-					sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileURL(pics[0].Url))
-					sendDocument.Caption = text
-					config.Arknights.Send(sendDocument)
-				} else {
-					sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileURL(pics[0].Url))
-					sendPhoto.Caption = text
-					config.Arknights.Send(sendPhoto)
-				}
-			}
-			return
-		}
-
+func BilibiliNews() {
+	text, pics := ParseBilibiliDynamic()
+	if len(text) == 0 {
+		return
+	}
+	groups := utils.GetJoinedGroups()
+	if pics == nil {
 		for _, group := range groups {
-			var mediaGroup tgbotapi.MediaGroupConfig
-			var media []interface{}
-			mediaGroup.ChatID = group
-
-			d := false
-			for _, p := range pics {
-				if p.Height > 3000 {
-					d = true
-				}
-			}
-
-			for i, pic := range pics {
-				if d {
-					var inputDocument tgbotapi.InputMediaDocument
-					inputDocument.Media = tgbotapi.FileURL(pic.Url)
-					inputDocument.Type = "document"
-					if i == len(pics)-1 {
-						inputDocument.Caption = text
-					}
-					media = append(media, inputDocument)
-				} else {
-					if strings.HasSuffix(pic.Url, ".gif") {
-						var inputVideo tgbotapi.InputMediaVideo
-						inputVideo.Media = tgbotapi.FileBytes{Bytes: convert2Video(pic.Url, i)}
-						inputVideo.Type = "video"
-						media = append(media, inputVideo)
-						continue
-					}
-					var inputPhoto tgbotapi.InputMediaPhoto
-					inputPhoto.Media = tgbotapi.FileURL(pic.Url)
-					inputPhoto.Type = "photo"
-					if i == 0 {
-						inputPhoto.Caption = text
-					}
-					media = append(media, inputPhoto)
-				}
-			}
-			mediaGroup.Media = media
-			config.Arknights.SendMediaGroup(mediaGroup)
+			sendMessage := tgbotapi.NewMessage(group, text)
+			config.Arknights.Send(sendMessage)
 		}
+		return
+	}
+
+	if len(pics) == 1 {
+		for _, group := range groups {
+			if pics[0].Height > 3000 {
+				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileURL(pics[0].Url))
+				sendDocument.Caption = text
+				config.Arknights.Send(sendDocument)
+			} else {
+				sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileURL(pics[0].Url))
+				sendPhoto.Caption = text
+				config.Arknights.Send(sendPhoto)
+			}
+		}
+		return
+	}
+
+	for _, group := range groups {
+		var mediaGroup tgbotapi.MediaGroupConfig
+		var media []interface{}
+		mediaGroup.ChatID = group
+
+		d := false
+		for _, p := range pics {
+			if p.Height > 3000 {
+				d = true
+			}
+		}
+
+		for i, pic := range pics {
+			if d {
+				var inputDocument tgbotapi.InputMediaDocument
+				inputDocument.Media = tgbotapi.FileURL(pic.Url)
+				inputDocument.Type = "document"
+				if i == len(pics)-1 {
+					inputDocument.Caption = text
+				}
+				media = append(media, inputDocument)
+			} else {
+				if strings.HasSuffix(pic.Url, ".gif") {
+					var inputVideo tgbotapi.InputMediaVideo
+					inputVideo.Media = tgbotapi.FileBytes{Bytes: convert2Video(pic.Url, i)}
+					inputVideo.Type = "video"
+					media = append(media, inputVideo)
+					continue
+				}
+				var inputPhoto tgbotapi.InputMediaPhoto
+				inputPhoto.Media = tgbotapi.FileURL(pic.Url)
+				inputPhoto.Type = "photo"
+				if i == 0 {
+					inputPhoto.Caption = text
+				}
+				media = append(media, inputPhoto)
+			}
+		}
+		mediaGroup.Media = media
+		config.Arknights.SendMediaGroup(mediaGroup)
 	}
 }
 

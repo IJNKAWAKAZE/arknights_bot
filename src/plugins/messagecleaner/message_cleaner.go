@@ -19,27 +19,27 @@ type MsgObject struct {
 }
 
 // DelMsg 删除消息
-func DelMsg() func() {
-	delMsg := func() {
-		var msgObject MsgObject
-		msgList := utils.RedisGetList("msgObjects")
-		for _, msg := range msgList {
-			err := json.Unmarshal([]byte(msg), &msgObject)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			t := time.Now()
-			if t.Sub(msgObject.CreateTime).Seconds() > msgObject.DelTime {
-				delMsg := tgbotapi.NewDeleteMessage(msgObject.ChatId, msgObject.MessageId)
-				bot.Arknights.Send(delMsg)
+func DelMsg() {
+	var msgObject MsgObject
+	msgList := utils.RedisGetList("msgObjects")
+	for _, msg := range msgList {
+		err := json.Unmarshal([]byte(msg), &msgObject)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		t := time.Now()
+		if t.Sub(msgObject.CreateTime).Seconds() > msgObject.DelTime {
+			delMsg := tgbotapi.NewDeleteMessage(msgObject.ChatId, msgObject.MessageId)
+			bot.Arknights.Send(delMsg)
+			if len(msgObject.FunctionHash) != 4 { // None 所有的functionHash都是大于4字的
 				commandoperation.RemoveCallBack(msgObject.FunctionHash)
-				m, _ := json.Marshal(msgObject)
-				utils.RedisDelListItem("msgObjects", string(m))
 			}
+			m, _ := json.Marshal(msgObject)
+			utils.RedisDelListItem("msgObjects", string(m))
 		}
 	}
-	return delMsg
+	return
 }
 
 // AddDelQueue 添加到删除队列
