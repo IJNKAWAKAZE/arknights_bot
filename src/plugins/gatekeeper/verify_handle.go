@@ -104,8 +104,9 @@ func VerifyMember(message *tgbotapi.Message) {
 			bot.Arknights.Send(restrictChatMemberConfig)
 			return
 		}
-		val := fmt.Sprintf("verify%d%d", chatId, userId)
-		utils.RedisAddSet("verify", val)
+		val := fmt.Sprintf("%d%d", chatId, userId)
+		//utils.RedisAddSet("verify", val)
+		verifySet.add(chatId, userId)
 		go verify(val, chatId, userId, photo.MessageID, messageId)
 	}
 }
@@ -121,9 +122,11 @@ func unban(chatMember tgbotapi.ChatMemberConfig) {
 
 func verify(val string, chatId int64, userId int64, messageId int, joinMessageId int) {
 	time.Sleep(time.Minute)
-	if !utils.RedisSetIsExists("verify", val) {
+	if !verifySet.checkExistAndRemove(userId, chatId) {
 		return
 	}
+	//if !utils.RedisSetIsExists("verify", val) {return}
+
 	// 踢出超时未验证用户
 	chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
 	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
@@ -134,7 +137,7 @@ func verify(val string, chatId int64, userId int64, messageId int, joinMessageId
 	// 删除用户入群提醒
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)
-	utils.RedisDelSetItem("verify", val)
+	//utils.RedisDelSetItem("verify", val)
 	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)

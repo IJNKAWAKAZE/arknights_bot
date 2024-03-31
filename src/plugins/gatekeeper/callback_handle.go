@@ -30,16 +30,16 @@ func CallBackData(callBack tgbotapi.Update) error {
 			bot.Arknights.Send(answer)
 			return nil
 		}
+		if verifySet.checkExistAndRemove(userId, chatId) {
+			if d[2] == "PASS" {
+				pass(chatId, userId, callbackQuery, true)
+			}
 
-		if d[2] == "PASS" {
-			pass(chatId, userId, callbackQuery, true)
+			if d[2] == "BAN" {
+				chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
+				ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
+			}
 		}
-
-		if d[2] == "BAN" {
-			chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-			ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
-		}
-
 		return nil
 	}
 
@@ -50,20 +50,20 @@ func CallBackData(callBack tgbotapi.Update) error {
 		bot.Arknights.Send(answer)
 		return nil
 	}
+	if verifySet.checkExistAndRemove(userId, chatId) {
+		if d[2] != d[3] {
+			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证未通过，请一分钟后再试！")
+			bot.Arknights.Send(answer)
+			chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
+			ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
+			go unban(chatMember)
+			return nil
+		}
 
-	if d[2] != d[3] {
-		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证未通过，请一分钟后再试！")
+		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
 		bot.Arknights.Send(answer)
-		chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-		ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
-		go unban(chatMember)
-		return nil
+		pass(chatId, userId, callbackQuery, false)
 	}
-
-	answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
-	bot.Arknights.Send(answer)
-	pass(chatId, userId, callbackQuery, false)
-
 	return nil
 }
 
