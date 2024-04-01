@@ -24,3 +24,10 @@ jobs:
 
     - name: Build
       run: cd src/ && go build -v ./
+
+    - name: Upload executable to artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: arknights_bot
+        path: src/arknights_bot
+        compression-level: 0
