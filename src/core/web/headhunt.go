@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Headhunt(r *gin.Engine) {
@@ -32,17 +33,8 @@ func Headhunt(r *gin.Engine) {
 			name := ""
 			autoProb(&r6prob, &r5prob, &r4prob, &r3prob, &times)
 			allPro := r6prob + r5prob + r4prob + r3prob
-			rankRand := float64(getRandomInt(1, int64(allPro)))
-			if rankRand <= r6prob {
-				name = randChar(6)
-				reProb(&r6prob, &r5prob, &r4prob, &r3prob, &times)
-			} else if rankRand <= r6prob+r5prob {
-				name = randChar(5)
-			} else if rankRand <= r6prob+r5prob+r4prob {
-				name = randChar(4)
-			} else if rankRand <= r6prob+r5prob+r4prob+r3prob {
-				name = randChar(3)
-			}
+			name = genOpeName(int64(allProb))
+
 			char := utils.GetOperatorByName(name)
 			operator.Profession = char.Profession
 			operator.Rarity = char.Rarity
@@ -54,6 +46,29 @@ func Headhunt(r *gin.Engine) {
 		utils.RedisSet(key, strconv.Itoa(times), 0)
 		c.HTML(http.StatusOK, "Headhunt.tmpl", operators)
 	})
+}
+
+// 生成干员
+func genOpeName(allPro int64, r6prob, r5prob, r4prob, r3prob *float64) string {
+	// 愚人节应设定为全3星
+	now := time.Now()
+	year, month, day := now.Date()
+	if month == time.April && day == 1 {
+		name = randChar(3)
+		return name
+	}
+	rankRand := float64(getRandomInt(1, allPro))
+	if rankRand <= r6prob {
+		name = randChar(6)
+		reProb(&r6prob, &r5prob, &r4prob, &r3prob, &times)
+	} else if rankRand <= r6prob+r5prob {
+		name = randChar(5)
+	} else if rankRand <= r6prob+r5prob+r4prob {
+		name = randChar(4)
+	} else if rankRand <= r6prob+r5prob+r4prob+r3prob {
+		name = randChar(3)
+	}
+	return name
 }
 
 // 自动调整6星概率
