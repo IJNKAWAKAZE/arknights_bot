@@ -6,48 +6,39 @@ This bot is designed to work in group [明日方舟 / Arknights 中文交流](ht
 # Project Structure
 
 ```
-docs/                    # Documentation
-src/                     # Source code
-test/                    # Test cases
-metadata/      
-    - GateKeeper/        # GateKeeper metadata
-        - config.json 
-        
-Dockerfile               # Dockerfile
-arknightsbot.nix         # Nix Package configuration
-README.md                # README
-LICENSE                  # LICENSE
+- docs/: Contains documentation and guides for the project.
+- src/: The source code of the project resides here.
+- assets/: Media files that support specific features of the bot.
+- template/: Templates used to generate images for specific features.
+- arknights.sql: Describes the database structure necessary for the project.
+- arknights.example.yaml: An example configuration file to help set up the project.
+- README.md: Provides an overview, installation instructions, and usage guidelines.
 ```
 
 # Runtime and Dependencies
 
 ## Deployment
 
-### Docker
+```
+# Edit arknights.yaml, modify the configuration to your own.
+# Import the database schema(arknights.sql) to your database.
+# Start the bot
+$ ./arknights_bot
+```
 
-### Pre-built binaries
+## Features
 
-### Build from source
+Refer to [Features Documentation](docs/Features.md) for more information.
 
-## Development and Contribution
+## Build, Development and Contribution
 
 Refer to [Development Documentation](docs/Development.md) for more information.
 
 # References and Acknowledgements
+The arknights game data possible come from [PRTS Wiki](https://prts.wiki/)
 
-<!-- 
-The arknights game data possible come from 
-[PRTS Wiki](https://prts.wiki/)
-
--->
-
-```
-
-```
 # License
-```
-
-```
+All rights reserved.
 
 
 
