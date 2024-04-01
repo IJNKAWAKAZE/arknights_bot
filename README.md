@@ -1,5 +1,5 @@
 # Arknights Telegram Bot
-
+[![Go](https://github.com/IJNKAWAKAZE/arknights_bot/actions/workflows/go.yml/badge.svg)](https://github.com/IJNKAWAKAZE/arknights_bot/actions/workflows/go.yml)
 This bot is designed to work in group [明日方舟 / Arknights 中文交流](https://t.me/ArknightsZH) as a user verification tool.
 
 
