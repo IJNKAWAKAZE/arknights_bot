@@ -24,3 +24,9 @@ jobs:
 
     - name: Build
       run: cd src/ && go build -v ./
+
+    - name: Upload executable to artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: arknights_bot_build_${{ github.event.pull_request.head.sha }}
+        path: src/arknights_bot
