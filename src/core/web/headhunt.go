@@ -32,8 +32,7 @@ func Headhunt(r *gin.Engine) {
 			var operator utils.Operator
 			name := ""
 			autoProb(&r6prob, &r5prob, &r4prob, &r3prob, &times)
-			allPro := r6prob + r5prob + r4prob + r3prob
-			name = genOpeName(int64(allProb))
+			name = genOpeName(r6prob, r5prob, r4prob, r3prob)
 
 			char := utils.GetOperatorByName(name)
 			operator.Profession = char.Profession
@@ -49,7 +48,7 @@ func Headhunt(r *gin.Engine) {
 }
 
 // 生成干员
-func genOpeName(allPro int64, r6prob, r5prob, r4prob, r3prob *float64) string {
+func genOpeName(r6prob, r5prob, r4prob, r3prob *float64) string {
 	// 愚人节应设定为全3星
 	now := time.Now()
 	year, month, day := now.Date()
@@ -57,7 +56,8 @@ func genOpeName(allPro int64, r6prob, r5prob, r4prob, r3prob *float64) string {
 		name = randChar(3)
 		return name
 	}
-	rankRand := float64(getRandomInt(1, allPro))
+	allPro := r6prob + r5prob + r4prob + r3prob
+	rankRand := float64(getRandomInt(1, int64(allPro)))
 	if rankRand <= r6prob {
 		name = randChar(6)
 		reProb(&r6prob, &r5prob, &r4prob, &r3prob, &times)
