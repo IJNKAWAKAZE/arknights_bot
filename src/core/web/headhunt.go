@@ -5,13 +5,14 @@ import (
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 func Headhunt(r *gin.Engine) {
@@ -30,10 +31,7 @@ func Headhunt(r *gin.Engine) {
 		var operators []utils.Operator
 		for i := 0; i < 10; i++ {
 			var operator utils.Operator
-			name := ""
-			autoProb(&r6prob, &r5prob, &r4prob, &r3prob, &times)
-      name = genOpeName(&r6prob, &r5prob, &r4prob, &r3prob)
-
+			name := genOpeName(&r6prob, &r5prob, &r4prob, &r3prob, &times)
 			char := utils.GetOperatorByName(name)
 			operator.Profession = char.Profession
 			operator.Rarity = char.Rarity
@@ -48,28 +46,29 @@ func Headhunt(r *gin.Engine) {
 }
 
 // 生成干员
-func genOpeName(r6prob *float64, r5prob *float64, r4prob *float64, r3prob *float64) string {
- 	name := ""
- 	// 愚人节应设定为全3星
- 	now := time.Now()
- 	_, month, day := now.Date()
- 	if month == time.April && day == 1 {
- 		name = randChar(3)
- 		return name
- 	}
- 	allPro := *r6prob + *r5prob + *r4prob + *r3prob
- 	rankRand := float64(getRandomInt(1, int64(allPro)))
- 	if rankRand <= *r6prob {
- 		name = randChar(6)
- 		reProb(r6prob, r5prob, r4prob, r3prob, times)
- 	} else if rankRand <= *r6prob+*r5prob {
- 		name = randChar(5)
- 	} else if rankRand <= *r6prob+*r5prob+*r4prob {
- 		name = randChar(4)
- 	} else {
- 		name = randChar(3)
- 	}
- 	return name
+func genOpeName(r6prob *float64, r5prob *float64, r4prob *float64, r3prob *float64, times *int) string {
+	name := ""
+	// 愚人节应设定为全3星
+	now := time.Now()
+	_, month, day := now.Date()
+	if month == time.April && day == 1 {
+		name = randChar(3)
+		return name
+	}
+	autoProb(r6prob, r5prob, r4prob, r3prob, times)
+	allPro := *r6prob + *r5prob + *r4prob + *r3prob
+	rankRand := float64(getRandomInt(1, int64(allPro)))
+	if rankRand <= *r6prob {
+		name = randChar(6)
+		reProb(r6prob, r5prob, r4prob, r3prob, times)
+	} else if rankRand <= *r6prob+*r5prob {
+		name = randChar(5)
+	} else if rankRand <= *r6prob+*r5prob+*r4prob {
+		name = randChar(4)
+	} else {
+		name = randChar(3)
+	}
+	return name
 }
 
 // 自动调整6星概率
