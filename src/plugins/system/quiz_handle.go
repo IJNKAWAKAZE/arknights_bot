@@ -89,7 +89,7 @@ func QuizHandle(update tgbotapi.Update) error {
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
 	correct := options[r.Int64()]
 
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
+	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.GetImg(correct.ThumbURL)})
 	if param == "h" {
 		pic := utils.ImgConvert(correct.ThumbURL)
 		if pic == nil {
