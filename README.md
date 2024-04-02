@@ -16,15 +16,6 @@ This bot is designed to work in group [明日方舟 / Arknights 中文交流](ht
 
 ## Runtime and Dependencies
 
-### Deployment
-
-```
-# Edit arknights.yaml, modify the configuration to your own.
-# Import the database schema(arknights.sql) to your database.
-# Start the bot
-$ ./arknights_bot
-```
-
 ### Features
 
 Refer to [Features Documentation](docs/Features.md) for more information.
