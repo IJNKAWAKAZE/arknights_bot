@@ -6,8 +6,12 @@ name: Go
 on:
   push:
     branches: [ "refactor/bot" ]
+    paths:
+      - 'src/**'
   pull_request:
     branches: [ "refactor/bot" ]
+    paths:
+      - 'src/**'
 
 jobs:
 
