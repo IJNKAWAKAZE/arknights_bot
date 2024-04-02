@@ -172,7 +172,7 @@ func ParseOperator(name string) Operator {
 					selection.Find("tr").Eq(0).Find("td").Each(func(k int, selection *goquery.Selection) {
 						if k == 0 {
 							icon, _ := selection.Children().Children().Children().Attr("data-src")
-							skill.Icon = "https://prts.wiki" + icon
+							skill.Icon = icon
 						}
 						if k == 1 {
 							skill.Name = strings.ReplaceAll(selection.Text(), "\n", "")

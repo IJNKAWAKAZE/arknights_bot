@@ -12,7 +12,6 @@ import (
 	"github.com/playwright-community/playwright-go"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
-	"golang.org/x/image/webp"
 	"gorm.io/gorm"
 	"image"
 	"image/color"
@@ -358,15 +357,26 @@ func Md5(str string) string {
 	return m5str
 }
 
+func GetImg(url string) []byte {
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Println("获取图片失败", err)
+		return nil
+	}
+	pic, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	return pic
+}
+
 func ImgConvert(url string) []byte {
 	pic, err := http.Get(url)
 	if err != nil {
-		log.Println("获取图片失败")
+		log.Println("获取图片失败", err)
 		return nil
 	}
-	m, err := webp.Decode(pic.Body)
+	m, _, err := image.Decode(pic.Body)
 	if err != nil {
-		log.Println("解析图片失败")
+		log.Println("解析图片失败", err)
 		return nil
 	}
 	bounds := m.Bounds()
@@ -415,13 +425,13 @@ func CutImg(url string) []byte {
 		log.Println("获取图片失败", err)
 		return nil
 	}
-	m, err := webp.Decode(pic.Body)
+	m, _, err := image.Decode(pic.Body)
 	if err != nil {
 		log.Println("解析图片失败", err)
 		return nil
 	}
-	rgba := m.(*image.NYCbCrA)
-	subImage := rgba.SubImage(image.Rect(0, m.Bounds().Dy(), m.Bounds().Dx(), int(float64(m.Bounds().Dy())/1.5))).(*image.NYCbCrA)
+	rgba := m.(*image.NRGBA)
+	subImage := rgba.SubImage(image.Rect(0, m.Bounds().Dy(), m.Bounds().Dx(), int(float64(m.Bounds().Dy())/1.5))).(*image.NRGBA)
 	buf := new(bytes.Buffer)
 	png.Encode(buf, subImage)
 	return buf.Bytes()

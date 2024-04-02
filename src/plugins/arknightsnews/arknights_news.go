@@ -42,11 +42,11 @@ func BilibiliNews() {
 	if len(pics) == 1 {
 		for _, group := range groups {
 			if pics[0].Height > 3000 {
-				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileURL(pics[0].Url))
+				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url)})
 				sendDocument.Caption = text
 				config.Arknights.Send(sendDocument)
 			} else {
-				sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileURL(pics[0].Url))
+				sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url)})
 				sendPhoto.Caption = text
 				config.Arknights.Send(sendPhoto)
 			}
@@ -69,7 +69,7 @@ func BilibiliNews() {
 		for i, pic := range pics {
 			if d {
 				var inputDocument tgbotapi.InputMediaDocument
-				inputDocument.Media = tgbotapi.FileURL(pic.Url)
+				inputDocument.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url)}
 				inputDocument.Type = "document"
 				if i == len(pics)-1 {
 					inputDocument.Caption = text
@@ -84,7 +84,7 @@ func BilibiliNews() {
 					continue
 				}
 				var inputPhoto tgbotapi.InputMediaPhoto
-				inputPhoto.Media = tgbotapi.FileURL(pic.Url)
+				inputPhoto.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url)}
 				inputPhoto.Type = "photo"
 				if i == 0 {
 					inputPhoto.Caption = text
