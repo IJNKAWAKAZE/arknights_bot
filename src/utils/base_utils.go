@@ -399,14 +399,12 @@ o:
 			b_uint8 := uint8(b >> 8)
 			a_uint8 := uint8(a >> 8)
 
-			r_uint8 = g_uint8
-			b_uint8 = g_uint8
-			a_uint8 = 255
-			if r_uint8 != 0 || g_uint8 != 0 || b_uint8 != 0 {
+			if a_uint8 > 23 {
 				r_uint8 = 255
 				g_uint8 = 255
 				b_uint8 = 255
 			}
+			a_uint8 = 255
 			newRgba.SetRGBA(i, j, color.RGBA{R: r_uint8, G: g_uint8, B: b_uint8, A: a_uint8})
 		}
 	}
