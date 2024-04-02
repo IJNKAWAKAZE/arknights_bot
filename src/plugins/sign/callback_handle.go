@@ -36,5 +36,7 @@ func SignPlayer(callBack tgbotapi.Update) error {
 	utils.GetAccountByUid(userId, uid).Scan(&userAccount)
 	utils.GetPlayerByUserId(userId, uid).Scan(&player)
 
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	bot.Arknights.Send(answer)
 	return Sign(player, userAccount, chatId)
 }

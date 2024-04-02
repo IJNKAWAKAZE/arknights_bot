@@ -31,6 +31,8 @@ func PlayerData(callBack tgbotapi.Update) error {
 		bot.Arknights.Send(answer)
 		return nil
 	} else {
+		answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+		bot.Arknights.Send(answer)
 		return callback.Function(playerId)
 	}
 }

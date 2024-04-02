@@ -46,6 +46,7 @@ func Report(callBack tgbotapi.Update) error {
 		delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 		bot.Arknights.Send(delMsg)
 	}
-
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	bot.Arknights.Send(answer)
 	return nil
 }
