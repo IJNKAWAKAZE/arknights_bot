@@ -11,7 +11,7 @@ Environment requirements:
 If you need to update your default path for Go, you can use the following command:
 
 ```shell
-export GOPATH="${workspaceFolder}/.go/"
+export GOPATH="${workspaceFolder}/src/.go/"
 ```
 
 You might need to write this command in your shell script or shell configuration file.
@@ -20,7 +20,7 @@ Then you can build the project:
 
 ```shell
 git clone https://github.com/IJNKAWAKAZE/arknights_bot
-cd arknights_bot/src
+cd arknights_bot/src/
 go build -v
 ```
 
@@ -47,6 +47,16 @@ parameter `-o` can be used to specify the output file name. It will affect the l
    ```shell
    ./src/arknights_bot
    ```
+
+If things gonna all right, you will see the output like this:
+
+```log
+2024-04-02T10:34:38.015+08:00 INF 2024/04/02 10:34:38 init_db.go:25: 数据库连接成功
+2024-04-02T10:34:38.017+08:00 INF 2024/04/02 10:34:38 init_redis.go:19: redis连接成功
+2024-04-02T10:34:38.982+08:00 INF 2024/04/02 10:34:38 init_bot.go:22: 机器人初始化完成
+2024-04-02T10:34:38.983+08:00 INF 2024/04/02 10:34:38 runner.go:48: 定时任务已启动
+2024-04-02T10:34:38.984+08:00 INF 2024/04/02 10:34:38 bot.go:21: 机器人启动成功
+```
 
 ## Local development
 
@@ -88,7 +98,7 @@ parameter `-o` can be used to specify the output file name. It will affect the l
                 "program": "${workspaceFolder}/src/arknights_bot",
                 "args": [],
                 "env": {
-                    "GOPATH": "${workspaceFolder}/.go"
+                    "GOPATH": "${workspaceFolder}/src/.go/"
                 }
             }
         ]
@@ -117,7 +127,7 @@ parameter `-o` can be used to specify the output file name. It will affect the l
         ],
         "options": {
             "env": {
-                "GOPATH": "${workspaceFolder}/.go"
+                "GOPATH": "${workspaceFolder}/src/.go/"
             }
         }
     }
