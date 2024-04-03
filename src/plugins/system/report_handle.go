@@ -57,8 +57,8 @@ func ReportHandle(update tgbotapi.Update) error {
 		}
 
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("report,%s,%d", "BAN", target)),
-			tgbotapi.NewInlineKeyboardButtonData("❌关闭", fmt.Sprintf("report,%s,%d", "CLOSE", target)),
+			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("report,%s,%d,%d", "BAN", target, replyMessageId)),
+			tgbotapi.NewInlineKeyboardButtonData("❌关闭", fmt.Sprintf("report,%s,%d,%d", "CLOSE", target, replyMessageId)),
 		))
 
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
