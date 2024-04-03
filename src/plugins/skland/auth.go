@@ -64,7 +64,7 @@ func Login(token string) (Account, error) {
 	}
 	account.Hypergryph.Token = token
 
-	res, err := grantApp(token, AppCodeSKLAND)
+	res, err := grantApp(token, "4ca99fa6b56cc2ba")
 	if err != nil {
 		return account, fmt.Errorf("grant app error: %w", err)
 	}
@@ -127,12 +127,12 @@ func RefreshToken(account Account) (Account, error) {
 	return account, nil
 }
 
-// 获取用户信息
+// GetUser 获取用户信息
 func GetUser(skland AccountSkland) (*User, error) {
 	return SklandRequest[*User](SKR(), "GET", "/api/v1/user", skland)
 }
 
-// 检查token有效性
+// CheckToken 检查token有效性
 func CheckToken(token string) error {
 	req := SKR().SetQueryParam("token", token)
 	_, err := HypergryphRequest[any](req, "GET", "/user/info/v1/basic")
@@ -176,10 +176,4 @@ func ArknightsPlayers(skland AccountSkland) ([]*Player, error) {
 		}
 	}
 	return players, nil
-}
-
-// GenTokenByUid 根据Oauth token和uid生成应用token
-func GenTokenByUid(uid string, token string) (*GenTokenByUidData, error) {
-	req := HR().SetBody(gh.M{"uid": uid, "token": token})
-	return HypergryphBindingAPIRequest[*GenTokenByUidData](req, "POST", "/account/binding/v1/token_by_uid")
 }

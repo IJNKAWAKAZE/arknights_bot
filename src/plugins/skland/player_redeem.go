@@ -51,7 +51,7 @@ func getPlayerRedeem(token, cdk, channelId string) (string, error) {
 		}
 	}
 	headers["X-Csrf-Token"] = csrfToken
-	req1 := SKR().SetHeaders(headers).SetBody(gh.M{"token": token, "giftCode": cdk, "channelId": channelId}).SetCookies(resp.Cookies())
+	req1 := HR().SetHeaders(headers).SetBody(gh.M{"token": token, "giftCode": cdk, "channelId": channelId}).SetCookies(resp.Cookies())
 	res, err := HypergryphAKRequest(req1, "POST", path)
 	if err != nil {
 		return "", fmt.Errorf("发送兑换请求失败")

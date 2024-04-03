@@ -24,11 +24,6 @@ func GetPlayerInfo(uid string, account Account) (*PlayerData, Account, error) {
 	return playerData, account, nil
 }
 
-func getPlayerInfo(uid string, skland AccountSkland) (*PlayerData, error) {
-	req := SKR().SetQueryParams(gh.MS{"uid": uid})
-	return SklandRequest[*PlayerData](req, "GET", "/api/v1/game/player/info", skland)
-}
-
 func getPlayerInfoStr(uid string, skland AccountSkland) (string, error) {
 	req := SKR().SetQueryParams(gh.MS{"uid": uid})
 	return SklandRequestPlayerData(req, "GET", "/api/v1/game/player/info", skland)

@@ -48,13 +48,8 @@ func sign(user UserSign) {
 				skAccount.Skland.Token = userAccount.SklandToken
 				skAccount.Skland.Cred = userAccount.SklandCred
 
-				var skPlayer skland.Player
-				skPlayer.NickName = player.PlayerName
-				skPlayer.ChannelName = player.ServerName
-				skPlayer.Uid = player.Uid
-
 				// 执行签到
-				record, err := skland.SignGamePlayer(&skPlayer, skAccount)
+				award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
 				if err != nil {
 					// 签到失败
 					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\nmsg:%s", player.PlayerName, err.Error()))
@@ -63,13 +58,13 @@ func sign(user UserSign) {
 					return
 				}
 				// 今日已完成签到
-				if record.HasSigned {
+				if hasSigned {
 					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
 					bot.Arknights.Send(sendMessage)
 					return
 				}
 				// 签到成功
-				sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, record.Award))
+				sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, award))
 				bot.Arknights.Send(sendMessage)
 			}
 		}

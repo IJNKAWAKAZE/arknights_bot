@@ -80,12 +80,8 @@ func SignHandle(update tgbotapi.Update) error {
 }
 
 func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) error {
-	var skPlayer skland.Player
 	var skAccount skland.Account
 	playerName := player.PlayerName
-	skPlayer.NickName = playerName
-	skPlayer.ChannelName = player.ServerName
-	skPlayer.Uid = player.Uid
 	skAccount.Hypergryph.Token = account.HypergryphToken
 	skAccount.Skland.Token = account.SklandToken
 	skAccount.Skland.Cred = account.SklandCred
@@ -93,7 +89,7 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)
 
-	record, err := skland.SignGamePlayer(&skPlayer, skAccount)
+	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\nmsg:%s", playerName, err.Error()))
 		msg, _ := bot.Arknights.Send(sendMessage)
@@ -102,13 +98,13 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 		return err
 	}
 	// 今日已完成签到
-	if record.HasSigned {
+	if hasSigned {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", playerName))
 		bot.Arknights.Send(sendMessage)
 		return nil
 	}
 	// 签到成功
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, record.Award))
+	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, award))
 	bot.Arknights.Send(sendMessage)
 	return nil
 }
