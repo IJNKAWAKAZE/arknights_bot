@@ -87,7 +87,7 @@ func ParseEnemy(name string) Enemy {
 	// 级别详情
 	var levels []Level
 	doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
-		if selection.Text() == "级别0" {
+		if selection.Text() == "级别0" || selection.Text() == "级别B" {
 			var level Level
 			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
@@ -145,7 +145,7 @@ func ParseEnemy(name string) Enemy {
 			})
 			levels = append(levels, level)
 		}
-		if selection.Text() == "级别1" {
+		if selection.Text() == "级别1" || selection.Text() == "级别A" {
 			var level Level
 			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
@@ -203,7 +203,7 @@ func ParseEnemy(name string) Enemy {
 			})
 			levels = append(levels, level)
 		}
-		if selection.Text() == "级别2" {
+		if selection.Text() == "级别2" || selection.Text() == "级别S" {
 			var level Level
 			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
