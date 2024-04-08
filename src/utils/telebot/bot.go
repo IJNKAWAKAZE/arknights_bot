@@ -1,6 +1,7 @@
 package telebot
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
 	"log"
@@ -87,6 +88,16 @@ func (b *Bot) addProcessor(command string, processor callbackFunction, funcMap m
 	}
 	funcMap[command] = processor
 }
+func recoverWarp(function callbackFunction) callbackFunction {
+	return func(msg tgbotapi.Update) error {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Recovered in f", r)
+			}
+		}()
+		return function(msg)
+	}
+}
 func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 	// generic first
 	for _, k := range b.matchProcessorSlice {
@@ -168,9 +179,10 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
 			}
 			continue
 		}
+
 		process := b.selectFunction(msg)
 		if process != nil {
-			err := process(msg)
+			err := recoverWarp(process)(msg)
 			if err != nil {
 				log.Println("Plugin Error", err.Error())
 			}

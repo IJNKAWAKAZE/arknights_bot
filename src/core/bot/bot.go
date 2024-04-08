@@ -94,5 +94,6 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("reg", system.RegulationHandle)
 	bot.TeleBot.NewCommandProcessor("clear", system.ClearHandle)
 	bot.TeleBot.NewCommandProcessor("kill", system.KillHandle)
+	log.Println("Run pulling")
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u), bot.Arknights)
 }
