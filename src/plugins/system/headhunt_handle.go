@@ -21,7 +21,10 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	if param == "" {
 		if utils.RedisIsExists(headhuntKey) && utils.RedisGet(headhuntKey) == "stop" {
 			sendMessage := tgbotapi.NewMessage(chatId, "模拟寻访功能已关闭！")
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}
@@ -38,12 +41,18 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 				text = "模拟寻访已关闭！"
 			}
 			sendMessage := tgbotapi.NewMessage(chatId, text)
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
@@ -59,7 +68,10 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 				messagecleaner.AddDelQueue(chatId, messageId, 60)
 				sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
 				sendMessage.ReplyToMessageID = messageId
-				msg, _ := bot.Arknights.Send(sendMessage)
+				msg, err := bot.Arknights.Send(sendMessage)
+				if err != nil {
+					return err
+				}
 				messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
 				return nil
 			}
@@ -74,10 +86,13 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
-		msg, _ := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
+		msg, err := bot.Arknights.Send(sendMessage)
 		times, _ := strconv.Atoi(utils.RedisGet(key))
 		utils.RedisSet(key, strconv.Itoa(times-1), 0)
+		if err != nil {
+			return err
+		}
+		messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
 		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})

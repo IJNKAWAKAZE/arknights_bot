@@ -13,8 +13,11 @@ func PingHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	sendSticker := tgbotapi.NewSticker(chatId, tgbotapi.FileID(viper.GetString("sticker.ping")))
 	sendSticker.ReplyToMessageID = messageId
-	msg, _ := bot.Arknights.Send(sendSticker)
+	msg, err := bot.Arknights.Send(sendSticker)
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
+	if err != nil {
+		return err
+	}
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	return nil
 }

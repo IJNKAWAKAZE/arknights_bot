@@ -27,7 +27,10 @@ func ReportHandle(update tgbotapi.Update) error {
 		if utils.IsAdmin(chatId, target) {
 			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
 			sendMessage.ReplyToMessageID = messageId
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}

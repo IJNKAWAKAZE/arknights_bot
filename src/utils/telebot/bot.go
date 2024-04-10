@@ -1,7 +1,6 @@
 package telebot
 
 import (
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
 	"log"
@@ -92,7 +91,7 @@ func recoverWarp(function callbackFunction) callbackFunction {
 	return func(msg tgbotapi.Update) error {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Println("Recovered in f", r)
+				log.Println("Recovered in f", r)
 			}
 		}()
 		return function(msg)

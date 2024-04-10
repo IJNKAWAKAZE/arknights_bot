@@ -25,7 +25,10 @@ func QuizHandle(update tgbotapi.Update) error {
 	if param == "" {
 		if utils.RedisIsExists(key) && utils.RedisGet(key) == "stop" {
 			sendMessage := tgbotapi.NewMessage(chatId, "云玩家检测功能已关闭！")
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}
@@ -42,12 +45,18 @@ func QuizHandle(update tgbotapi.Update) error {
 				text = "云玩家检测已关闭！"
 			}
 			sendMessage := tgbotapi.NewMessage(chatId, text)
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}

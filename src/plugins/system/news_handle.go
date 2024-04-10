@@ -24,14 +24,20 @@ func NewsHandle(update tgbotapi.Update) error {
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, text)
 		sendMessage.ReplyToMessageID = messageId
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 	sendMessage.ReplyToMessageID = messageId
-	msg, _ := bot.Arknights.Send(sendMessage)
+	msg, err := bot.Arknights.Send(sendMessage)
+	if err != nil {
+		return err
+	}
 	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	return nil
 }

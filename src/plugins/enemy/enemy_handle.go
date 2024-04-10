@@ -30,7 +30,10 @@ func EnemyHandle(update tgbotapi.Update) error {
 		)
 		sendMessage := tgbotapi.NewMessage(chatId, "请选择要查询的敌人")
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
@@ -38,8 +41,11 @@ func EnemyHandle(update tgbotapi.Update) error {
 	if enemy.Name == "" {
 		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "未查询到此敌人，请输入正确的敌人名称。")
 		sendMessage.ReplyToMessageID = messageId
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, bot.MsgDelDelay)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
