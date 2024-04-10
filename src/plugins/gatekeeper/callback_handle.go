@@ -102,10 +102,11 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 		sendMessage := tgbotapi.NewMessage(chatId, text)
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		msg, err := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(chatId, msg.MessageID, 3600)
 		if err != nil {
 			return err
 		}
+		messagecleaner.AddDelQueue(chatId, msg.MessageID, 3600)
+
 	}
 	return nil
 }

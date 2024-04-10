@@ -5,6 +5,7 @@ Environment requirements:
 - [Go lang](https://go.dev) 1.10+
 - [MySQL](https://www.mysql.com/) 5.7+ ([MariaDB](https://mariadb.org) is also supported)
 - [Redis](https://redis.io) 5.0+ ([Redis stack](https://redis.io/docs/about/about-stack/) is also supported)
+- [FFMPEG](https://ffmpeg.org/)
 
 ## Build from Source
 

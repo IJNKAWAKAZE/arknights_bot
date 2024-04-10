@@ -474,7 +474,9 @@ func OCR(file io.Reader, lang, engine, sep string) []string {
 	}
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 	request.Header.Add("Apikey", "helloworld")
-	resp, err := http.DefaultClient.Do(request)
+	client := http.DefaultClient
+	client.Timeout = time.Second * 10
+	resp, err := client.Do(request)
 	if err != nil {
 		log.Println("ocr失败")
 		return nil
