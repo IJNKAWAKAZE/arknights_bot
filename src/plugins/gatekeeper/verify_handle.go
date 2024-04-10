@@ -78,7 +78,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			buttons...,
 		)
-		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileURL(correct.ThumbURL))
+		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.GetImg(correct.ThumbURL)})
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 		sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", utils.EscapesMarkdownV2(name), userId)
 		sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
@@ -104,8 +104,9 @@ func VerifyMember(message *tgbotapi.Message) {
 			bot.Arknights.Send(restrictChatMemberConfig)
 			return
 		}
-		val := fmt.Sprintf("verify%d%d", chatId, userId)
-		utils.RedisAddSet("verify", val)
+		val := fmt.Sprintf("%d%d", chatId, userId)
+		//utils.RedisAddSet("verify", val)
+		verifySet.add(userId, chatId)
 		go verify(val, chatId, userId, photo.MessageID, messageId)
 	}
 }
@@ -121,9 +122,11 @@ func unban(chatMember tgbotapi.ChatMemberConfig) {
 
 func verify(val string, chatId int64, userId int64, messageId int, joinMessageId int) {
 	time.Sleep(time.Minute)
-	if !utils.RedisSetIsExists("verify", val) {
+	if !verifySet.checkExistAndRemove(userId, chatId) {
 		return
 	}
+	//if !utils.RedisSetIsExists("verify", val) {return}
+
 	// 踢出超时未验证用户
 	chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
 	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
@@ -134,7 +137,7 @@ func verify(val string, chatId int64, userId int64, messageId int, joinMessageId
 	// 删除用户入群提醒
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)
-	utils.RedisDelSetItem("verify", val)
+	//utils.RedisDelSetItem("verify", val)
 	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	bot.Arknights.Send(delMsg)

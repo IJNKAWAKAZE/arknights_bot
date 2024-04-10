@@ -5,6 +5,7 @@ import (
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"arknights_bot/utils/telebot"
+	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -45,6 +46,11 @@ func ResetToken(update tgbotapi.Update) error {
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)
 
+	var userToken UserToken
+	err := json.Unmarshal([]byte(token), &userToken)
+	if err == nil {
+		token = userToken.Data.Content
+	}
 	account, err := skland.Login(token)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
@@ -53,7 +59,7 @@ func ResetToken(update tgbotapi.Update) error {
 	}
 	// 查查询账户信息
 	var userAccount UserAccount
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := utils.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token

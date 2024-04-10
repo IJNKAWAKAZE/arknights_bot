@@ -5,6 +5,7 @@ import (
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"arknights_bot/utils/telebot"
+	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -35,6 +36,11 @@ func SetToken(update tgbotapi.Update) error {
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)
 
+	var userToken UserToken
+	err := json.Unmarshal([]byte(token), &userToken)
+	if err == nil {
+		token = userToken.Data.Content
+	}
 	account, err := skland.Login(token)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
@@ -43,7 +49,7 @@ func SetToken(update tgbotapi.Update) error {
 	}
 	// 查询账户是否存在
 	var userAccount UserAccount
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := utils.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
@@ -60,6 +66,7 @@ func SetToken(update tgbotapi.Update) error {
 			HypergryphToken: token,
 			SklandToken:     account.Skland.Token,
 			SklandCred:      account.Skland.Cred,
+			SklandId:        account.UserId,
 		}
 		bot.DBEngine.Table("user_account").Create(&userAccount)
 	}
@@ -72,6 +79,7 @@ func SetToken(update tgbotapi.Update) error {
 		return err
 	}
 
+	sklandIdMap[chatId] = account.UserId
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for _, player := range players {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(

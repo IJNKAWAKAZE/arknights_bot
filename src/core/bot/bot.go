@@ -9,6 +9,7 @@ import (
 	"arknights_bot/plugins/operator"
 	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/sign"
+	"arknights_bot/plugins/skin"
 	"arknights_bot/plugins/system"
 	"arknights_bot/utils/telebot"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -43,6 +44,7 @@ func Serve() {
 
 	// InlineQuery
 	bot.TeleBot.NewInlineQueryProcessor("干员", operator.InlineOperator)
+	bot.TeleBot.NewInlineQueryProcessor("皮肤", skin.InlineSkin)
 	bot.TeleBot.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
 	bot.TeleBot.NewInlineQueryProcessor("材料", material.InlineMaterial)
 
@@ -75,6 +77,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("base", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
+	bot.TeleBot.NewCommandProcessor("skin", skin.SkinHandle)
 	bot.TeleBot.NewCommandProcessor("enemy", enemy.EnemyHandle)
 	bot.TeleBot.NewCommandProcessor("material", material.MaterialHandle)
 	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
@@ -91,5 +94,6 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("reg", system.RegulationHandle)
 	bot.TeleBot.NewCommandProcessor("clear", system.ClearHandle)
 	bot.TeleBot.NewCommandProcessor("kill", system.KillHandle)
+	log.Println("Run pulling")
 	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u), bot.Arknights)
 }

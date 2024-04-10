@@ -64,7 +64,7 @@ func Login(token string) (Account, error) {
 	}
 	account.Hypergryph.Token = token
 
-	res, err := grantApp(token, AppCodeSKLAND)
+	res, err := grantApp(token, "4ca99fa6b56cc2ba")
 	if err != nil {
 		return account, fmt.Errorf("grant app error: %w", err)
 	}
@@ -74,6 +74,7 @@ func Login(token string) (Account, error) {
 	if err != nil {
 		return account, fmt.Errorf("auth login by code error: %w", err)
 	}
+	account.UserId = res1.UserId
 	account.Skland.Cred = res1.Cred
 	account.Skland.Token = res1.Token
 	return account, nil
@@ -92,8 +93,8 @@ func authLoginByCode(code string) (*GenCredByCodeData, error) {
 }
 
 // RefreshToken 刷新 token
-func RefreshToken(uid string, account Account) (Account, error) {
-	_, err := getUser(account.Skland)
+func RefreshToken(account Account) (Account, error) {
+	_, err := GetUser(account.Skland)
 	if err == nil {
 		return account, nil
 	}
@@ -107,7 +108,7 @@ func RefreshToken(uid string, account Account) (Account, error) {
 	}
 	account.Skland.Token = res.Token
 
-	_, err = getUser(account.Skland)
+	_, err = GetUser(account.Skland)
 	if err != nil {
 		if !IsUnauthorized(err) {
 			return account, fmt.Errorf("get user error: %w", err)
@@ -120,24 +121,18 @@ func RefreshToken(uid string, account Account) (Account, error) {
 		if err != nil {
 			return account, err
 		}
-	}
-	// 查询更新用户
-	var userNumber string
-	result := bot.DBEngine.Raw("select user_number from user_player where uid = ?", uid).Scan(&userNumber)
-
-	if result.RowsAffected > 0 {
 		// 更新token
-		bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where user_number = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, userNumber)
+		bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
 	}
 	return account, nil
 }
 
-// 获取用户信息
-func getUser(skland AccountSkland) (*User, error) {
+// GetUser 获取用户信息
+func GetUser(skland AccountSkland) (*User, error) {
 	return SklandRequest[*User](SKR(), "GET", "/api/v1/user", skland)
 }
 
-// 检查token有效性
+// CheckToken 检查token有效性
 func CheckToken(token string) error {
 	req := SKR().SetQueryParam("token", token)
 	_, err := HypergryphRequest[any](req, "GET", "/user/info/v1/basic")
@@ -181,10 +176,4 @@ func ArknightsPlayers(skland AccountSkland) ([]*Player, error) {
 		}
 	}
 	return players, nil
-}
-
-// GenTokenByUid 根据Oauth token和uid生成应用token
-func GenTokenByUid(uid string, token string) (*GenTokenByUidData, error) {
-	req := HR().SetBody(gh.M{"uid": uid, "token": token})
-	return HypergryphBindingAPIRequest[*GenTokenByUidData](req, "POST", "/account/binding/v1/token_by_uid")
 }

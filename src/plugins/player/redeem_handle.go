@@ -43,8 +43,11 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("BToken未设置，请先进行[设置](https://t.me/%s)。", viper.GetString("bot.name")))
 			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 			sendMessage.ReplyToMessageID = messageId
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(chatId, messageId, 5)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}

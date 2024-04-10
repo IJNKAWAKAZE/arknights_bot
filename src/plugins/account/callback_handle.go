@@ -8,9 +8,13 @@ import (
 	"strings"
 )
 
+var sklandIdMap = make(map[int64]string)
+
 // ChoosePlayer 选择绑定角色
 func ChoosePlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	bot.Arknights.Send(answer)
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
@@ -24,10 +28,11 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 	uid := d[1]
 	serverName := d[2]
 	playerName := d[3]
+	sklandId := sklandIdMap[chatId]
 
 	var userAccount UserAccount
 	var userPlayer UserPlayer
-	utils.GetAccountByUserId(userId).Scan(&userAccount)
+	utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
 	res := utils.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
 	if res.RowsAffected == 0 {
 		id, _ := gonanoid.New(32)
@@ -51,12 +56,15 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 	}
 	sendMessage := tgbotapi.NewMessage(chatId, "角色绑定成功！")
 	bot.Arknights.Send(sendMessage)
+	delete(sklandIdMap, chatId)
 	return nil
 }
 
 // UnbindPlayer 解绑角色
 func UnbindPlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	bot.Arknights.Send(answer)
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
@@ -80,6 +88,8 @@ func UnbindPlayer(callBack tgbotapi.Update) error {
 // ChooseBTokenPlayer 选择设置BToken角色
 func ChooseBTokenPlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	bot.Arknights.Send(answer)
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
@@ -101,6 +111,8 @@ func ChooseBTokenPlayer(callBack tgbotapi.Update) error {
 // SetResume 设置名片签名
 func SetResume(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	bot.Arknights.Send(answer)
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 

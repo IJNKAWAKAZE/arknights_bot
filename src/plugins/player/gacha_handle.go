@@ -36,8 +36,6 @@ type UserGacha struct {
 	Remark     string    `json:"remark"`
 }
 
-// BoxHandle 我的干员
-
 func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	token := userAccount.HypergryphToken
@@ -52,8 +50,11 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("BToken未设置，请先进行[设置](https://t.me/%s)。", viper.GetString("bot.name")))
 			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 			sendMessage.ReplyToMessageID = messageId
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
 			messagecleaner.AddDelQueue(chatId, messageId, 5)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}

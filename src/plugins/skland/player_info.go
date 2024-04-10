@@ -9,7 +9,7 @@ import (
 
 func GetPlayerInfo(uid string, account Account) (*PlayerData, Account, error) {
 	var playerData *PlayerData
-	account, err := RefreshToken(uid, account)
+	account, err := RefreshToken(account)
 	if err != nil {
 		log.Println(err.Error())
 		return playerData, account, err
@@ -24,11 +24,6 @@ func GetPlayerInfo(uid string, account Account) (*PlayerData, Account, error) {
 	return playerData, account, nil
 }
 
-func getPlayerInfo(uid string, skland AccountSkland) (*PlayerData, error) {
-	req := SKR().SetQueryParams(gh.MS{"uid": uid})
-	return SklandRequest[*PlayerData](req, "GET", "/api/v1/game/player/info", skland)
-}
-
 func getPlayerInfoStr(uid string, skland AccountSkland) (string, error) {
 	req := SKR().SetQueryParams(gh.MS{"uid": uid})
 	return SklandRequestPlayerData(req, "GET", "/api/v1/game/player/info", skland)
@@ -36,7 +31,7 @@ func getPlayerInfoStr(uid string, skland AccountSkland) (string, error) {
 
 func GetPlayerStatistic(uid string, account Account) (*PlayerStatistic, Account, error) {
 	var playerStatistic *PlayerStatistic
-	account, err := RefreshToken(uid, account)
+	account, err := RefreshToken(account)
 	if err != nil {
 		log.Println(err.Error())
 		return playerStatistic, account, err

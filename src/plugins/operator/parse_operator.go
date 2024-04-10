@@ -75,7 +75,7 @@ func ParseOperator(name string) Operator {
 					operator.ProfessionBranch.Name = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
 					paintingName := fmt.Sprintf("职业分支图标_%s.png", operator.ProfessionBranch.Name)
 					m := utils.Md5(paintingName)
-					path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
+					path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 					operator.ProfessionBranch.Pic = path + paintingName
 					tds.Each(func(j int, selection *goquery.Selection) {
 						if _, b := selection.Attr("style"); !b {
@@ -172,7 +172,7 @@ func ParseOperator(name string) Operator {
 					selection.Find("tr").Eq(0).Find("td").Each(func(k int, selection *goquery.Selection) {
 						if k == 0 {
 							icon, _ := selection.Children().Children().Children().Attr("data-src")
-							skill.Icon = "https://prts.wiki" + icon
+							skill.Icon = icon
 						}
 						if k == 1 {
 							skill.Name = strings.ReplaceAll(selection.Text(), "\n", "")

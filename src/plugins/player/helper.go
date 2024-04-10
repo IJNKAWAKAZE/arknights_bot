@@ -57,6 +57,7 @@ func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, pla
 	msg, err := bot.Arknights.Send(sendMessage)
 	if err != nil {
 		log.Println("can not send massage ", err)
+		return nil
 	}
 	messagecleaner.AddDelQueueFuncHash(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay, functionHash)
 	return nil
@@ -87,10 +88,11 @@ func getAccount(update tgbotapi.Update) (*account.UserAccount, error) {
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		msg, err := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			log.Println("can not send massage ", err)
+			return nil, nil
 		}
-		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil, nil
 	}
@@ -119,10 +121,12 @@ func getPlayers(update tgbotapi.Update) ([]account.UserPlayer, error) {
 	} else {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
 		msg, err := bot.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, 5)
+
 		if err != nil {
 			log.Println("can not send massage ", err)
+			return nil, nil
 		}
-		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil, nil
 	}

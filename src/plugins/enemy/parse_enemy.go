@@ -68,7 +68,7 @@ func ParseEnemy(name string) Enemy {
 	enemy.Name = strings.ReplaceAll(trs.Eq(0).Text(), "\n", "")
 	paintingName := fmt.Sprintf("头像_敌人_%s.png", enemy.Name)
 	m := utils.Md5(paintingName)
-	path := "https://prts.wiki" + fmt.Sprintf("/images/%s/%s/", m[:1], m[:2])
+	path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 	enemy.Pic = path + paintingName
 	enemy.Desc = strings.ReplaceAll(trs.Eq(1).Find("td").Eq(1).Text(), "\n", "")
 	td3 := trs.Eq(3).Find("td")
@@ -87,7 +87,7 @@ func ParseEnemy(name string) Enemy {
 	// 级别详情
 	var levels []Level
 	doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
-		if selection.Text() == "级别0" {
+		if selection.Text() == "级别0" || selection.Text() == "级别B" {
 			var level Level
 			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
@@ -145,7 +145,7 @@ func ParseEnemy(name string) Enemy {
 			})
 			levels = append(levels, level)
 		}
-		if selection.Text() == "级别1" {
+		if selection.Text() == "级别1" || selection.Text() == "级别A" {
 			var level Level
 			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
@@ -203,7 +203,7 @@ func ParseEnemy(name string) Enemy {
 			})
 			levels = append(levels, level)
 		}
-		if selection.Text() == "级别2" {
+		if selection.Text() == "级别2" || selection.Text() == "级别S" {
 			var level Level
 			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {

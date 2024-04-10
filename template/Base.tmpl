@@ -59,6 +59,9 @@
             border: solid 1px;
             border-radius: 5px;
         }
+        .skill {
+            width: 30px;
+        }
     </style>
 </head>
 <body>
@@ -417,6 +420,55 @@
         <div class="chars">
             {{if .Hire.Chars}}
             {{range .Hire.Chars}}
+            <span style="display: inline-grid">
+                <div style="display: inline-flex;align-items: center;">
+                    <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+                    {{if le .AP 0}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#e42e20" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M19 18L15 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 18L19 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M33 18L29 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M29 18L33 22" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="20" y="28" width="8" height="8" rx="4" fill="none" stroke="#e42e20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else if lt .AP 100}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#f0ab22" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 27 24 27C19 27 17 31 17 31" stroke="#f0ab22" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{else}}
+                    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z" fill="none" stroke="#3cd627" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M31 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 18V19" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M31 31C31 31 29 35 24 35C19 35 17 31 17 31" stroke="#3cd627" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{end}}
+                    <span>{{.Name}}</span>
+                </div>
+                <progress class="ap" max="100" value="{{.AP}}"></progress>
+            </span>
+            {{end}}
+            {{else}}
+            <span style="margin-left: 10px">空无一人</span>
+            {{end}}
+        </div>
+    </div>
+    <div class="base">
+        <h3 class="title">训练室 Lv.{{.Training.Level}}
+            {{if .Training.Skill}}
+            <div class="title_icon">
+                <span>Lv.{{.Training.SpecializeLevel}}</span>
+                <img class="skill" src="https://web.hycdn.cn/arknights/game/assets/char_skill/{{.Training.Skill}}.png"/>
+            </div>
+            {{end}}
+        </h3>
+        <div class="chars">
+            {{if .Training.Chars}}
+            {{range .Training.Chars}}
             <span style="display: inline-grid">
                 <div style="display: inline-flex;align-items: center;">
                     <img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>

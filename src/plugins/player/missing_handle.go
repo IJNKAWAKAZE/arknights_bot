@@ -16,8 +16,6 @@ type PlayerOperationMissing struct {
 	commandoperation.OperationAbstract
 }
 
-// BoxHandle 我的干员
-
 func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
@@ -33,7 +31,7 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 	}
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/missing?userId=%d&uid=%s&param=%s", port, userAccount.UserNumber, uid, param), 0, 1.5)
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/missing?userId=%d&uid=%s&param=%s&sklandId=%s", port, userAccount.UserNumber, uid, param, userAccount.SklandId), 0, 1.5)
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("生成图片失败，token可能已失效请[重设token](https://t.me/%s)。", viper.GetString("bot.name")))
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2

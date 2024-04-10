@@ -27,7 +27,10 @@ func ReportHandle(update tgbotapi.Update) error {
 		if utils.IsAdmin(chatId, target) {
 			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
 			sendMessage.ReplyToMessageID = messageId
-			msg, _ := bot.Arknights.Send(sendMessage)
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
+			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 			return nil
 		}
@@ -57,8 +60,8 @@ func ReportHandle(update tgbotapi.Update) error {
 		}
 
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("report,%s,%d", "BAN", target)),
-			tgbotapi.NewInlineKeyboardButtonData("❌关闭", fmt.Sprintf("report,%s,%d", "CLOSE", target)),
+			tgbotapi.NewInlineKeyboardButtonData("🚫封禁", fmt.Sprintf("report,%s,%d,%d", "BAN", target, replyMessageId)),
+			tgbotapi.NewInlineKeyboardButtonData("❌关闭", fmt.Sprintf("report,%s,%d,%d", "CLOSE", target, replyMessageId)),
 		))
 
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(

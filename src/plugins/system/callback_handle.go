@@ -14,7 +14,7 @@ func Report(callBack tgbotapi.Update) error {
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
-	if len(d) < 3 {
+	if len(d) < 4 {
 		return nil
 	}
 
@@ -22,6 +22,7 @@ func Report(callBack tgbotapi.Update) error {
 	chatId := callbackQuery.Message.Chat.ID
 	messageId := callbackQuery.Message.MessageID
 	target, _ := strconv.ParseInt(d[2], 10, 64)
+	targetMessageId, _ := strconv.Atoi(d[3])
 
 	if !utils.IsAdmin(chatId, userId) {
 		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
@@ -38,7 +39,9 @@ func Report(callBack tgbotapi.Update) error {
 			RevokeMessages: true,
 		}
 		bot.Arknights.Send(banChatMemberConfig)
-		delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
+		delMsg := tgbotapi.NewDeleteMessage(chatId, targetMessageId)
+		bot.Arknights.Send(delMsg)
+		delMsg = tgbotapi.NewDeleteMessage(chatId, messageId)
 		bot.Arknights.Send(delMsg)
 	}
 
@@ -46,6 +49,7 @@ func Report(callBack tgbotapi.Update) error {
 		delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 		bot.Arknights.Send(delMsg)
 	}
-
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	bot.Arknights.Send(answer)
 	return nil
 }

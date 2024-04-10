@@ -50,5 +50,6 @@ func PlayerHandle(update tgbotapi.Update) error {
 	if len(players) > 1 {
 		return playerSelector(update, userAccount, players, operation, command)
 	}
+	utils.GetAccountByUid(userAccount.UserNumber, players[0].Uid).Scan(&userAccount)
 	return operation.Run(players[0].Uid, userAccount, chatId, update.Message)
 }

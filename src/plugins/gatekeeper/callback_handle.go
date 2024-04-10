@@ -2,6 +2,7 @@ package gatekeeper
 
 import (
 	bot "arknights_bot/config"
+	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -30,16 +31,17 @@ func CallBackData(callBack tgbotapi.Update) error {
 			bot.Arknights.Send(answer)
 			return nil
 		}
+		if verifySet.checkExistAndRemove(userId, chatId) {
+			if d[2] == "PASS" {
+				err := pass(chatId, userId, callbackQuery, true)
+				return err
+			}
 
-		if d[2] == "PASS" {
-			pass(chatId, userId, callbackQuery, true)
+			if d[2] == "BAN" {
+				chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
+				ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
+			}
 		}
-
-		if d[2] == "BAN" {
-			chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-			ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
-		}
-
 		return nil
 	}
 
@@ -50,24 +52,25 @@ func CallBackData(callBack tgbotapi.Update) error {
 		bot.Arknights.Send(answer)
 		return nil
 	}
+	if verifySet.checkExistAndRemove(userId, chatId) {
+		if d[2] != d[3] {
+			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证未通过，请一分钟后再试！")
+			bot.Arknights.Send(answer)
+			chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
+			ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
+			go unban(chatMember)
+			return nil
+		}
 
-	if d[2] != d[3] {
-		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证未通过，请一分钟后再试！")
+		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
 		bot.Arknights.Send(answer)
-		chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-		ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
-		go unban(chatMember)
-		return nil
+		err := pass(chatId, userId, callbackQuery, false)
+		return err
 	}
-
-	answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
-	bot.Arknights.Send(answer)
-	pass(chatId, userId, callbackQuery, false)
-
 	return nil
 }
 
-func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) string {
+func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) error {
 	bot.Arknights.Send(tgbotapi.RestrictChatMemberConfig{
 		Permissions: &tgbotapi.ChatPermissions{
 			CanSendMessages:       true,
@@ -98,9 +101,14 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, text)
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
+		messagecleaner.AddDelQueue(chatId, msg.MessageID, 3600)
+
 	}
-	return val
+	return nil
 }
 
 func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chatMember tgbotapi.ChatMemberConfig, joinMessageId int) {

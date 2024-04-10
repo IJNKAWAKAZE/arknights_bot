@@ -2,6 +2,7 @@ package commandoperation
 
 import (
 	"arknights_bot/plugins/account"
+	"arknights_bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 )
@@ -42,6 +43,7 @@ func (operation OperationAbstract) GetCallBackFunctionOnMultiPlayer(update tgbot
 	newOP := OperationTypeMaps[getTypeName]
 	return NewMultiuserCallBackFunction(
 		func(uid string) error {
+			utils.GetAccountByUid(account.UserNumber, uid).Scan(&account)
 			return newOP.Run(uid, account, chatId, update.Message)
 		},
 		update.Message.From.ID)

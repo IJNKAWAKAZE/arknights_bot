@@ -29,7 +29,10 @@ func OperatorHandle(update tgbotapi.Update) error {
 		)
 		sendMessage := tgbotapi.NewMessage(chatId, "请选择要查询的干员")
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
@@ -37,8 +40,11 @@ func OperatorHandle(update tgbotapi.Update) error {
 	if operator.OP.Name == "" {
 		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "查无此人，请输入正确的干员名称。")
 		sendMessage.ReplyToMessageID = messageId
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, bot.MsgDelDelay)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}

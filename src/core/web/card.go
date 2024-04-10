@@ -51,7 +51,8 @@ func Card(r *gin.Engine) {
 		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
-		utils.GetAccountByUserId(userId).Scan(&userAccount)
+		sklandId := c.Query("sklandId")
+		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
 		var userPlayer account.UserPlayer
 		utils.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
 		playerCard.ServerName = userPlayer.ServerName

@@ -87,6 +87,16 @@ func (b *Bot) addProcessor(command string, processor callbackFunction, funcMap m
 	}
 	funcMap[command] = processor
 }
+func recoverWarp(function callbackFunction) callbackFunction {
+	return func(msg tgbotapi.Update) error {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Println("Recovered in f", r)
+			}
+		}()
+		return function(msg)
+	}
+}
 func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 	// generic first
 	for _, k := range b.matchProcessorSlice {
@@ -97,11 +107,11 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 	if msg.Message != nil {
 		// wait msg
 		if msg.Message.Chat.IsPrivate() {
-			if msg.Message.Command() == "cancel" {
-				return b.privateCommandProcessor["cancel"]
-			}
 			res, ok := WaitMessage[msg.Message.From.ID]
 			if ok {
+				if msg.Message.Command() == "cancel" {
+					return b.privateCommandProcessor["cancel"]
+				}
 				waitMsg, is_str := res.(string)
 				if is_str {
 					return b.waitMsgProcess[waitMsg]
@@ -112,6 +122,7 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 		if len(msg.Message.Photo) > 0 {
 			suffix := "@" + viper.GetString("bot.name")
 			command, _ := strings.CutSuffix(msg.Message.Caption, suffix)
+			command = strings.Split(command, " ")[0]
 			result, ok := b.photoCommandProcess[command]
 			if ok {
 				return result
@@ -167,9 +178,10 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
 			}
 			continue
 		}
+
 		process := b.selectFunction(msg)
 		if process != nil {
-			err := process(msg)
+			err := recoverWarp(process)(msg)
 			if err != nil {
 				log.Println("Plugin Error", err.Error())
 			}

@@ -1,54 +1,35 @@
 # Arknights Telegram Bot
 
-This bot is designed to work in group [明日方舟 / Arknights 中文交流](https://t.me/ArknightsZH) as a user verification tool.
+[![Go](https://github.com/IJNKAWAKAZE/arknights_bot/actions/workflows/go.yml/badge.svg)](https://github.com/IJNKAWAKAZE/arknights_bot/actions/workflows/go.yml)
 
+[中文文档](docs/README_ZH.md)
 
-# Project Structure
+This bot is designed to work in group [明日方舟 / Arknights 中文交流](https://t.me/ArknightsZH)
 
-```
-docs/                    # Documentation
-src/                     # Source code
-test/                    # Test cases
-metadata/      
-    - GateKeeper/        # GateKeeper metadata
-        - config.json 
-        
-Dockerfile               # Dockerfile
-arknightsbot.nix         # Nix Package configuration
-README.md                # README
-LICENSE                  # LICENSE
-```
+## Project Structure
 
-# Runtime and Dependencies
+- `docs/`: Contains documentation and guides for the project.
+- `src/`: The source code of the project resides here.
+- `assets/`: Media files that support specific features of the bot.
+- `template/`: Templates used to generate images for specific features.
+- `arknights.sql`: Describes the database structure necessary for the project.
+- `arknights.example.yaml`: An example configuration file to help set up the project.
+- `README.md`: Provides an overview, installation instructions, and usage guidelines.
 
-## Deployment
+## Runtime and Dependencies
 
-### Docker
+### Features
 
-### Pre-built binaries
+Refer to [Features Documentation](docs/Features.md) for more information.
 
-### Build from source
-
-## Development and Contribution
+### Build, Development and Contribution
 
 Refer to [Development Documentation](docs/Development.md) for more information.
 
-# References and Acknowledgements
+## References and Acknowledgements
 
-<!-- 
-The arknights game data possible come from 
-[PRTS Wiki](https://prts.wiki/)
+The arknights game data possible come from [PRTS Wiki](https://prts.wiki/)
 
--->
+## License
 
-```
-
-```
-# License
-```
-
-```
-
-
-
-
+The GPL-3 license.

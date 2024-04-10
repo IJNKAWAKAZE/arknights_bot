@@ -13,10 +13,22 @@ type RecruitList struct {
 	Operators []utils.Operator `json:"operators"`
 }
 
+var jpMissing = make(map[string]string)
+
+func init() {
+	jpMissing["酸糖"] = "酸糖"
+	jpMissing["芳汀"] = "芳汀"
+	jpMissing["燧石"] = "燧石"
+	jpMissing["四月"] = "四月"
+	jpMissing["森蚺"] = "森蚺"
+	jpMissing["史尔特尔"] = "史尔特尔"
+}
+
 func Recruit(r *gin.Engine) {
 	r.GET("/recruit", func(c *gin.Context) {
 		r.LoadHTMLFiles("./template/Recruit.tmpl")
 		tags := strings.Split(c.Query("tags"), " ")
+		client := c.Query("client")
 		var recruitList []RecruitList
 		recruitOperatorList := utils.GetRecruitOperatorList()
 		var tagList [][]string
@@ -47,6 +59,9 @@ func Recruit(r *gin.Engine) {
 				continue
 			}
 			for _, operator := range recruitOperatorList {
+				if client == "jp" && jpMissing[operator.Name] != "" {
+					continue
+				}
 				opTags := operator.Tags + " " + operator.ProfessionZH + " " + operator.Position
 				if operator.Rarity == 5 {
 					opTags += " 高资"
@@ -70,8 +85,15 @@ func Recruit(r *gin.Engine) {
 				}
 			}
 			if len(recruit.Operators) > 0 {
+
 				sort.Slice(recruit.Operators, func(i, j int) bool {
-					return recruit.Operators[i].Rarity > recruit.Operators[j].Rarity
+					if recruit.Operators[i].Rarity > recruit.Operators[j].Rarity {
+						return true
+					}
+					if recruit.Operators[i].Rarity < recruit.Operators[j].Rarity {
+						return false
+					}
+					return recruit.Operators[i].Profession > recruit.Operators[j].Profession
 				})
 				recruitList = append(recruitList, recruit)
 			}

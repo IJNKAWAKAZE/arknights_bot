@@ -72,9 +72,10 @@ type Hire struct {
 }
 
 type Training struct {
-	Level   int      `json:"level"`
-	Trainer BaseChar `json:"trainer"`
-	Trainee BaseChar `json:"trainee"`
+	Level           int        `json:"level"`
+	Chars           []BaseChar `json:"chars"`
+	Skill           string     `json:"skill"`
+	SpecializeLevel int        `json:"specializeLevel"`
 }
 
 type Dormitory struct {
@@ -149,7 +150,8 @@ func Base(r *gin.Engine) {
 		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
-		utils.GetAccountByUserId(userId).Scan(&userAccount)
+		sklandId := c.Query("sklandId")
+		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
 		skAccount.Hypergryph.Token = userAccount.HypergryphToken
 		skAccount.Skland.Token = userAccount.SklandToken
 		skAccount.Skland.Cred = userAccount.SklandCred
@@ -174,7 +176,7 @@ func Base(r *gin.Engine) {
 		for _, char := range building.Control.Chars {
 			baseChar := BaseChar{
 				Name:   charMap[char.CharID].Name,
-				Avatar: getChar(char.CharID, playerData),
+				Avatar: getCharSkinID(char.CharID, playerData),
 				AP:     getAp(char.Ap),
 			}
 			control.Chars = append(control.Chars, baseChar)
@@ -189,7 +191,7 @@ func Base(r *gin.Engine) {
 			for _, char := range t.Chars {
 				baseChar := BaseChar{
 					Name:   charMap[char.CharID].Name,
-					Avatar: getChar(char.CharID, playerData),
+					Avatar: getCharSkinID(char.CharID, playerData),
 					AP:     getAp(char.Ap),
 				}
 				trading.Chars = append(trading.Chars, baseChar)
@@ -213,7 +215,7 @@ func Base(r *gin.Engine) {
 			for _, char := range m.Chars {
 				baseChar := BaseChar{
 					Name:   charMap[char.CharID].Name,
-					Avatar: getChar(char.CharID, playerData),
+					Avatar: getCharSkinID(char.CharID, playerData),
 					AP:     getAp(char.Ap),
 				}
 				manufacture.Chars = append(manufacture.Chars, baseChar)
@@ -234,7 +236,7 @@ func Base(r *gin.Engine) {
 			for _, char := range p.Chars {
 				baseChar := BaseChar{
 					Name:   charMap[char.CharID].Name,
-					Avatar: getChar(char.CharID, playerData),
+					Avatar: getCharSkinID(char.CharID, playerData),
 					AP:     getAp(char.Ap),
 				}
 				power.Chars = append(power.Chars, baseChar)
@@ -250,7 +252,7 @@ func Base(r *gin.Engine) {
 		for _, char := range building.Meeting.Chars {
 			baseChar := BaseChar{
 				Name:   charMap[char.CharID].Name,
-				Avatar: getChar(char.CharID, playerData),
+				Avatar: getCharSkinID(char.CharID, playerData),
 				AP:     getAp(char.Ap),
 			}
 			meeting.Chars = append(meeting.Chars, baseChar)
@@ -272,7 +274,7 @@ func Base(r *gin.Engine) {
 		for _, char := range building.Hire.Chars {
 			baseChar := BaseChar{
 				Name:   charMap[char.CharID].Name,
-				Avatar: getChar(char.CharID, playerData),
+				Avatar: getCharSkinID(char.CharID, playerData),
 				AP:     getAp(char.Ap),
 			}
 			hire.Chars = append(hire.Chars, baseChar)
@@ -283,16 +285,22 @@ func Base(r *gin.Engine) {
 		// 训练室
 		var training Training
 		training.Level = building.Training.Level
-		training.Trainee = BaseChar{
-			Name:   charMap[building.Training.Trainee.CharID].Name,
-			Avatar: getChar(building.Training.Trainee.CharID, playerData),
-			AP:     getAp(building.Training.Trainee.Ap),
+		if building.Training.Trainee.CharID != "" {
+			training.Chars = append(training.Chars, BaseChar{
+				Name:   charMap[building.Training.Trainee.CharID].Name,
+				Avatar: getCharSkinID(building.Training.Trainee.CharID, playerData),
+				AP:     getAp(building.Training.Trainee.Ap),
+			})
+			training.Skill, training.SpecializeLevel = getCharSkillID(building.Training.Trainee.CharID, playerData, building.Training.Trainee.TargetSkill)
 		}
-		training.Trainer = BaseChar{
-			Name:   charMap[building.Training.Trainer.CharID].Name,
-			Avatar: getChar(building.Training.Trainer.CharID, playerData),
-			AP:     getAp(building.Training.Trainer.Ap),
+		if building.Training.Trainer.CharID != "" {
+			training.Chars = append(training.Chars, BaseChar{
+				Name:   charMap[building.Training.Trainer.CharID].Name,
+				Avatar: getCharSkinID(building.Training.Trainer.CharID, playerData),
+				AP:     getAp(building.Training.Trainer.Ap),
+			})
 		}
+
 		playerBase.Training = training
 
 		// 宿舍
@@ -303,7 +311,7 @@ func Base(r *gin.Engine) {
 			for _, char := range d.Chars {
 				baseChar := BaseChar{
 					Name:   charMap[char.CharID].Name,
-					Avatar: getChar(char.CharID, playerData),
+					Avatar: getCharSkinID(char.CharID, playerData),
 					AP:     getAp(char.Ap),
 				}
 				dormitory.Chars = append(dormitory.Chars, baseChar)
@@ -321,11 +329,20 @@ func getAp(ap int) int {
 	return int(math.Ceil(float64(ap) / float64(86400)))
 }
 
-func getChar(charId string, data *skland.PlayerData) string {
+func getCharSkinID(charId string, data *skland.PlayerData) string {
 	for _, char := range data.Chars {
 		if char.CharID == charId {
 			return char.SkinID
 		}
 	}
 	return ""
+}
+
+func getCharSkillID(charId string, data *skland.PlayerData, target int) (string, int) {
+	for _, char := range data.Chars {
+		if char.CharID == charId && target != -1 {
+			return char.Skills[target].ID, char.Skills[target].SpecializeLevel + 7
+		}
+	}
+	return "", 7
 }

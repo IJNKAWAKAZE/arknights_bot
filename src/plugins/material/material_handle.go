@@ -29,7 +29,10 @@ func MaterialHandle(update tgbotapi.Update) error {
 		)
 		sendMessage := tgbotapi.NewMessage(chatId, "请选择要查询的材料")
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
@@ -37,8 +40,11 @@ func MaterialHandle(update tgbotapi.Update) error {
 	if len(materials) == 0 {
 		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "未查询到此材料，请输入正确的材料名称。")
 		sendMessage.ReplyToMessageID = messageId
-		msg, _ := bot.Arknights.Send(sendMessage)
+		msg, err := bot.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, bot.MsgDelDelay)
+		if err != nil {
+			return err
+		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
