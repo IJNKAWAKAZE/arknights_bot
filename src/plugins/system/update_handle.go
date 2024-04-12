@@ -4,7 +4,6 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/datasource"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
 )
@@ -16,7 +15,7 @@ func UpdateHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
-	if utils.IsAdmin(chatId, userId) || owner == userId {
+	if owner == userId {
 		sendMessage := tgbotapi.NewMessage(chatId, "开始更新数据源")
 		sendMessage.ReplyToMessageID = messageId
 		msg, err := bot.Arknights.Send(sendMessage)

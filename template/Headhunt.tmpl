@@ -27,6 +27,7 @@
         }
         .lh {
             width: 95px;
+            height: 190px;
         }
         .profession {
             position: absolute;
@@ -43,7 +44,7 @@
     {{range .}}
     <div class="bg" style="background-image: url('/assets/headhunt/back_{{.Rarity}}.png');">
         <div class="operator">
-            <img class="lh" src="{{.ThumbURL}}"/>
+            <img class="lh" src="{{.ThumbURL}}" onerror="this.src='assets/common/amiya.png'"/>
             <img class="profession" src="/assets/headhunt/{{.Profession}}.png"/>
             <img class="rarity" src="/assets/headhunt/Rarity_{{.Rarity}}.png"/>
         </div>

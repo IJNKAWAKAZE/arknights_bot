@@ -4,6 +4,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
 	"log"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -91,33 +92,21 @@ func recoverWarp(function callbackFunction) callbackFunction {
 	return func(msg tgbotapi.Update) error {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Println("Recovered in f", r)
+				s := string(debug.Stack())
+				log.Printf("Recovered err=%v, stack=%s\n", r, s)
 			}
 		}()
 		return function(msg)
 	}
 }
-func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
+func (b *Bot) selectFunction(msg tgbotapi.Update) (callbackFunction, string) {
 	// generic first
 	for _, k := range b.matchProcessorSlice {
 		if k.MatchFunc(msg) {
-			return k.Processor
+			return k.Processor, ""
 		}
 	}
 	if msg.Message != nil {
-		// wait msg
-		if msg.Message.Chat.IsPrivate() {
-			res, ok := WaitMessage[msg.Message.From.ID]
-			if ok {
-				if msg.Message.Command() == "cancel" {
-					return b.privateCommandProcessor["cancel"]
-				}
-				waitMsg, is_str := res.(string)
-				if is_str {
-					return b.waitMsgProcess[waitMsg]
-				}
-			}
-		}
 		//photo related cmd
 		if len(msg.Message.Photo) > 0 {
 			suffix := "@" + viper.GetString("bot.name")
@@ -125,7 +114,7 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 			command = strings.Split(command, " ")[0]
 			result, ok := b.photoCommandProcess[command]
 			if ok {
-				return result
+				return result, command
 			}
 		}
 		//private cmd
@@ -133,13 +122,20 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 		if msg.Message.Chat.IsPrivate() {
 			result, ok := b.privateCommandProcessor[command]
 			if ok {
-				return result
+				return result, command
+			}
+			res, ok := WaitMessage[msg.Message.From.ID]
+			if ok {
+				waitMsg, is_str := res.(string)
+				if is_str {
+					return b.waitMsgProcess[waitMsg], waitMsg
+				}
 			}
 		}
 		//normal command
 		result, ok := b.commandProcessor[command]
 		if ok {
-			return result
+			return result, command
 		}
 	}
 	// callback
@@ -147,18 +143,18 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) callbackFunction {
 		callback_q := strings.Split(msg.CallbackData(), ",")[0]
 		result, ok := b.callbackQueryProcess[callback_q]
 		if ok {
-			return result
+			return result, ""
 		}
 	}
 	//inline Q
 	if msg.InlineQuery != nil {
 		for _, v := range b.inlineQueryProcess {
 			if strings.HasPrefix(msg.InlineQuery.Query, v.prefix) {
-				return v.processor
+				return v.processor, ""
 			}
 		}
 	}
-	return nil
+	return nil, ""
 }
 
 func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
@@ -179,8 +175,11 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
 			continue
 		}
 
-		process := b.selectFunction(msg)
+		process, command := b.selectFunction(msg)
 		if process != nil {
+			if command != "" {
+				log.Println("用户", msg.SentFrom().String(), "执行了", command, "操作")
+			}
 			err := recoverWarp(process)(msg)
 			if err != nil {
 				log.Println("Plugin Error", err.Error())

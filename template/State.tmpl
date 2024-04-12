@@ -217,7 +217,7 @@
 </head>
 <body>
 <div class="main">
-    <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/>
+    <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png" onerror="this.src='assets/common/amiya.png'"/>
     <span id="name">Dr {{.PlayerName}}</span>
     <img id="ap_icon" src="/assets/state/ap.png">
     <P id="ap">{{.Ap.Current}}/{{.Ap.Max}}</P>
@@ -286,7 +286,7 @@
         <span id="manufactures" class="title">{{.Manufacture.Current}}/{{.Manufacture.Max}}</span>
     </div>
     {{if .Training.CharIcon}}
-        <img id="trainee" src="{{.Training.CharIcon}}"/>
+        <img id="trainee" src="{{.Training.CharIcon}}" onerror="this.src='assets/common/amiya.png'"/>
         <p id="remain_secs_bg"></p>
         <p id="remain_secs">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">

@@ -40,6 +40,9 @@
             font-size: 22px;
             font-weight: 600;
         }
+        img {
+            width: 158px;
+        }
         a {
             color: white;
         }
@@ -55,7 +58,7 @@
             <td colspan="8" id="name">{{.Name}}</td>
         </tr>
         <tr>
-            <td><img src="{{.Pic}}"/></td>
+            <td><img src="{{.Pic}}" onerror="this.src='assets/common/amiya.png'"/></td>
             <td colspan="7">{{.Desc}}</td>
         </tr>
         <tr>

@@ -59,7 +59,7 @@
             <td>
                 {{range .Operators}}
                 <div class="op">
-                    <img class="avatar" src="{{.Avatar}}"/>
+                    <img class="avatar" src="{{.Avatar}}" onerror="this.src='assets/common/amiya.png'"/>
                     <img class="profession" src="/assets/box/{{.Profession}}.png"/>
                     <img class="rarity" src="/assets/box/Rarity_{{.Rarity}}.png"/>
                 </div>

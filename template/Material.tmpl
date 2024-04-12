@@ -38,12 +38,12 @@
                 <div>{{.ZoneName}}</div>
                 <div>{{.Code}}</div>
             </td>
-            <td><img class="icon" src="{{.Icon}}"/></td>
+            <td><img src="{{.Icon}}" onerror="this.src='assets/common/amiya.png'"/></td>
             <td>{{.KnockRating}}</td>
             <td>{{.ApExpect}}</td>
             <td>
                 {{if .SecondaryItemIcon}}
-                <img class="icon" src="{{.SecondaryItemIcon}}"/>
+                <img src="{{.SecondaryItemIcon}}" onerror="this.src='assets/common/amiya.png'"/>
                 {{end}}
             </td>
             <td>{{.StageEfficiency}}</td>
