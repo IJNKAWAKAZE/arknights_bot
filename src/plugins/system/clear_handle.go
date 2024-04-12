@@ -16,7 +16,7 @@ func ClearHandle(update tgbotapi.Update) error {
 	param := update.Message.CommandArguments()
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
-	if utils.IsAdmin(chatId, userId) || owner == userId {
+	if owner == userId {
 		res, ctx := utils.RedisScanKeys(param)
 		for res.Next(ctx) {
 			utils.RedisDel(res.Val())

@@ -28,6 +28,7 @@
         }
         .operator_bg {
             width: 70px;
+            height: 140px;
         }
         .profession {
             position: absolute;
@@ -62,9 +63,9 @@
     </div>
     {{range .Chars}}
     <div class="operator">
-        <img class="operator_bg" src="{{.SkinId}}"/>
+        <img class="operator_bg" src="{{.SkinId}}" onerror="this.src='assets/common/amiya.png'"/>
         <img class="profession" src="/assets/box/{{.Profession}}.png"/>
-        <img class="rarity" src="/assets/box/Rarity_{{.Rarity}}.png" data="{{.Rarity}}"/>
+        <img class="rarity" src="/assets/box/Rarity_{{.Rarity}}.png"/>
         <div class="name">{{.Name}}</div>
     </div>
     {{end}}

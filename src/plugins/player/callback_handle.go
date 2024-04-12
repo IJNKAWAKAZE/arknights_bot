@@ -31,7 +31,7 @@ func PlayerData(callBack tgbotapi.Update) error {
 		bot.Arknights.Send(answer)
 		return nil
 	} else {
-		answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+		answer := tgbotapi.NewCallback(callbackQuery.ID, "正在渲染图片请勿重复点击")
 		bot.Arknights.Send(answer)
 		return callback.Function(playerId)
 	}

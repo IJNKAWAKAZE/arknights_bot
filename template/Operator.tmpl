@@ -115,6 +115,9 @@
         sup {
             display: none;
         }
+        .skill {
+            width: 50px;
+        }
     </style>
 </head>
 <body>
@@ -232,7 +235,7 @@
             {{range .Skills}}
             <tr>
                 <td style="text-align: center" rowspan="2">
-                    <img src="{{.Icon}}"/>
+                    <img class="skill" src="{{.Icon}}" onerror="this.src='assets/common/amiya.png'"/>
                 </td>
                 <td style="text-align: center">
                     {{range .SpType}}

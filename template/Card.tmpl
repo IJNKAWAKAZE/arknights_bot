@@ -92,7 +92,7 @@
 <div class="main">
     <table id="card" style="border-spacing: 0">
         <tr>
-            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png"/></td>
+            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png" onerror="this.src='assets/common/amiya.png'"/></td>
             <td colspan="2" style="color: white">{{.Name}}&nbsp&nbsp({{.ServerName}})</td>
         </tr>
         <tr>
@@ -125,7 +125,7 @@
     <table id="assistChars" style="border-spacing: 0">
         {{range .AssistChars}}
         <tr>
-            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png"/><img class="potential" src="/assets/box/Potential_{{.PotentialRank}}.png"/><img class="evolve" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/></td>
+            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png" onerror="this.src='assets/common/amiya.png'"/><img class="potential" src="/assets/box/Potential_{{.PotentialRank}}.png"/><img class="evolve" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/></td>
             <td colspan="2" style="width: 100px">{{.Name}}</td>
             <td style="text-align: center"><div class="level">{{.Level}}</div></td>
         </tr>
@@ -148,7 +148,7 @@
         </tr>
         <tr>
             {{if .SkillID}}
-                <td><img class="skill" src="https://web.hycdn.cn/arknights/game/assets/char_skill/{{.SkillID}}.png"/></td>
+                <td><img class="skill" src="https://web.hycdn.cn/arknights/game/assets/char_skill/{{.SkillID}}.png" onerror="this.src='assets/common/amiya.png'"/></td>
                 <td colspan="3">Rank.{{.MainSkillLvl}}</td>
             {{else}}
             <td style="height: 20px"> </td>

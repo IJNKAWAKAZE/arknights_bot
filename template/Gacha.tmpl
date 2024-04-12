@@ -125,7 +125,7 @@
             {{range .Chars}}
             <table>
                 <tr>
-                    <td rowspan="4"><img src="{{.Avatar}}"/></td>
+                    <td rowspan="4"><img src="{{.Avatar}}" onerror="this.src='assets/common/amiya.png'"/></td>
                     <td>
                         {{.CharName}}
                         {{if .IsNew}}
@@ -150,7 +150,7 @@
             {{range .Star6Info}}
             <table>
                 <tr>
-                    <td rowspan="4"><img src="{{.Avatar}}"/></td>
+                    <td rowspan="4"><img src="{{.Avatar}}" onerror="this.src='assets/common/amiya.png'"/></td>
                     <td>
                         {{.Name}}
                         {{if .IsNew}}

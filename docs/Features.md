@@ -51,9 +51,14 @@ This document provides an overview of the features available in the Arknights Te
 ```
 ## Admin Commands
 ```
-/update - Update the bot metadata.
-/news [start/stop]- Enable/Disable sending news to the group.
+/news - Enable/Disable sending news to the group.
 /quiz [start/stop] - Enable/Disable the quiz game.
 /headhunt [start/stop] - Enable/Disable the headhunt game.
 /reg - Set the message to be sent when a new user joins the group.
+```
+## Owner Commands
+```
+/update - Update the bot metadata.
+/clear [key]- delete redis key
+/kill - kill bot.
 ```
