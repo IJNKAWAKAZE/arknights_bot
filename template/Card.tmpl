@@ -3,161 +3,215 @@
     <meta name="referrer" content="no-referrer" />
     <title>名片</title>
     <style>
+        @font-face{
+            font-family: 'NotoSansHans';
+            src : url('/assets/font/NotoSansHans-Regular.ttf');
+        }
         body {
             margin: 0;
+            font-family: 'NotoSansHans',serif;
         }
         .main {
             position: absolute;
-            width: 610px;
-            height: 340px;
-            background-color: #2b323c;
+            background-image: url("assets/card/bg.png");
+            width: 1280px;
+            height: 720px;
         }
-        .avatar {
+        .main * {
+            position: relative;
+        }
+        #regTime {
+            background-color: #0098dc;
+            width: 132px;
+            margin-left: 20px;
+            margin-top: 20px;
+        }
+        #regTime div {
+            background-color: white;
+            display: inline-block;
+        }
+        #avatar {
+            width: 130px;
+            left: -112px;
+            top: 13px;
+        }
+        #nameCard {
+            background-image: url("/assets/card/name_card_short.png");
+            width: 638px;
+            height: 223px;
+            float: right;
+            margin-top: -550px;
+        }
+        #level {
             position: absolute;
-            width: 80px;
-            margin-top: -40px;
-            margin-left: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            top: 5px;
+            left: 30px;
+        }
+        #name {
+            position: absolute;
+            color: white;
+            top: 50px;
+            left: 200px;
+            font-size: 30px;
+        }
+        #uid {
+            position: absolute;
+            color: #a3a3a2;
+            background-color: rgba(0, 0, 0, 0.2);
+            left: 200px;
+            top: 100px;
+            font-size: 17px;
+            border-radius: 10px;
+            padding: 0 5px;
+        }
+        #resume {
+            display: flex;
+            width: 605px;
+            height: 70px;
+            float: right;
+            margin-top: -350px;
+            right: 16px;
+            background-color: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
-        }
-        .potential {
-            position: absolute;
-            width: 30px;
-            margin-top: 12px;
-            margin-left: 10px;
-        }
-        .evolve {
-            position: absolute;
-            width: 30px;
-            margin-left: 50px;
-            margin-top: 15px;
-        }
-        #card {
-            position: absolute;
-            width: 330px;
-            height: 330px;
-            margin-top: 5px;
-            margin-left: 5px;
-            border: 1px solid #3b4654;
-            border-radius: 15px;
-            padding: 5px;
-        }
-        #card td {
-            color: #7a7a7f;
         }
         #assistChars {
-            position: absolute;
-            width: 265px;
-            height: 330px;
-            margin-top: 5px;
-            margin-left: 340px;
-            border: 1px solid #3b4654;
+            display: flex;
+            align-items: center;
+            width: 605px;
+            height: 200px;
+            float: right;
+            margin-top: -270px;
+            right: 16px;
+            background-color: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
-            padding: 5px;
         }
-        #assistChars td {
-            white-space: nowrap;
-            color: white;
+        #mainline {
+            width: 605px;
+            height: 196px;
+            float: right;
+            margin-top: -60px;
+            right: 16px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
         }
         .level {
-            width: 20px;
-            background-color: #3f4b5b;
-            border-radius: 100%;
-            padding: 3px;
-        }
-        .equip {
+            position: absolute;
+            text-align: center;
+            color: white;
             width: 25px;
-            position: absolute;
-            margin-top: -9px;
-        }
-        .icon_color {
-            width: 50px;
-            position: absolute;
-            margin-left: -12px;
-            margin-top: -12px;
-        }
-        .equip_name {
-            margin-left: -20px;
-        }
-        .equip_level {
-            background-color: #3f4b5b;
-            border-radius: 5px;
-            padding: 1px;
-        }
-        .skill {
-            width: 20px;
-        }
+            padding: 3px;
+            left: 15px;
+            top: 0;
+            font-size: 17px;
+         }
     </style>
 </head>
 <body>
 <div class="main">
-    <table id="card" style="border-spacing: 0">
+    <img style="position: absolute;left: 5%;max-height: 720px; -webkit-mask: -webkit-linear-gradient(0deg, transparent, #fff 50%)" src="{{.Secretary}}"/>
+    <div id="regTime">入职日<div id="ts">{{.RegTime}}</div></div>
+    <img style="margin-left: 20px;margin-top: 10px;transform: translateX(-60px); filter: drop-shadow(60px 0 0 #0098dc);" src="/assets/card/no_use_icon_circle.png"/><br>
+    <img style="margin-left: 20px;" src="/assets/card/no_use_icon_x.png"/>
+    <div style="margin-left: 20px;background-color: white;width: 50px;margin-top: 10px;text-align: center">助理</div>
+    <div style="color: white;margin-left: 20px;font-size: 24px;">{{.SecretaryName}}</div>
+    <div style="color: white;margin-left: 20px;font-size: 17px;">{{.SecretaryEnName}}</div>
+    <img style="margin-top: 40px" src="/assets/card/decor.png"/>
+    <div style="color: white;font-size: 12px;margin-left: 20px;margin-top: 10px;">DATA PROVIDED BY PRTS<br>-</div>
+    <img style="display: block;margin-left: 20px;margin-top: 20px;" src="/assets/card/decor_skin.png"/>
+    <table style="margin-left: 20px;margin-top: 10px;">
         <tr>
-            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png" onerror="this.src='assets/common/amiya.png'"/></td>
-            <td colspan="2" style="color: white">{{.Name}}&nbsp&nbsp({{.ServerName}})</td>
+           <td rowspan="2"><img src="/assets/card/icon_skin.png" /></td>
+            <td><div style="color: white">时装保有数</div></td>
         </tr>
         <tr>
-            <td colspan="3" style="color: white">LV.{{.Level}}&nbsp&nbsp&nbspUID:{{.Uid}}</td>
-        </tr>
-        <tr>
-            <td colspan="3" style="color: white;font-size: 13px">{{.Resume}}</td>
-        </tr>
-        <tr>
-            <td>入职时间</td>
-            <td id="wakeDays" style="width: 120px"></td>
-            <td style="text-align: center">作战进度</td>
-        </tr>
-        <tr>
-            <td id="regTime" colspan="2" style="color: #78acd7">{{.RegTime}}</td>
-            <td style="color: #78acd7;text-align: center">{{if .MainStageProgress}}{{.MainStageProgress}}{{else}}全部完成{{end}}</td>
-        </tr>
-        <tr>
-            <td style="text-align: center">家具保有量</td>
-            <td style="text-align: center">干员招募数</td>
-            <td style="text-align: center">时装拥有数</td>
-        </tr>
-        <tr>
-            <td style="color: #78acd7;text-align: center">{{.FurnitureCnt}}</td>
-            <td style="color: #78acd7;text-align: center">{{.CharCnt}}</td>
-            <td style="color: #78acd7;text-align: center">{{.SkinCnt}}</td>
+            <td style="color: white;text-align: center">{{.SkinCnt}}</td>
         </tr>
     </table>
-
-    <table id="assistChars" style="border-spacing: 0">
-        {{range .AssistChars}}
-        <tr>
-            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png" onerror="this.src='assets/common/amiya.png'"/><img class="potential" src="/assets/box/Potential_{{.PotentialRank}}.png"/><img class="evolve" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/></td>
-            <td colspan="2" style="width: 100px">{{.Name}}</td>
-            <td style="text-align: center"><div class="level">{{.Level}}</div></td>
-        </tr>
-        <tr>
-            {{if .Equip.ID}}
-                {{if ne .Equip.Name "ORIGINAL"}}
-                    <td style="width: 50px"><img class="equip" src="https://web.hycdn.cn/arknights/game/assets/uniequip/type/icon/{{.Equip.TypeIcon}}.png"/><img class="icon_color" src="https://web.hycdn.cn/arknights/game/assets/uniequip/type/shining/{{.Equip.ShiningColor}}.png"/></td>
-                    <td><span class="equip_name">{{.Equip.Name}}</span></td>
-                    <td colspan="2"><span class="equip_level">LV.{{.Equip.Level}}</span></td>
-                {{else}}
-                    <td style="width: 50px;height: 32px"> </td>
-                    <td> </td>
-                    <td colspan="2"> </td>
+    <div style="margin-left: 20px;display: inline-flex">
+        <div style="background-color: #0098dc;width: 160px;font-weight: 600;font-size: 17px;letter-spacing: 3px;line-height: 2;text-align: center;">雇佣干员进度</div>
+        <img style="margin-left: -20px;" src="/assets/card/human_resource.png"/>
+    </div>
+    <div style="margin-left: 20px;color: white;font-size: 55px">{{.CharCnt}}</div>
+    <div id="nameCard">
+        <img style="top: 30px; left: 30px;" src="/assets/card/headicon_back.png"/>
+        <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png" onerror="this.src='assets/common/amiya.png'"/>
+        <div id="level">
+            <img style="position: absolute;" src="/assets/card/level_bg.png"/>
+            <div style="font-size: 20px;padding-top: 8px;">{{.Level}}</div>
+            <div style="font-size: 14px;">LV</div>
+        </div>
+        <div id="name">{{.Name}}</div>
+        <div id="uid">ID {{.Uid}}</div>
+    </div>
+    <div id="resume">
+        <table style="padding: 0 20px;">
+            <tr>
+                <td style="width: 100px;"><img src="/assets/card/resume_icon.png"/></td>
+                <td style="color: #a3a3a2;">
+                    {{if .Resume}}
+                    {{.Resume}}
+                    {{else}}
+                    暂未设置签名
+                    {{end}}
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="assistChars">
+        <table style="padding: 0 20px;">
+            <tr>
+                <td style="display: flex;flex-direction: column;align-items: center;color: #a3a3a2;">
+                    <img src="/assets/card/assist_icon.png"/>
+                    <div style="letter-spacing: 7px;font-size: 17px;">助战干员</div>
+                    <div style="font-size: 13px;">SUPPORT UNIT</div>
+                </td>
+                {{range .AssistChars}}
+                <td>
+                    <div style="background-image: url('assets/card/back_end.png'); width: 150px;height: 150px;">
+                        <img style="width: 130px;left: 10px;top: 2px;" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png" onerror="this.src='assets/common/amiya.png'"/>
+                        <img style="position: absolute;width: 40px;left: 100px;top: 5px;" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/>
+                        <div class="level"><span style="font-size: 10px;">LV</span><br>{{.Level}}</div>
+                    </div>
+                </td>
                 {{end}}
-            {{else}}
-                <td style="width: 50px;height: 32px"> </td>
-                <td> </td>
-                <td colspan="2"> </td>
-            {{end}}
-        </tr>
-        <tr>
-            {{if .SkillID}}
-                <td><img class="skill" src="https://web.hycdn.cn/arknights/game/assets/char_skill/{{.SkillID}}.png" onerror="this.src='assets/common/amiya.png'"/></td>
-                <td colspan="3">Rank.{{.MainSkillLvl}}</td>
-            {{else}}
-            <td style="height: 20px"> </td>
-            <td colspan="3"> </td>
-            {{end}}
-        </tr>
-        {{end}}
-    </table>
+            </tr>
+        </table>
+    </div>
+    <div id="mainline">
+        <img style="float: right" src="/assets/card/mainline_human.png"/>
+        <img style="left: 200px;top: 30px;" src="/assets/card/mainline_icon.png"/>
+        <div style="display: flex;flex-direction: column;align-items: center;left: -50px;top: -90px;">
+            <div style="color: #a3a3a2;font-size: 25px;">主线进度</div>
+            <div style="color: #a3a3a2;font-size: 20px;margin-top: 30px;">
+                {{if .MainStageProgress}}
+                {{.MainStageProgress}}
+                {{else}}
+                全部完成
+                {{end}}
+            </div>
+        </div>
+    </div>
 </div>
-<script charset="utf-8" src="/template/js/Card.js"></script>
 </body>
+<script>
+    window.onload = function(){
+        const regTime = document.getElementById("ts");
+        regTime.textContent = timestampToTime(regTime.textContent)
+    }
+    function timestampToTime(timestamp) {
+        timestamp = timestamp ? timestamp : null;
+        let date = new Date(timestamp*1000);
+        let Y = date.getFullYear() + '-';
+        let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+        let D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
+        let h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+        let m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+        let s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
+        return Y + M + D;
+    }
+</script>
 </html>

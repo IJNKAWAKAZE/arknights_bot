@@ -50,6 +50,7 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "所有未获取干员", Param: "all", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "对应星级未获取干员", Param: "5,6", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/card", Desc: "我的名片", Param: "", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/card", Desc: "我的名片(旧版)", Param: "o", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/base", Desc: "基建信息", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/gacha", Desc: "抽卡记录", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/operator", Desc: "干员查询", Param: "", IsBind: false})

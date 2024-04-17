@@ -50,7 +50,7 @@ func VerifyMember(message *tgbotapi.Message) {
 			}
 			operator := operatorsPool[operatorIndex]
 			operatorName := operator.Name
-			painting := operator.Skins[0]
+			painting := operator.Skins[0].Url
 			if painting != "" {
 				options = append(options, utils.Operator{
 					Name:     operatorName,

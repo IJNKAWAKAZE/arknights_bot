@@ -64,7 +64,13 @@ func ParseOperator(name string) Operator {
 	op := utils.GetOperatorByName(name)
 	if op.Name != "" {
 		operator.OP = op
-		operator.Painting = op.Skins[0]
+		operator.Painting = op.Skins[0].Url
+		if op.Rarity > 2 {
+			operator.Painting = op.Skins[1].Url
+		}
+		if op.Name == "阿米娅(近卫)" {
+			operator.Painting = op.Skins[0].Url
+		}
 		doc, _ := goquery.NewDocumentFromReader(response.Body)
 
 		// 职业分支

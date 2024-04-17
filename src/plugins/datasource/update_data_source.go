@@ -85,20 +85,17 @@ func UpdateDataSourceRunner() {
 		operators = append(operators, operator)
 	})
 
-	skinCount := make(map[string]int)
+	skinCount := make(map[string][]string)
 	response, _ = http.Get(api + "时装回廊")
 	doc, _ = goquery.NewDocumentFromReader(response.Body)
-	doc.Find(".charimg").Each(func(i int, selection *goquery.Selection) {
-		img, _ := url.QueryUnescape(selection.Nodes[0].FirstChild.Attr[0].Val)
+	doc.Find(".skinwrapper").Each(func(i int, selection *goquery.Selection) {
+		img, _ := url.QueryUnescape(selection.Find(".charimg").First().Nodes[0].FirstChild.Attr[0].Val)
+		skinName := selection.Find(".charnameEn").Text()
 		compileRegex := regexp.MustCompile("_(.*?)_")
 		match := compileRegex.FindStringSubmatch(img)
 		if len(match) > 1 {
 			name := match[1]
-			if skinCount[name] == 0 {
-				skinCount[name] = 1
-			} else {
-				skinCount[name] = skinCount[name] + 1
-			}
+			skinCount[name] = append(skinCount[name], skinName)
 		}
 	})
 
@@ -111,21 +108,28 @@ func UpdateDataSourceRunner() {
 				m := utils.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				operators[i].Skins = append(operators[i].Skins, painting)
+				var skin utils.Skin
+				skin.Url = painting
+				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 			// 精1立绘
 			paintingName := fmt.Sprintf("立绘_%s_1+.png", name)
 			m := utils.Md5(paintingName)
 			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-			operators[i].Skins = append(operators[i].Skins, painting)
+			var skin utils.Skin
+			skin.Url = painting
+			operators[i].Skins = append(operators[i].Skins, skin)
 			// 皮肤
-			for c := 0; c < skinCount[name]; c++ {
+			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				operators[i].Skins = append(operators[i].Skins, painting)
+				var skin utils.Skin
+				skin.Name = sk
+				skin.Url = painting
+				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 			continue
 		}
@@ -135,14 +139,19 @@ func UpdateDataSourceRunner() {
 			m := utils.Md5(paintingName)
 			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-			operators[i].Skins = append(operators[i].Skins, painting)
+			var skin utils.Skin
+			skin.Url = painting
+			operators[i].Skins = append(operators[i].Skins, skin)
 			// 皮肤
-			for c := 0; c < skinCount[name]; c++ {
+			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				operators[i].Skins = append(operators[i].Skins, painting)
+				var skin utils.Skin
+				skin.Name = sk
+				skin.Url = painting
+				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 			continue
 		}
@@ -152,14 +161,19 @@ func UpdateDataSourceRunner() {
 			m := utils.Md5(paintingName)
 			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-			operators[i].Skins = append(operators[i].Skins, painting)
+			var skin utils.Skin
+			skin.Url = painting
+			operators[i].Skins = append(operators[i].Skins, skin)
 			// 皮肤
-			for c := 0; c < skinCount[name]; c++ {
+			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				operators[i].Skins = append(operators[i].Skins, painting)
+				var skin utils.Skin
+				skin.Name = sk
+				skin.Url = painting
+				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 		} else {
 			// 立绘
@@ -168,15 +182,20 @@ func UpdateDataSourceRunner() {
 				m := utils.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				operators[i].Skins = append(operators[i].Skins, painting)
+				var skin utils.Skin
+				skin.Url = painting
+				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 			// 皮肤
-			for c := 0; c < skinCount[name]; c++ {
+			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, c+1)
 				m := utils.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				operators[i].Skins = append(operators[i].Skins, painting)
+				var skin utils.Skin
+				skin.Name = sk
+				skin.Url = painting
+				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 		}
 	}

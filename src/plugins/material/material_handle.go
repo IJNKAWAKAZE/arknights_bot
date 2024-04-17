@@ -52,19 +52,6 @@ func MaterialHandle(update tgbotapi.Update) error {
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 
-	fileId := ""
-	key := "material:" + name
-	if utils.RedisIsExists(key) {
-		fileId = utils.RedisGet(key)
-	}
-
-	if fileId != "" {
-		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(fileId))
-		sendPhoto.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendPhoto)
-		return nil
-	}
-
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/material?name=%s", port, name), 0, 1.5)
 	if pic == nil {
@@ -75,11 +62,10 @@ func MaterialHandle(update tgbotapi.Update) error {
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendPhoto)
+	_, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	utils.RedisSet(key, msg.Photo[0].FileID, 0)
 	return nil
 }

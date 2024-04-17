@@ -81,9 +81,9 @@ func QuizHandle(update tgbotapi.Update) error {
 		operatorName := operator.Name
 		skins := operator.Skins
 		rsk, _ := rand.Int(rand.Reader, big.NewInt(int64(len(skins))))
-		painting := skins[rsk.Int64()]
+		painting := skins[rsk.Int64()].Url
 		if param == "h" || param == "ex" {
-			painting = skins[0]
+			painting = skins[0].Url
 		}
 		if painting != "" {
 			options = append(options, utils.Operator{

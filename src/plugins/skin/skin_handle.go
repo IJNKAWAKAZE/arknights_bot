@@ -52,7 +52,7 @@ func SkinHandle(update tgbotapi.Update) error {
 
 	content := "[]"
 	for _, skin := range operator.Skins {
-		src, _ := sjson.Set("", "attrs.src", skin)
+		src, _ := sjson.Set("", "attrs.src", skin.Url)
 		attrs, _ := sjson.Set(src, "tag", "img")
 		content, _ = sjson.SetRaw(content, "-1", attrs)
 	}
