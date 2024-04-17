@@ -127,10 +127,15 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 
 func getSkinUrl(secretaryName, skinId string) (string, string, error) {
 	skinUrl := ""
+	if strings.Contains(skinId, "amiya2") {
+		secretaryName = "阿米娅(近卫)"
+	}
 	operator := utils.GetOperatorByName(secretaryName)
 	enName := operator.NameEn
 	if !strings.Contains(skinId, "@") {
 		if strings.Contains(skinId, "#1") {
+			skinUrl = operator.Skins[0].Url
+		} else if strings.Contains(skinId, "#2") && secretaryName == "阿米娅(近卫)" {
 			skinUrl = operator.Skins[0].Url
 		} else if strings.Contains(skinId, "#2") {
 			skinUrl = operator.Skins[1].Url
