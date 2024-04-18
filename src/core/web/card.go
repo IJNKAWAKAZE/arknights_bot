@@ -16,20 +16,21 @@ import (
 )
 
 type PlayerCard struct {
-	Name              string `json:"name"`
-	Uid               string `json:"uid"`
-	ServerName        string `json:"serverName"`
-	Resume            string `json:"resume"`
-	Level             int    `json:"level"`
-	RegTime           int    `json:"regTime"`
-	MainStageProgress string `json:"mainStageProgress"`
-	Avatar            string `json:"avatar"`
-	SecretaryName     string `json:"secretaryName"`
-	SecretaryEnName   string `json:"secretaryEnName"`
-	Secretary         string `json:"secretary"`
-	CharCnt           int    `json:"charCnt"`
-	FurnitureCnt      int    `json:"furnitureCnt"`
-	SkinCnt           int    `json:"skinCnt"`
+	Name              string   `json:"name"`
+	Uid               string   `json:"uid"`
+	ServerName        string   `json:"serverName"`
+	Resume            string   `json:"resume"`
+	Level             int      `json:"level"`
+	RegTime           int      `json:"regTime"`
+	MainStageProgress string   `json:"mainStageProgress"`
+	Avatar            string   `json:"avatar"`
+	SecretaryName     string   `json:"secretaryName"`
+	SecretaryEnName   string   `json:"secretaryEnName"`
+	Secretary         string   `json:"secretary"`
+	CharCnt           int      `json:"charCnt"`
+	FurnitureCnt      int      `json:"furnitureCnt"`
+	SkinCnt           int      `json:"skinCnt"`
+	NationList        []Nation `json:"nationList"`
 	AssistChars       []struct {
 		Name            string `json:"name"`
 		CharID          string `json:"charId"`
@@ -48,6 +49,11 @@ type PlayerCard struct {
 			ShiningColor string `json:"shiningColor"`
 		} `json:"equip"`
 	} `json:"assistChars"`
+}
+
+type Nation struct {
+	Name string `json:"name"`
+	Flag int64  `json:"flag"`
 }
 
 func Card(r *gin.Engine) {
@@ -110,6 +116,10 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	playerCard.MainStageProgress = playerData.StageInfoMap[playerData.Status.MainStageProgress].Code
 	playerCard.Avatar = playerData.Status.Secretary.SkinID
 	playerCard.CharCnt = len(playerData.Chars)
+	playerCard.NationList = getNationList(playerData)
+	if _, has := charMap["char_1001_amiya2"]; has {
+		playerCard.CharCnt -= 1
+	}
 	playerCard.SkinCnt = len(playerData.Skins)
 	playerCard.FurnitureCnt = playerData.Building.Furniture.Total
 	playerCard.AssistChars = playerData.AssistChars
@@ -169,4 +179,57 @@ func getSkinUrl(secretaryName, skinId string) (string, string, error) {
 		})
 	}
 	return skinUrl, enName, nil
+}
+
+func getNationList(playerData *skland.PlayerData) []Nation {
+	nationList := []Nation{
+		{Name: "rhodes"},
+		{Name: "lungmen"},
+		{Name: "yan"},
+		{Name: "egir"},
+		{Name: "bolivar"},
+		{Name: "columbia"},
+		{Name: "higashi"},
+		{Name: "iberia"},
+		{Name: "kazimierz"},
+		{Name: "kjerag"},
+		{Name: "laterano"},
+		{Name: "leithanien"},
+		{Name: "minos"},
+		{Name: "rim"},
+		{Name: "sami"},
+		{Name: "sargon"},
+		{Name: "siracusa"},
+		{Name: "ursus"},
+		{Name: "victoria"},
+		{Name: "kazdel"},
+		{Name: "followers"}}
+
+	var m = make(map[string]int)
+	var m1 = make(map[string]int)
+	resp, _ := http.Get("https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/art/handbookpos_table.json")
+	r, _ := io.ReadAll(resp.Body)
+	gjson.ParseBytes(r).Get("groupList").ForEach(func(key, value gjson.Result) bool {
+		m[key.String()] = len(value.Get("charList").Array())
+		return true
+	})
+	for _, v := range playerData.CharInfoMap {
+		key := v.NationID
+		if v.NationID == "" {
+			key = "followers"
+		}
+		m1[key] += 1
+	}
+	defer resp.Body.Close()
+	for i, nation := range nationList {
+		key := nation.Name
+		if m1[nation.Name] == 0 {
+			nationList[i].Flag = -1
+		} else if m[key] > m1[key] {
+			nationList[i].Flag = 0
+		} else if m[key] == m1[key] {
+			nationList[i].Flag = 1
+		}
+	}
+	return nationList
 }

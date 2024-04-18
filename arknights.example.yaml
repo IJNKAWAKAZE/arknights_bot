@@ -22,6 +22,7 @@ api:
   bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly
   telegraph: https://api.telegra.ph/createPage
   skin_table: https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/excel/skin_table.json
+  nation_table: https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/art/handbookpos_table.json
 
 mysql:
   dsn: root:root@tcp(localhost:3306)/arknights?charset=utf8mb4&parseTime=True&loc=Local

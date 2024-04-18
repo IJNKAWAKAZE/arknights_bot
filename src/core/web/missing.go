@@ -51,10 +51,13 @@ func Missing(r *gin.Engine) {
 			rarity := playerData.CharInfoMap[c.CharID].Rarity
 			if filter(param, rarity) {
 				name := playerData.CharInfoMap[c.CharID].Name
+				if c.CharID == "char_1001_amiya2" {
+					name = "阿米娅(近卫)"
+				}
 				char := Char{
 					CharId:        c.CharID,
 					SkinId:        c.SkinID,
-					Name:          playerData.CharInfoMap[c.CharID].Name,
+					Name:          name,
 					Level:         c.Level,
 					EvolvePhase:   c.EvolvePhase,
 					PotentialRank: c.PotentialRank,
@@ -68,9 +71,6 @@ func Missing(r *gin.Engine) {
 
 		for _, operator := range operatorList {
 			name := operator.Name
-			if name == "阿米娅(近卫)" {
-				continue
-			}
 			rarity := operator.Rarity
 			if filter(param, rarity) {
 				if _, has := myOperators[name]; !has {

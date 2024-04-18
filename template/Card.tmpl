@@ -40,7 +40,7 @@
             width: 638px;
             height: 223px;
             float: right;
-            margin-top: -550px;
+            margin-top: -650px;
         }
         #level {
             position: absolute;
@@ -73,7 +73,7 @@
             width: 605px;
             height: 70px;
             float: right;
-            margin-top: -350px;
+            margin-top: -450px;
             right: 16px;
             background-color: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
@@ -84,7 +84,7 @@
             width: 605px;
             height: 200px;
             float: right;
-            margin-top: -270px;
+            margin-top: -370px;
             right: 16px;
             background-color: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
@@ -93,7 +93,7 @@
             width: 605px;
             height: 196px;
             float: right;
-            margin-top: -60px;
+            margin-top: -160px;
             right: 16px;
             background-color: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
@@ -136,6 +136,17 @@
         <img style="margin-left: -20px;" src="/assets/card/human_resource.png"/>
     </div>
     <div style="margin-left: 20px;color: white;font-size: 55px">{{.CharCnt}}</div>
+    <div style="width: 320px;margin-left: 20px;">
+        {{range .NationList}}
+        {{if eq .Flag 0}}
+        <img style="width: 30px;" src="/assets/card/{{.Name}}.png"/>
+        {{else if eq .Flag -1}}
+        <img style="width: 30px;opacity: 0.2;" src="/assets/card/{{.Name}}.png"/>
+        {{else if eq .Flag 1}}
+        <img style="width: 30px;transform: translateY(200px); filter: drop-shadow(0 -200px 0 #0098dc);" src="/assets/card/{{.Name}}.png"/>
+        {{end}}
+        {{end}}
+    </div>
     <div id="nameCard">
         <img style="top: 30px; left: 30px;" src="/assets/card/headicon_back.png"/>
         <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png" onerror="this.src='assets/common/amiya.png'"/>
@@ -151,7 +162,7 @@
         <table style="padding: 0 20px;">
             <tr>
                 <td style="width: 100px;"><img src="/assets/card/resume_icon.png"/></td>
-                <td style="color: #a3a3a2;">
+                <td style="color: #a3a3a2;font-size: 19px;">
                     {{if .Resume}}
                     {{.Resume}}
                     {{else}}
