@@ -8,7 +8,7 @@ import (
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/spf13/viper"
 	"log"

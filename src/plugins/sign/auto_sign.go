@@ -7,7 +7,7 @@ import (
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"math/big"
 	"strconv"
@@ -52,7 +52,7 @@ func sign(user UserSign) {
 				award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
 				if err != nil {
 					// 签到失败
-					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\nmsg:%s", player.PlayerName, err.Error()))
+					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err.Error()))
 					bot.Arknights.Send(sendMessage)
 					log.Println(player.PlayerName, err)
 					return

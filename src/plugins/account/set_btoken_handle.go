@@ -6,7 +6,7 @@ import (
 	"arknights_bot/utils"
 	"arknights_bot/utils/telebot"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 var bToken = make(map[int64]string)

@@ -7,7 +7,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"github.com/go-redis/redis/v8"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/playwright-community/playwright-go"
 	"github.com/spf13/viper"
@@ -23,24 +23,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"unicode/utf8"
 )
 
 var ctx = context.Background()
-
-// GetFullName 获取用户全名
-func GetFullName(user *tgbotapi.User) string {
-	var buffer bytes.Buffer
-	firstName := user.FirstName
-	lastName := user.LastName
-	if firstName != "" {
-		buffer.WriteString(firstName)
-	}
-	if lastName != "" {
-		buffer.WriteString(lastName)
-	}
-	return buffer.String()
-}
 
 type GroupInvite struct {
 	Id           string    `json:"id" gorm:"primaryKey"`
@@ -72,9 +57,9 @@ func SaveInvite(message *tgbotapi.Message, member *tgbotapi.User) {
 		Id:           id,
 		GroupName:    message.Chat.Title,
 		GroupNumber:  message.Chat.ID,
-		UserName:     GetFullName(message.From),
+		UserName:     message.From.FullName(),
 		UserNumber:   message.From.ID,
-		MemberName:   GetFullName(member),
+		MemberName:   member.FullName(),
 		MemberNumber: member.ID,
 	}
 
@@ -97,21 +82,6 @@ func SaveJoined(message *tgbotapi.Message) {
 // GetJoinedByChatId 查询入群记录
 func GetJoinedByChatId(chatId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from group_joined where group_number = ? limit 1", chatId)
-}
-
-// IsAdmin 是否管理员
-func IsAdmin(chatId, userId int64) bool {
-	getChatMemberConfig := tgbotapi.GetChatMemberConfig{
-		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
-			ChatID: chatId,
-			UserID: userId,
-		},
-	}
-	memberInfo, _ := bot.Arknights.GetChatMember(getChatMemberConfig)
-	if memberInfo.Status != "creator" && memberInfo.Status != "administrator" {
-		return false
-	}
-	return true
 }
 
 // DownloadFile 下载tg文件
@@ -315,41 +285,6 @@ func ReverseSlice[T any](s []T) {
 		j := len(s) - i - 1
 		s[i], s[j] = s[j], s[i]
 	}
-}
-
-// EscapesMarkdownV2 ModeMarkdownV2特殊字符转义
-func EscapesMarkdownV2(s string) string {
-	var i int
-	for i = 0; i < len(s); i++ {
-		if special(s[i]) {
-			break
-		}
-	}
-	if i >= len(s) {
-		return s
-	}
-
-	b := make([]byte, 2*len(s)-i)
-	copy(b, s[:i])
-	j := i
-	for ; i < len(s); i++ {
-		if special(s[i]) {
-			b[j] = '\\'
-			j++
-		}
-		b[j] = s[i]
-		j++
-	}
-	return string(b[:j])
-}
-
-func special(b byte) bool {
-	var specialBytes [16]byte
-	for _, b := range []byte(`_*[]()~>#+-=|{}.!`) {
-		specialBytes[b%16] |= 1 << (b / 16)
-	}
-	specialBytes[byte('`')%16] |= 1 << (byte('`') / 16)
-	return b < utf8.RuneSelf && specialBytes[b%16]&(1<<(b/16)) != 0
 }
 
 func Md5(str string) string {

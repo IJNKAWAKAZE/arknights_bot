@@ -4,7 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 func NewsHandle(update tgbotapi.Update) error {
@@ -13,7 +13,7 @@ func NewsHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
-	if utils.IsAdmin(chatId, userId) {
+	if bot.Arknights.IsAdmin(chatId, userId) {
 		var joined utils.GroupJoined
 		utils.GetJoinedByChatId(chatId).Scan(&joined)
 		joined.News = joined.News ^ 1

@@ -7,7 +7,7 @@ import (
 	"arknights_bot/utils/telebot"
 	"encoding/json"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
@@ -61,7 +61,7 @@ func SetToken(update tgbotapi.Update) error {
 		id, _ := gonanoid.New(32)
 		userAccount = UserAccount{
 			Id:              id,
-			UserName:        utils.GetFullName(message.From),
+			UserName:        message.From.FullName(),
 			UserNumber:      userId,
 			HypergryphToken: token,
 			SklandToken:     account.Skland.Token,

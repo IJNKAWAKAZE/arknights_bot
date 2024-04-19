@@ -5,7 +5,7 @@ import (
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"strconv"
 )
@@ -31,7 +31,7 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	}
 
 	if param != "" {
-		if utils.IsAdmin(chatId, userId) {
+		if bot.Arknights.IsAdmin(chatId, userId) {
 			text := ""
 			if param == "start" {
 				utils.RedisSet(headhuntKey, "start", 0)

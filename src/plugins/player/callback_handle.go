@@ -1,9 +1,8 @@
 package player
 
 import (
-	bot "arknights_bot/config"
 	"arknights_bot/plugins/commandoperation"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"strings"
 )
@@ -27,12 +26,10 @@ func PlayerData(callBack tgbotapi.Update) error {
 	userId := callbackQuery.From.ID
 	clickUserId := callback.UserId
 	if userId != clickUserId {
-		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
-		bot.Arknights.Send(answer)
+		callbackQuery.Answer(true, "这不是你的角色！")
 		return nil
 	} else {
-		answer := tgbotapi.NewCallback(callbackQuery.ID, "正在渲染图片请勿重复点击")
-		bot.Arknights.Send(answer)
+		callbackQuery.Answer(false, "正在渲染图片请勿重复点击")
 		return callback.Function(playerId)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"arknights_bot/utils"
 	"arknights_bot/utils/telebot"
 	"encoding/json"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 // SetTokenHandle 重设token

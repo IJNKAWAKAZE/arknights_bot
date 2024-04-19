@@ -3,7 +3,7 @@ package account
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/utils"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"strings"
 )
@@ -13,8 +13,7 @@ var sklandIdMap = make(map[int64]string)
 // ChoosePlayer 选择绑定角色
 func ChoosePlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
-	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
-	bot.Arknights.Send(answer)
+	callbackQuery.Answer(false, "")
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
@@ -63,8 +62,7 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 // UnbindPlayer 解绑角色
 func UnbindPlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
-	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
-	bot.Arknights.Send(answer)
+	callbackQuery.Answer(false, "")
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
@@ -74,22 +72,19 @@ func UnbindPlayer(callBack tgbotapi.Update) error {
 
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
-	messageId := callbackQuery.Message.MessageID
 
 	uid := d[1]
 	bot.DBEngine.Exec("delete from user_player where user_number = ? and uid = ?", userId, uid)
 	sendMessage := tgbotapi.NewMessage(chatId, "角色解绑成功！")
 	bot.Arknights.Send(sendMessage)
-	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	bot.Arknights.Send(delMsg)
+	callbackQuery.Message.Delete()
 	return nil
 }
 
 // ChooseBTokenPlayer 选择设置BToken角色
 func ChooseBTokenPlayer(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
-	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
-	bot.Arknights.Send(answer)
+	callbackQuery.Answer(false, "")
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
@@ -99,11 +94,9 @@ func ChooseBTokenPlayer(callBack tgbotapi.Update) error {
 
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
-	messageId := callbackQuery.Message.MessageID
 	uid := d[1]
 
-	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	bot.Arknights.Send(delMsg)
+	callbackQuery.Delete()
 	WaitBToken(chatId, userId, uid)
 	return nil
 }
@@ -111,8 +104,7 @@ func ChooseBTokenPlayer(callBack tgbotapi.Update) error {
 // SetResume 设置名片签名
 func SetResume(callBack tgbotapi.Update) error {
 	callbackQuery := callBack.CallbackQuery
-	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
-	bot.Arknights.Send(answer)
+	callbackQuery.Answer(false, "")
 	data := callBack.CallbackData()
 	d := strings.Split(data, ",")
 
@@ -122,11 +114,9 @@ func SetResume(callBack tgbotapi.Update) error {
 
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
-	messageId := callbackQuery.Message.MessageID
 	uid := d[1]
 
-	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	bot.Arknights.Send(delMsg)
+	callbackQuery.Delete()
 	WaitResume(chatId, userId, uid)
 	return nil
 }

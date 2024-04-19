@@ -3,10 +3,9 @@ package system
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
 	"bytes"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 // ReportHandle 举报
@@ -15,16 +14,15 @@ func ReportHandle(update tgbotapi.Update) error {
 	chatId := message.Chat.ID
 	messageId := message.MessageID
 
-	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	bot.Arknights.Send(delMsg)
+	message.Delete()
 
 	if message.ReplyToMessage != nil {
 		replyToMessage := message.ReplyToMessage
 		replyMessageId := replyToMessage.MessageID
 		target := replyToMessage.From.ID
-		name := utils.GetFullName(replyToMessage.From)
+		name := replyToMessage.From.FullName()
 
-		if utils.IsAdmin(chatId, target) {
+		if bot.Arknights.IsAdmin(chatId, target) {
 			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
 			sendMessage.ReplyToMessageID = messageId
 			msg, err := bot.Arknights.Send(sendMessage)
@@ -45,7 +43,7 @@ func ReportHandle(update tgbotapi.Update) error {
 		var buttons [][]tgbotapi.InlineKeyboardButton
 
 		var text bytes.Buffer
-		text.WriteString(fmt.Sprintf("被举报人：[%s](tg://user?id=%d)\n", utils.EscapesMarkdownV2(name), target))
+		text.WriteString(fmt.Sprintf("被举报人：[%s](tg://user?id=%d)\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, name), target))
 		text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/%s/%d)", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
 		charAdmins, _ := bot.Arknights.GetChatAdministrators(getAdmins)
 		var admins []int64

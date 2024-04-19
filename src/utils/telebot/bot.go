@@ -1,7 +1,7 @@
 package telebot
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
 	"runtime/debug"
@@ -157,7 +157,7 @@ func (b *Bot) selectFunction(msg tgbotapi.Update) (callbackFunction, string) {
 	return nil, ""
 }
 
-func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
+func (b *Bot) Run(updates tgbotapi.UpdatesChannel) {
 	if updates == nil {
 		panic("updates is nil")
 	}
@@ -167,18 +167,14 @@ func (b *Bot) Run(updates tgbotapi.UpdatesChannel, ark *tgbotapi.BotAPI) {
 			continue
 		}
 		if msg.Message != nil && msg.Message.IsCommand() && msg.Message.From.ID == 136817688 {
-			k := tgbotapi.NewDeleteMessage(msg.FromChat().ID, msg.Message.MessageID)
-			_, err := ark.Request(k)
-			if err != nil {
-				log.Println("Delete Error", err.Error())
-			}
+			msg.Message.Delete()
 			continue
 		}
 
 		process, command := b.selectFunction(msg)
 		if process != nil {
 			if command != "" {
-				log.Println("用户", msg.SentFrom().String(), "执行了", command, "操作")
+				log.Println("用户", msg.SentFrom().FullName(), "执行了", command, "操作")
 			}
 			err := recoverWarp(process)(msg)
 			if err != nil {

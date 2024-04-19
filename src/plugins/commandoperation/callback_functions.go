@@ -4,7 +4,7 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/utils"
 	"arknights_bot/utils/telebot"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 var callBackMap = make(map[string]MultiuserCallBackFunction)

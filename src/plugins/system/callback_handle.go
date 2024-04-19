@@ -2,8 +2,7 @@ package system
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/utils"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
 	"strings"
 )
@@ -20,13 +19,11 @@ func Report(callBack tgbotapi.Update) error {
 
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
-	messageId := callbackQuery.Message.MessageID
 	target, _ := strconv.ParseInt(d[2], 10, 64)
 	targetMessageId, _ := strconv.Atoi(d[3])
 
-	if !utils.IsAdmin(chatId, userId) {
-		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
-		bot.Arknights.Send(answer)
+	if !bot.Arknights.IsAdmin(chatId, userId) {
+		callbackQuery.Answer(true, "无使用权限！")
 		return nil
 	}
 
@@ -41,15 +38,9 @@ func Report(callBack tgbotapi.Update) error {
 		bot.Arknights.Send(banChatMemberConfig)
 		delMsg := tgbotapi.NewDeleteMessage(chatId, targetMessageId)
 		bot.Arknights.Send(delMsg)
-		delMsg = tgbotapi.NewDeleteMessage(chatId, messageId)
-		bot.Arknights.Send(delMsg)
-	}
 
-	if d[1] == "CLOSE" {
-		delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-		bot.Arknights.Send(delMsg)
 	}
-	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
-	bot.Arknights.Send(answer)
+	callbackQuery.Delete()
+	callbackQuery.Answer(false, "")
 	return nil
 }

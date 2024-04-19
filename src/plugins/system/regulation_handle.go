@@ -5,7 +5,7 @@ import (
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
 )
 
@@ -15,7 +15,7 @@ func RegulationHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
-	if utils.IsAdmin(chatId, userId) {
+	if bot.Arknights.IsAdmin(chatId, userId) {
 		replyToMessage := update.Message.ReplyToMessage
 		if replyToMessage != nil {
 			replyMessageId := replyToMessage.MessageID

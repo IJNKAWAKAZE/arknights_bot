@@ -4,7 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/tidwall/sjson"
 )
 
@@ -15,8 +15,7 @@ func SkinHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	name := update.Message.CommandArguments()
 	if name == "" {
-		delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-		bot.Arknights.Send(delMsg)
+		update.Message.Delete()
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.InlineKeyboardButton{

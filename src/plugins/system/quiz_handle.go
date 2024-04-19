@@ -6,7 +6,7 @@ import (
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"math/big"
 )
@@ -15,12 +15,10 @@ import (
 func QuizHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
-	messageId := update.Message.MessageID
 	param := update.Message.CommandArguments()
 	key := fmt.Sprintf("quiz:%d", chatId)
 
-	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-	bot.Arknights.Send(delMsg)
+	update.Message.Delete()
 
 	if param == "" {
 		if utils.RedisIsExists(key) && utils.RedisGet(key) == "stop" {
@@ -35,7 +33,7 @@ func QuizHandle(update tgbotapi.Update) error {
 	}
 
 	if param == "start" || param == "stop" {
-		if utils.IsAdmin(chatId, userId) {
+		if bot.Arknights.IsAdmin(chatId, userId) {
 			text := ""
 			if param == "start" {
 				utils.RedisSet(key, "start", 0)

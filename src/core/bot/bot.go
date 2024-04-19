@@ -12,7 +12,7 @@ import (
 	"arknights_bot/plugins/skin"
 	"arknights_bot/plugins/system"
 	"arknights_bot/utils/telebot"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 )
 
@@ -95,5 +95,5 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("clear", system.ClearHandle)
 	bot.TeleBot.NewCommandProcessor("kill", system.KillHandle)
 	log.Println("Run pulling")
-	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u), bot.Arknights)
+	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
 }
