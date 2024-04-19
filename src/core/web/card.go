@@ -207,10 +207,17 @@ func getNationList(playerData *skland.PlayerData) []Nation {
 
 	var m = make(map[string]int)
 	var m1 = make(map[string]int)
-	resp, _ := http.Get("https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/art/handbookpos_table.json")
+	resp, _ := http.Get(viper.GetString("api.nation_table"))
 	r, _ := io.ReadAll(resp.Body)
 	gjson.ParseBytes(r).Get("groupList").ForEach(func(key, value gjson.Result) bool {
-		m[key.String()] = len(value.Get("charList").Array())
+		count := 0
+		charList := value.Get("charList").Array()
+		for _, c := range charList {
+			if strings.Contains(c.Get("charId").String(), "npc") {
+				count++
+			}
+		}
+		m[key.String()] = len(charList) - count
 		return true
 	})
 	for _, v := range playerData.CharInfoMap {
