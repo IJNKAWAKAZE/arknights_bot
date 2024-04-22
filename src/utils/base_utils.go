@@ -389,13 +389,13 @@ func overtime(f *bool) {
 }
 
 // OCR OCR识别
-func OCR(file io.Reader, lang, engine, sep string) []string {
+func OCR(file io.Reader, lang, engine, sep string) ([]string, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	part, err := writer.CreateFormFile("file", "test.png")
 	if err != nil {
 		log.Println("创建文件失败")
-		return nil
+		return nil, err
 	}
 	io.Copy(part, file)
 	writer.WriteField("language", lang)
@@ -405,7 +405,7 @@ func OCR(file io.Reader, lang, engine, sep string) []string {
 	request, err := http.NewRequest("POST", "https://api.ocr.space/parse/image", body)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return nil, err
 	}
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 	request.Header.Add("Apikey", "helloworld")
@@ -414,13 +414,13 @@ func OCR(file io.Reader, lang, engine, sep string) []string {
 	resp, err := client.Do(request)
 	if err != nil {
 		log.Println("ocr失败")
-		return nil
+		return nil, err
 	}
 	read, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	result := gjson.ParseBytes(read)
 	log.Println("识别结果：", result.String())
-	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), sep)
+	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), sep), nil
 }
 
 // CreateTelegraphPage 创建telegraph页面
