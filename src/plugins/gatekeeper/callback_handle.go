@@ -37,8 +37,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 			}
 
 			if d[2] == "BAN" {
-				chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-				ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
+				ban(chatId, userId, callbackQuery, joinMessageId)
 			}
 		}
 		return nil
@@ -53,9 +52,8 @@ func CallBackData(callBack tgbotapi.Update) error {
 	if verifySet.checkExistAndRemove(userId, chatId) {
 		if d[2] != d[3] {
 			callbackQuery.Answer(true, "验证未通过，请一分钟后再试！")
-			chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-			ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
-			go unban(chatMember)
+			ban(chatId, userId, callbackQuery, joinMessageId)
+			go unban(chatId, userId)
 			return nil
 		}
 
@@ -91,12 +89,8 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 	return nil
 }
 
-func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chatMember tgbotapi.ChatMemberConfig, joinMessageId int) {
-	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
-		ChatMemberConfig: chatMember,
-		RevokeMessages:   true,
-	}
-	bot.Arknights.Send(banChatMemberConfig)
+func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, joinMessageId int) {
+	bot.Arknights.BanChatMember(chatId, userId)
 	callbackQuery.Delete()
 	val := fmt.Sprintf("verify%d%d", chatId, userId)
 	utils.RedisDelSetItem("verify", val)

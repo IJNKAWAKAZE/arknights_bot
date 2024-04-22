@@ -81,13 +81,9 @@ func VerifyMember(message *tgbotapi.Message) {
 	go verify(chatId, userId, photo.MessageID, messageId)
 }
 
-func unban(chatMember tgbotapi.ChatMemberConfig) {
+func unban(chatId, userId int64) {
 	time.Sleep(time.Minute)
-	unbanChatMemberConfig := tgbotapi.UnbanChatMemberConfig{
-		ChatMemberConfig: chatMember,
-		OnlyIfBanned:     true,
-	}
-	bot.Arknights.Send(unbanChatMemberConfig)
+	bot.Arknights.UnbanChatMember(chatId, userId)
 }
 
 func verify(chatId int64, userId int64, messageId int, joinMessageId int) {
@@ -97,12 +93,7 @@ func verify(chatId int64, userId int64, messageId int, joinMessageId int) {
 	}
 
 	// 踢出超时未验证用户
-	chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
-		ChatMemberConfig: chatMember,
-		RevokeMessages:   true,
-	}
-	bot.Arknights.Send(banChatMemberConfig)
+	bot.Arknights.BanChatMember(chatId, userId)
 	// 删除用户入群提醒
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)
@@ -111,8 +102,5 @@ func verify(chatId int64, userId int64, messageId int, joinMessageId int) {
 	bot.Arknights.Send(delMsg)
 	time.Sleep(time.Minute)
 	// 解除用户封禁
-	bot.Arknights.Send(tgbotapi.UnbanChatMemberConfig{
-		ChatMemberConfig: chatMember,
-		OnlyIfBanned:     true,
-	})
+	bot.Arknights.UnbanChatMember(chatId, userId)
 }
