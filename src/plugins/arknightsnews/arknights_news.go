@@ -170,6 +170,7 @@ func ParseBilibiliDynamic() (string, []Pic) {
 					var p Pic
 					p.Url = pic.Get("url").String()
 					p.Height = pic.Get("height").Int()
+					p.Width = pic.Get("width").Int()
 					pics = append(pics, p)
 				}
 				text = desc + "\n\n" + item.Get("orig.modules.module_dynamic.major.opus.summary.text").String()
@@ -180,6 +181,7 @@ func ParseBilibiliDynamic() (string, []Pic) {
 					var p Pic
 					p.Url = pic.Get("url").String()
 					p.Height = pic.Get("height").Int()
+					p.Width = pic.Get("width").Int()
 					pics = append(pics, p)
 				}
 				text = strings.ReplaceAll(summary, "[图片]", "") + "\n\n专栏地址：https:" + item.Get("modules.module_dynamic.major.opus.jump_url").String()
