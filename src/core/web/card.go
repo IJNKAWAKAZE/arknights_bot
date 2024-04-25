@@ -56,6 +56,21 @@ type Nation struct {
 	Flag int64  `json:"flag"`
 }
 
+var ignoreChar = make(map[string]string)
+
+func init() {
+	ignoreChar["npc_001_doctor"] = "npc_001_doctor"
+	ignoreChar["npc_003_kalts"] = "npc_003_kalts"
+	ignoreChar["npc_010_chen"] = "npc_010_chen"
+	ignoreChar["npc_2005_wywu"] = "npc_2005_wywu"
+	ignoreChar["npc_2006_fmzuki"] = "npc_2006_fmzuki"
+	ignoreChar["char_513_apionr"] = "char_513_apionr"
+	ignoreChar["char_511_asnipe"] = "char_511_asnipe"
+	ignoreChar["char_510_amedic"] = "char_510_amedic"
+	ignoreChar["char_508_aguard"] = "char_508_aguard"
+	ignoreChar["char_509_acast"] = "char_509_acast"
+}
+
 func Card(r *gin.Engine) {
 	r.GET("/card", func(c *gin.Context) {
 		r.LoadHTMLFiles("./template/Card.tmpl")
@@ -205,38 +220,35 @@ func getNationList(playerData *skland.PlayerData) []Nation {
 		{Name: "kazdel"},
 		{Name: "followers"}}
 
-	var m = make(map[string]int)
-	var m1 = make(map[string]int)
+	var m = make(map[string][]string)
 	resp, _ := http.Get(viper.GetString("api.nation_table"))
 	r, _ := io.ReadAll(resp.Body)
 	gjson.ParseBytes(r).Get("groupList").ForEach(func(key, value gjson.Result) bool {
-		count := 0
 		charList := value.Get("charList").Array()
 		for _, c := range charList {
-			if strings.Contains(c.Get("charId").String(), "npc") {
+			if _, has := ignoreChar[c.Get("charId").String()]; !has {
+				m[key.String()] = append(m[key.String()], c.Get("charId").String())
+			}
+		}
+		return true
+	})
+	defer resp.Body.Close()
+	for i, nation := range nationList {
+		count := 0
+		key := nation.Name
+		for _, char := range m[key] {
+			if _, has := playerData.CharInfoMap[char]; has {
 				count++
 			}
 		}
-		m[key.String()] = len(charList) - count
-		return true
-	})
-	for _, v := range playerData.CharInfoMap {
-		key := v.NationID
-		if v.NationID == "" {
-			key = "followers"
-		}
-		m1[key] += 1
-	}
-	defer resp.Body.Close()
-	for i, nation := range nationList {
-		key := nation.Name
-		if m1[nation.Name] == 0 {
+		if count == 0 {
 			nationList[i].Flag = -1
-		} else if m[key] > m1[key] {
+		} else if len(m[key]) > count {
 			nationList[i].Flag = 0
-		} else if m[key] == m1[key] {
+		} else if len(m[key]) == count {
 			nationList[i].Flag = 1
 		}
+
 	}
 	return nationList
 }
