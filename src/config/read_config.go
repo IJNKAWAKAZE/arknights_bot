@@ -4,12 +4,15 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"log"
+	"strings"
 )
 
 var MsgDelDelay float64
 var HeadhuntTimes int
 var PoolUP = make(map[int]string)
 var Pool = make(map[int]string)
+
+var RecruitMissing map[string]string
 
 func init() {
 	// 设置配置文件的名字
@@ -42,4 +45,9 @@ func initData() {
 	Pool[5] = viper.GetString("headhunt.pool_5")
 	Pool[4] = viper.GetString("headhunt.pool_4")
 	Pool[3] = viper.GetString("headhunt.pool_3")
+	jpMissing := viper.GetString("recruit.missing.jp")
+	RecruitMissing = make(map[string]string)
+	for _, missing := range strings.Split(jpMissing, "/") {
+		RecruitMissing[missing] = missing
+	}
 }

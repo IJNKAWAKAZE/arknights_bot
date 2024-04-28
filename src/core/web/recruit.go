@@ -1,6 +1,7 @@
 package web
 
 import (
+	"arknights_bot/config"
 	"arknights_bot/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -11,17 +12,6 @@ import (
 type RecruitList struct {
 	Tags      []string         `json:"tags"`
 	Operators []utils.Operator `json:"operators"`
-}
-
-var jpMissing = make(map[string]string)
-
-func init() {
-	jpMissing["酸糖"] = "酸糖"
-	jpMissing["芳汀"] = "芳汀"
-	jpMissing["燧石"] = "燧石"
-	jpMissing["四月"] = "四月"
-	jpMissing["森蚺"] = "森蚺"
-	jpMissing["史尔特尔"] = "史尔特尔"
 }
 
 func Recruit(r *gin.Engine) {
@@ -59,7 +49,7 @@ func Recruit(r *gin.Engine) {
 				continue
 			}
 			for _, operator := range recruitOperatorList {
-				if client == "jp" && jpMissing[operator.Name] != "" {
+				if client == "jp" && config.RecruitMissing[operator.Name] != "" {
 					continue
 				}
 				opTags := operator.Tags + " " + operator.ProfessionZH + " " + operator.Position
