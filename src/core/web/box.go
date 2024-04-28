@@ -55,10 +55,14 @@ func Box(r *gin.Engine) {
 		for _, c := range playerData.Chars {
 			rarity := playerData.CharInfoMap[c.CharID].Rarity
 			if filter(param, rarity) {
+				name := playerData.CharInfoMap[c.CharID].Name
+				if c.CharID == "char_1001_amiya2" {
+					name = "阿米娅(近卫)"
+				}
 				char := Char{
 					CharId:        c.CharID,
 					SkinId:        c.SkinID,
-					Name:          playerData.CharInfoMap[c.CharID].Name,
+					Name:          name,
 					Level:         c.Level,
 					EvolvePhase:   c.EvolvePhase,
 					PotentialRank: c.PotentialRank,

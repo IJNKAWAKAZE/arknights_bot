@@ -6,7 +6,7 @@ import (
 	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/utils"
 	"encoding/json"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/tidwall/sjson"
 	"io"
@@ -56,7 +56,7 @@ func (o PlayerOperationImportS2) Run(uid string, userAccount account.UserAccount
 		return err
 	}
 
-	go addGacha(importGachaData, userAccount.UserNumber, uid, utils.GetFullName(message.From))
+	go addGacha(importGachaData, userAccount.UserNumber, uid, message.From.FullName())
 	sendMessage := tgbotapi.NewMessage(chatId, "抽卡记录导入成功！")
 	bot.Arknights.Send(sendMessage)
 	return nil

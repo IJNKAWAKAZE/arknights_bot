@@ -5,7 +5,7 @@ import (
 	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/utils"
 	"encoding/json"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"time"
 )

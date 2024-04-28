@@ -5,7 +5,7 @@ import (
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
 )
@@ -17,8 +17,7 @@ func MaterialHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	name := update.Message.CommandArguments()
 	if name == "" {
-		delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
-		bot.Arknights.Send(delMsg)
+		update.Message.Delete()
 		inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.InlineKeyboardButton{
@@ -52,19 +51,6 @@ func MaterialHandle(update tgbotapi.Update) error {
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 
-	fileId := ""
-	key := "material:" + name
-	if utils.RedisIsExists(key) {
-		fileId = utils.RedisGet(key)
-	}
-
-	if fileId != "" {
-		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(fileId))
-		sendPhoto.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendPhoto)
-		return nil
-	}
-
 	port := viper.GetString("http.port")
 	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/material?name=%s", port, name), 0, 1.5)
 	if pic == nil {
@@ -75,11 +61,10 @@ func MaterialHandle(update tgbotapi.Update) error {
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendPhoto)
+	_, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	utils.RedisSet(key, msg.Photo[0].FileID, 0)
 	return nil
 }

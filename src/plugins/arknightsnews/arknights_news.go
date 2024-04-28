@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -23,6 +23,7 @@ type Payload struct {
 type Pic struct {
 	Url    string `json:"url"`
 	Height int64  `json:"height"`
+	Width  int64  `json:"width"`
 }
 
 func BilibiliNews() {
@@ -41,7 +42,7 @@ func BilibiliNews() {
 
 	if len(pics) == 1 {
 		for _, group := range groups {
-			if pics[0].Height > 3000 {
+			if pics[0].Height > pics[0].Width*2 {
 				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url)})
 				sendDocument.Caption = text
 				config.Arknights.Send(sendDocument)
@@ -61,7 +62,7 @@ func BilibiliNews() {
 
 		d := false
 		for _, p := range pics {
-			if p.Height > 3000 {
+			if p.Height > p.Width*2 {
 				d = true
 			}
 		}
@@ -145,6 +146,7 @@ func ParseBilibiliDynamic() (string, []Pic) {
 					var p Pic
 					p.Url = pic.Get("url").String()
 					p.Height = pic.Get("height").Int()
+					p.Width = pic.Get("width").Int()
 					pics = append(pics, p)
 				}
 				text = item.Get("modules.module_dynamic.major.opus.summary.text").String()
@@ -168,6 +170,7 @@ func ParseBilibiliDynamic() (string, []Pic) {
 					var p Pic
 					p.Url = pic.Get("url").String()
 					p.Height = pic.Get("height").Int()
+					p.Width = pic.Get("width").Int()
 					pics = append(pics, p)
 				}
 				text = desc + "\n\n" + item.Get("orig.modules.module_dynamic.major.opus.summary.text").String()
@@ -178,6 +181,7 @@ func ParseBilibiliDynamic() (string, []Pic) {
 					var p Pic
 					p.Url = pic.Get("url").String()
 					p.Height = pic.Get("height").Int()
+					p.Width = pic.Get("width").Int()
 					pics = append(pics, p)
 				}
 				text = strings.ReplaceAll(summary, "[图片]", "") + "\n\n专栏地址：https:" + item.Get("modules.module_dynamic.major.opus.jump_url").String()

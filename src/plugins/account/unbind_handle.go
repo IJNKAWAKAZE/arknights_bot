@@ -4,7 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 // UnbindHandle 解绑角色

@@ -1,10 +1,9 @@
 package sign
 
 import (
-	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/utils"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
 	"strings"
 )
@@ -25,8 +24,7 @@ func SignPlayer(callBack tgbotapi.Update) error {
 	uid := d[2]
 
 	if userId != clickUserId {
-		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的角色！")
-		bot.Arknights.Send(answer)
+		callbackQuery.Answer(true, "这不是你的角色！")
 		return nil
 	}
 
@@ -36,7 +34,6 @@ func SignPlayer(callBack tgbotapi.Update) error {
 	utils.GetAccountByUid(userId, uid).Scan(&userAccount)
 	utils.GetPlayerByUserId(userId, uid).Scan(&player)
 
-	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
-	bot.Arknights.Send(answer)
+	callbackQuery.Answer(false, "")
 	return Sign(player, userAccount, chatId)
 }

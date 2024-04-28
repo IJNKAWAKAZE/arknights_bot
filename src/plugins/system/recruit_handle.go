@@ -4,7 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
 	"strings"
@@ -87,7 +87,11 @@ func RecruitHandle(update tgbotapi.Update) error {
 		lang, engine, sep = "jpn", "1", "\r\n"
 	}
 
-	results := utils.OCR(file, lang, engine, sep)
+	results, err := utils.OCR(file, lang, engine, sep)
+	if err != nil {
+		sendMessage := tgbotapi.NewMessage(chatId, "识别失败请稍后再试")
+		bot.Arknights.Send(sendMessage)
+	}
 	if results == nil {
 		log.Println("图片识别失败")
 		return nil
@@ -122,7 +126,7 @@ func RecruitHandle(update tgbotapi.Update) error {
 	}
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "recruit.jpg"})
 	sendDocument.ReplyToMessageID = messageId
-	_, err := bot.Arknights.Send(sendDocument)
+	_, err = bot.Arknights.Send(sendDocument)
 	if err != nil {
 		return err
 	}

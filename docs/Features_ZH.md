@@ -6,7 +6,7 @@
 ```
 /bind - 绑定森空岛账号(支持多账号与单账号多角色)
 /unbind - 解绑角色
-/resume - 设置角色签名
+/resume - 设置角色签名(因官方开放签名此功能已关闭)
 /reset_token - 重设森空岛Token
 /btoken - 设置BToken(B服用户才需要)
 /import_gacha - 导入抽卡记录
@@ -31,6 +31,7 @@
     /missing 6 - 查看对应星级未获取干员
     /missing 1,2 - 查看多个星级未获取干员
 /card - 查看角色名片(私聊设置的签名会在这里显示)
+    /card o - 旧版名片
 /base - 查看基建状态
 /gacha - 查看抽卡分析
 /operator - 查看干员信息(不输入名称显示干员搜索按钮)

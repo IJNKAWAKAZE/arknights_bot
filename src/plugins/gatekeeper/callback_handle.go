@@ -5,7 +5,7 @@ import (
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
 	"strings"
 )
@@ -26,9 +26,8 @@ func CallBackData(callBack tgbotapi.Update) error {
 	if d[2] == "PASS" || d[2] == "BAN" {
 		joinMessageId, _ = strconv.Atoi(d[3])
 
-		if !utils.IsAdmin(chatId, callbackQuery.From.ID) {
-			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "无使用权限！")
-			bot.Arknights.Send(answer)
+		if !bot.Arknights.IsAdmin(chatId, callbackQuery.From.ID) {
+			callbackQuery.Answer(true, "无使用权限！")
 			return nil
 		}
 		if verifySet.checkExistAndRemove(userId, chatId) {
@@ -38,8 +37,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 			}
 
 			if d[2] == "BAN" {
-				chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-				ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
+				ban(chatId, userId, callbackQuery, joinMessageId)
 			}
 		}
 		return nil
@@ -48,22 +46,18 @@ func CallBackData(callBack tgbotapi.Update) error {
 	joinMessageId, _ = strconv.Atoi(d[4])
 
 	if userId != callbackQuery.From.ID {
-		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "这不是你的验证！")
-		bot.Arknights.Send(answer)
+		callbackQuery.Answer(true, "这不是你的验证！")
 		return nil
 	}
 	if verifySet.checkExistAndRemove(userId, chatId) {
 		if d[2] != d[3] {
-			answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证未通过，请一分钟后再试！")
-			bot.Arknights.Send(answer)
-			chatMember := tgbotapi.ChatMemberConfig{ChatID: chatId, UserID: userId}
-			ban(chatId, userId, callbackQuery, chatMember, joinMessageId)
-			go unban(chatMember)
+			callbackQuery.Answer(true, "验证未通过，请一分钟后再试！")
+			ban(chatId, userId, callbackQuery, joinMessageId)
+			go unban(chatId, userId)
 			return nil
 		}
 
-		answer := tgbotapi.NewCallbackWithAlert(callbackQuery.ID, "验证通过！")
-		bot.Arknights.Send(answer)
+		callbackQuery.Answer(true, "验证通过！")
 		err := pass(chatId, userId, callbackQuery, false)
 		return err
 	}
@@ -71,30 +65,14 @@ func CallBackData(callBack tgbotapi.Update) error {
 }
 
 func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) error {
-	bot.Arknights.Send(tgbotapi.RestrictChatMemberConfig{
-		Permissions: &tgbotapi.ChatPermissions{
-			CanSendMessages:       true,
-			CanSendMediaMessages:  true,
-			CanSendPolls:          true,
-			CanSendOtherMessages:  true,
-			CanAddWebPagePreviews: true,
-			CanInviteUsers:        true,
-			CanChangeInfo:         true,
-			CanPinMessages:        true,
-		},
-		ChatMemberConfig: tgbotapi.ChatMemberConfig{
-			ChatID: chatId,
-			UserID: userId,
-		},
-	})
+	bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
 	val := fmt.Sprintf("verify%d%d", chatId, userId)
 	utils.RedisDelSetItem("verify", val)
-	delMsg := tgbotapi.NewDeleteMessage(chatId, callbackQuery.Message.MessageID)
-	bot.Arknights.Send(delMsg)
+	callbackQuery.Delete()
 
 	if !adminPass {
 		// 新人发送box提醒
-		text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。\n", utils.EscapesMarkdownV2(utils.GetFullName(callbackQuery.From)), callbackQuery.From.ID)
+		text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, callbackQuery.From.FullName()), callbackQuery.From.ID)
 		id := utils.RedisGet(fmt.Sprintf("regulation:%d", chatId))
 		if id != "" {
 			text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%s)", callbackQuery.Message.Chat.UserName, id)
@@ -111,14 +89,9 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 	return nil
 }
 
-func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, chatMember tgbotapi.ChatMemberConfig, joinMessageId int) {
-	banChatMemberConfig := tgbotapi.BanChatMemberConfig{
-		ChatMemberConfig: chatMember,
-		RevokeMessages:   true,
-	}
-	bot.Arknights.Send(banChatMemberConfig)
-	delMsg := tgbotapi.NewDeleteMessage(chatId, callbackQuery.Message.MessageID)
-	bot.Arknights.Send(delMsg)
+func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, joinMessageId int) {
+	bot.Arknights.BanChatMember(chatId, userId)
+	callbackQuery.Delete()
 	val := fmt.Sprintf("verify%d%d", chatId, userId)
 	utils.RedisDelSetItem("verify", val)
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)

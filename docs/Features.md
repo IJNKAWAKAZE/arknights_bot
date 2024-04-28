@@ -6,7 +6,7 @@ This document provides an overview of the features available in the Arknights Te
 ```
 /bind - Bind your Telegram account with your Arknights account.
 /unbind - Unbind your Telegram account from your Arknights account.
-/resume - Set your introduction for the group.
+/resume - Set your resume for the card(closed).
 /reset_token - Reset your token status.
 /btoken - Set your bilibili token.
 /import_gacha - Import your gacha history.
@@ -31,6 +31,7 @@ This document provides an overview of the features available in the Arknights Te
     /missing 6 - Show all missing 6-star cards.
     /missing 1,2 - Show all missing 1-star and 2-star cards, note that the number of stars should be separated by commas.
 /card - Show the player card.
+    /card o - old player card.
 /base - Show the base status.
 /gacha - Show the gacha history
 /operator - Show the operator data, without any arguments, it will show the operator select helper. 

@@ -7,7 +7,7 @@ import (
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/spf13/viper"
 	"log"
@@ -101,7 +101,7 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
 	if err != nil {
 		log.Println(playerName, err)
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\nmsg:%s", playerName, err.Error()))
+		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\n失败原因:%s", playerName, err.Error()))
 		msg, err := bot.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
@@ -142,7 +142,7 @@ func autoSign(update tgbotapi.Update) {
 	id, _ := gonanoid.New(32)
 	userSign = UserSign{
 		Id:         id,
-		UserName:   utils.GetFullName(message.From),
+		UserName:   message.From.FullName(),
 		UserNumber: userId,
 	}
 
