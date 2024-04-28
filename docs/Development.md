@@ -48,16 +48,21 @@ parameter `-o` can be used to specify the output file name. It will affect the l
    ```shell
    ./src/arknights_bot
    ```
+   If things gonna all right, you will see the output like this:
 
-If things gonna all right, you will see the output like this:
+   ```log
+   2024-04-02T10:34:38.015+08:00 INF 2024/04/02 10:34:38 init_db.go:25: 数据库连接成功
+   2024-04-02T10:34:38.017+08:00 INF 2024/04/02 10:34:38 init_redis.go:19: redis连接成功
+   2024-04-02T10:34:38.982+08:00 INF 2024/04/02 10:34:38 init_bot.go:22: 机器人初始化完成
+   2024-04-02T10:34:38.983+08:00 INF 2024/04/02 10:34:38 runner.go:48: 定时任务已启动
+   2024-04-02T10:34:38.984+08:00 INF 2024/04/02 10:34:38 bot.go:21: 机器人启动成功
+   ```
 
-```log
-2024-04-02T10:34:38.015+08:00 INF 2024/04/02 10:34:38 init_db.go:25: 数据库连接成功
-2024-04-02T10:34:38.017+08:00 INF 2024/04/02 10:34:38 init_redis.go:19: redis连接成功
-2024-04-02T10:34:38.982+08:00 INF 2024/04/02 10:34:38 init_bot.go:22: 机器人初始化完成
-2024-04-02T10:34:38.983+08:00 INF 2024/04/02 10:34:38 runner.go:48: 定时任务已启动
-2024-04-02T10:34:38.984+08:00 INF 2024/04/02 10:34:38 bot.go:21: 机器人启动成功
-```
+4. Initialization data 
+
+   ```
+    If first run send /update to bot
+   ```
 
 ## Local development
 

@@ -53,7 +53,7 @@ func Serve() {
 	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("resume", account.ResumeHandle)
+	//bot.TeleBot.NewPrivateCommandProcessor("resume", account.ResumeHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
 	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.PlayerHandle)
@@ -62,7 +62,7 @@ func Serve() {
 	// wait
 	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
 	bot.TeleBot.NewWaitMessageProcessor("bToken", account.SetBToken)
-	bot.TeleBot.NewWaitMessageProcessor("resume", account.Resume)
+	//bot.TeleBot.NewWaitMessageProcessor("resume", account.Resume)
 	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
 	bot.TeleBot.NewWaitMessageProcessor("importGacha", player.PlayerHandle)
 

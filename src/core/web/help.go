@@ -29,7 +29,7 @@ func Help(r *gin.Engine) {
 		// 私聊指令
 		privateCmds = append(privateCmds, Cmd{Cmd: "/bind", Desc: "绑定角色", Param: "", IsBind: false})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/unbind", Desc: "解绑角色", Param: "", IsBind: true})
-		privateCmds = append(privateCmds, Cmd{Cmd: "/resume", Desc: "设置名片签名", Param: "", IsBind: true})
+		//privateCmds = append(privateCmds, Cmd{Cmd: "/resume", Desc: "设置名片签名", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/cancel", Desc: "取消操作", Param: "", IsBind: false})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/reset_token", Desc: "重设token", Param: "", IsBind: true})
 		privateCmds = append(privateCmds, Cmd{Cmd: "/btoken", Desc: "设置BToken", Param: "", IsBind: true})

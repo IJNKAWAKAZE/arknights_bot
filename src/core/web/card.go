@@ -105,7 +105,7 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	var userPlayer account.UserPlayer
 	utils.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
 	playerCard.ServerName = userPlayer.ServerName
-	playerCard.Resume = userPlayer.Resume
+	//playerCard.Resume = userPlayer.Resume
 	skAccount.Hypergryph.Token = userAccount.HypergryphToken
 	skAccount.Skland.Token = userAccount.SklandToken
 	skAccount.Skland.Cred = userAccount.SklandCred
@@ -130,6 +130,7 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	playerCard.RegTime = playerData.Status.RegisterTs
 	playerCard.MainStageProgress = playerData.StageInfoMap[playerData.Status.MainStageProgress].Code
 	playerCard.Avatar = playerData.Status.Secretary.SkinID
+	playerCard.Resume = playerData.Status.Resume
 	playerCard.CharCnt = len(playerData.Chars)
 	playerCard.NationList = getNationList(playerData)
 	if _, has := charMap["char_1001_amiya2"]; has {
