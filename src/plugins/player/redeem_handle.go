@@ -11,6 +11,7 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"strings"
+	"time"
 )
 
 type PlayerOperationRedeem struct {
@@ -31,6 +32,12 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 	messageId := message.MessageID
 	cdk := message.CommandArguments()
 	cdk = strings.ToUpper(cdk)
+	if utils.RedisIsExists("risk_control") {
+		SendMessage := tgbotapi.NewMessage(chatId, "触发风控，请等待解除后再进行兑换！")
+		SendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(SendMessage)
+		return nil
+	}
 	token := userAccount.HypergryphToken
 	channelId := "1"
 	var userPlayer account.UserPlayer
@@ -60,6 +67,9 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 		return err
 	}
 	if result != "" {
+		if result == "需要验证" {
+			utils.RedisSet("risk_control", "1", time.Hour)
+		}
 		SendMessage := tgbotapi.NewMessage(chatId, result)
 		SendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(SendMessage)

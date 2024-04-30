@@ -11,13 +11,13 @@
             margin: 0;
             font-family: 'NotoSansHans',serif;
         }
-        .main {
+        #main {
             position: absolute;
             background-image: url("assets/card/bg.png");
             width: 1280px;
             height: 720px;
         }
-        .main * {
+        #main * {
             position: relative;
         }
         #regTime {
@@ -111,7 +111,7 @@
     </style>
 </head>
 <body>
-<div class="main">
+<div id="main">
     <img style="position: absolute;left: 5%;max-height: 720px; -webkit-mask: -webkit-linear-gradient(0deg, transparent, #fff 50%)" src="{{.Secretary}}"/>
     <div id="regTime">入职日<div id="ts">{{.RegTime}}</div></div>
     <img style="margin-left: 20px;margin-top: 10px;transform: translateX(-60px); filter: drop-shadow(60px 0 0 #0098dc);" src="/assets/card/no_use_icon_circle.png"/><br>

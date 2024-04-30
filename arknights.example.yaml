@@ -23,6 +23,7 @@ api:
   telegraph: https://api.telegra.ph/createPage
   skin_table: https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/excel/skin_table.json
   nation_table: https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/art/handbookpos_table.json
+  calendar: https://wiki.biligame.com/arknights/index.php?title=MediaWiki:EventCalendar.js&action=raw
 
 mysql:
   dsn: root:root@tcp(localhost:3306)/arknights?charset=utf8mb4&parseTime=True&loc=Local

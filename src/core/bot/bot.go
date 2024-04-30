@@ -84,6 +84,7 @@ func Serve() {
 	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
 	bot.TeleBot.NewCommandProcessor("redeem", player.PlayerHandle)
 	bot.TeleBot.NewCommandProcessor("headhunt", system.HeadhuntHandle)
+	bot.TeleBot.NewCommandProcessor("calendar", system.CalendarHandle)
 
 	// 图片
 	bot.TeleBot.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)

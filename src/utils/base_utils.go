@@ -266,7 +266,7 @@ func Screenshot(url string, waitTime float64, scale float64) []byte {
 		WaitUntil: playwright.WaitUntilStateNetworkidle,
 	})
 	page.WaitForTimeout(waitTime)
-	locator, _ := page.Locator(".main")
+	locator, _ := page.Locator("#main")
 	if v, _ := locator.IsVisible(); !v {
 		log.Println("元素未加载取消截图操作")
 		return nil
