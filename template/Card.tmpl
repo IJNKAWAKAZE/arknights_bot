@@ -17,7 +17,7 @@
             width: 1280px;
             height: 720px;
         }
-        #main * {
+        * {
             position: relative;
         }
         #regTime {
@@ -156,7 +156,7 @@
             <div style="font-size: 14px;">LV</div>
         </div>
         <div id="name">{{.Name}}</div>
-        <div id="uid">ID {{.Uid}}</div>
+        <div id="uid">ID {{.Uid}}<span> {{.ServerName}}</span></div>
     </div>
     <div id="resume">
         <table style="padding: 0 20px;">

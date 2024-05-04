@@ -42,6 +42,7 @@ func init() {
 	tagMap["快速复活"] = "快速复活"
 	tagMap["位移"] = "位移"
 	tagMap["召唤"] = "召唤"
+	tagMap["元素"] = "元素"
 
 	tagMap["上級エリート"] = "高资"
 	tagMap["上級工リート"] = "高资"

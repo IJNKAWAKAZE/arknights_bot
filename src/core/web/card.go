@@ -136,6 +136,9 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	if _, has := charMap["char_1001_amiya2"]; has {
 		playerCard.CharCnt -= 1
 	}
+	if _, has := charMap["char_1037_amiya3"]; has {
+		playerCard.CharCnt -= 1
+	}
 	playerCard.SkinCnt = len(playerData.Skins)
 	playerCard.FurnitureCnt = playerData.Building.Furniture.Total
 	playerCard.AssistChars = playerData.AssistChars
@@ -156,12 +159,15 @@ func getSkinUrl(secretaryName, skinId string) (string, string, error) {
 	if strings.Contains(skinId, "amiya2") {
 		secretaryName = "阿米娅(近卫)"
 	}
+	if strings.Contains(skinId, "amiya3") {
+		secretaryName = "阿米娅(医疗)"
+	}
 	operator := utils.GetOperatorByName(secretaryName)
 	enName := operator.NameEn
 	if !strings.Contains(skinId, "@") {
 		if strings.Contains(skinId, "#1") {
 			skinUrl = operator.Skins[0].Url
-		} else if strings.Contains(skinId, "#2") && secretaryName == "阿米娅(近卫)" {
+		} else if strings.Contains(skinId, "#2") && (secretaryName == "阿米娅(近卫)" || secretaryName == "阿米娅(医疗)") {
 			skinUrl = operator.Skins[0].Url
 		} else if strings.Contains(skinId, "#2") {
 			skinUrl = operator.Skins[1].Url
