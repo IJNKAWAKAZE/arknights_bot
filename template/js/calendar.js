@@ -22,8 +22,6 @@ var Calendar = function(options) {
         }
     }
     this.attrs = options;
-    //触摸起始点记录
-    this.touchesStart = {};
     //初始化内容
     this.init();
 };
@@ -42,12 +40,43 @@ Calendar.prototype = {
      * @param date 指定日期
      */
     setAside : function(date) {
+        var resource = document.getElementById("resource")
+        var chip = document.getElementById("chip")
         date = date || new Date();
         var year = date.getFullYear(),
             month = date.getMonth(),
             day = date.getDate();
+        var week = date.getDay();
         this.timeNowEle.innerHTML =   "<span>" + year + "年" + (month + 1) + "月" + day + "日" + "</span>"
-                                    + "<span>" + this.attrs.dayLongNames[date.getDay()] + "</span>";
+                                    + "<span>" + this.attrs.dayLongNames[week] + "</span>";
+        if(week === 0) {
+            resource.textContent = "经验书、技能书、钱、h红票、";
+            chip.textContent = "近卫、特种、医疗、重装、辅助、先锋";
+        }
+        if(week === 1) {
+            resource.textContent = "经验书、红票、碳";
+            chip.textContent = "术士、狙击、医疗、重装";
+        }
+        if(week === 2) {
+            resource.textContent = "经验书、技能书、钱";
+            chip.textContent = "术士、狙击、近卫、特种";
+        }
+        if(week === 3) {
+            resource.textContent = "经验书、技能书、碳";
+            chip.textContent = "近卫、特种、辅助、先锋";
+        }
+        if(week === 4) {
+            resource.textContent = "经验书、钱、红票";
+            chip.textContent = "医疗、重装、辅助、先锋";
+        }
+        if(week === 5) {
+            resource.textContent = "经验书、技能书、碳";
+            chip.textContent = "术士、狙击、医疗、重装";
+        }
+        if(week === 6) {
+            resource.textContent = "经验书、钱、红票";
+            chip.textContent = "术士、狙击、近卫、特种、辅助、先锋";
+        }
     },
     /**
      * 布局函数
@@ -197,19 +226,17 @@ Calendar.prototype = {
                     dayNumber = "0" + dayNumber
                 }
                 var holiday = this.attrs.holiday[dayYear + "-" + dayMonth + "-" + dayNumber];
-                //节日显示
+                //活动显示
                 if(holiday) {
                     var alamanac = holiday;
                     classNames.push("date-holiday");
                 }else {
                     var alamanac = "";
                 }
-                console.log(dayYear + "-" + dayMonth + "-" + dayNumber);
-                console.log(alamanac);
                 tdList.push(
                       '<div class="' + classNames.join(" ") + '" data-year=' + dayYear + ' data-month=' + dayMonth + ' data-day=' + dayNumber + '>'
                     +   '<span class="dayNumber">' + dayNumber + "</span>"
-                    +   '<span class="almanac">' + alamanac + "</span>"
+                    +   '<span class="almanac"><ul>' + alamanac + "</ul></span>"
                     + '</div>'
                 )
             }

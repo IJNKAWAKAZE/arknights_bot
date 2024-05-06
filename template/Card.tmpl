@@ -59,14 +59,18 @@
             font-size: 30px;
         }
         #uid {
-            position: absolute;
-            color: #a3a3a2;
             background-color: rgba(0, 0, 0, 0.2);
-            left: 200px;
-            top: 100px;
             font-size: 17px;
             border-radius: 10px;
             padding: 0 5px;
+            display: inline-block;
+        }
+        #serverName {
+            background-color: rgba(0, 0, 0, 0.2);
+            font-size: 17px;
+            border-radius: 10px;
+            padding: 0 5px;
+            display: inline-block;
         }
         #resume {
             display: flex;
@@ -156,7 +160,10 @@
             <div style="font-size: 14px;">LV</div>
         </div>
         <div id="name">{{.Name}}</div>
-        <div id="uid">ID {{.Uid}}<span> {{.ServerName}}</span></div>
+        <div style="position: absolute;color: #a3a3a2;left: 200px;top: 100px;">
+            <div id="uid">ID {{.Uid}}</div>
+            <div id="serverName">{{.ServerName}}</div>
+        </div>
     </div>
     <div id="resume">
         <table style="padding: 0 20px;">

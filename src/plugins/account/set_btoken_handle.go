@@ -32,7 +32,7 @@ func SetBTokenHandle(update tgbotapi.Update) error {
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
-	sendMessage := tgbotapi.NewMessage(chatId, "请选择要解绑的角色")
+	sendMessage := tgbotapi.NewMessage(chatId, "请选择要设置的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
 	return nil

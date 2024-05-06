@@ -60,20 +60,20 @@ func Calendar(r *gin.Engine) {
 			if beginTime.Year() == time.Now().Year() {
 				title := c.Title
 				if _, bHas := calendarMap[c.Begin]; bHas {
-					calendarMap[c.Begin] = template.HTML(fmt.Sprintf("%s<br>开始 %s", calendarMap[c.Begin], title))
+					calendarMap[c.Begin] = template.HTML(fmt.Sprintf("%s<li>开始 %s</li>", calendarMap[c.Begin], title))
 				} else {
-					calendarMap[c.Begin] = template.HTML("开始 " + title)
+					calendarMap[c.Begin] = template.HTML("<li>开始 " + title + "</li>")
 				}
 				if _, eHas := calendarMap[c.End]; eHas {
-					calendarMap[c.End] = template.HTML(fmt.Sprintf("%s<br>结束 %s", calendarMap[c.End], title))
+					calendarMap[c.End] = template.HTML(fmt.Sprintf("%s<li>结束 %s</li>", calendarMap[c.End], title))
 				} else {
-					calendarMap[c.End] = template.HTML("结束 " + c.Title)
+					calendarMap[c.End] = template.HTML("<li>结束 " + c.Title + "</li>")
 				}
 				if c.Close != "" {
 					if _, cHas := calendarMap[c.Close]; cHas {
-						calendarMap[c.Close] = template.HTML(fmt.Sprintf("%s<br>关闭关卡 %s", calendarMap[c.Close], title))
+						calendarMap[c.Close] = template.HTML(fmt.Sprintf("%s<li>关闭关卡 %s</li>", calendarMap[c.Close], title))
 					} else {
-						calendarMap[c.Close] = template.HTML("关闭关卡" + c.Title)
+						calendarMap[c.Close] = template.HTML("<li>关闭关卡" + c.Title + "</li>")
 					}
 				}
 			}
