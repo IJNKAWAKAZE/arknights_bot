@@ -1,6 +1,7 @@
 package skland
 
 import (
+	bot "arknights_bot/config"
 	"encoding/json"
 	"github.com/starudream/go-lib/core/v2/gh"
 	"github.com/tidwall/gjson"
@@ -20,7 +21,7 @@ func GetPlayerInfo(uid string, account Account) (*PlayerData, Account, error) {
 	}
 
 	json.Unmarshal([]byte(gjson.Get(playerDatastr, "data").String()), &playerData)
-
+	bot.DBEngine.Exec("update user_player set player_name = ? where uid = ?", playerData.Status.Name, uid)
 	return playerData, account, nil
 }
 
