@@ -4,7 +4,6 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
-	"arknights_bot/utils/telebot"
 	"encoding/json"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
@@ -32,7 +31,7 @@ func SetTokenHandle(update tgbotapi.Update) error {
 		"手机用户且已登录森空岛直接点击此处获取token：[获取token](https://ss.xingzhige.com/skland.html)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
-	telebot.WaitMessage[chatId] = "resetToken"
+	tgbotapi.WaitMessage[chatId] = "resetToken"
 	return nil
 }
 
@@ -69,6 +68,6 @@ func ResetToken(update tgbotapi.Update) error {
 		sendMessage := tgbotapi.NewMessage(chatId, "重设token成功！")
 		bot.Arknights.Send(sendMessage)
 	}
-	delete(telebot.WaitMessage, chatId)
+	delete(tgbotapi.WaitMessage, chatId)
 	return nil
 }

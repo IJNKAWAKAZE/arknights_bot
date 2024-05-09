@@ -3,7 +3,6 @@ package account
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/utils"
-	"arknights_bot/utils/telebot"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"unicode/utf8"
@@ -40,7 +39,7 @@ func WaitResume(chatId, userId int64, uid string) {
 	setResume[userId] = uid
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入签名(最多30字)，输入null设置签名为空 /cancel 指令取消操作。")
 	bot.Arknights.Send(sendMessage)
-	telebot.WaitMessage[chatId] = "resume"
+	tgbotapi.WaitMessage[chatId] = "resume"
 }
 
 // Resume 设置签名
@@ -61,7 +60,7 @@ func Resume(update tgbotapi.Update) error {
 	bot.DBEngine.Exec("update user_player set resume = ? where user_number = ? and uid = ?", resume, userId, setResume[userId])
 	sendMessage := tgbotapi.NewMessage(chatId, "角色签名设置成功！")
 	bot.Arknights.Send(sendMessage)
-	delete(telebot.WaitMessage, chatId)
+	delete(tgbotapi.WaitMessage, chatId)
 	delete(setResume, userId)
 	return nil
 }

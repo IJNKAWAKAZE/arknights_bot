@@ -1,15 +1,12 @@
 package config
 
 import (
-	"arknights_bot/utils/telebot"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
 )
 
 var Arknights *tgbotapi.BotAPI
-
-var TeleBot *telebot.Bot
 
 func Bot() error {
 	token := viper.GetString("bot.token")

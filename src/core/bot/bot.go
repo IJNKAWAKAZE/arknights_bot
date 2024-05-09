@@ -11,90 +11,78 @@ import (
 	"arknights_bot/plugins/sign"
 	"arknights_bot/plugins/skin"
 	"arknights_bot/plugins/system"
-	"arknights_bot/utils/telebot"
-	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 )
 
 // Serve TG机器人阻塞监听
 func Serve() {
 	log.Println("机器人启动成功")
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	// 注册处理器
-	bot.TeleBot = &telebot.Bot{}
-	bot.TeleBot.InitMap()
-	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
-		return update.Message != nil && len(update.Message.NewChatMembers) > 0
-	}, gatekeeper.NewMemberHandle)
-	bot.TeleBot.NewProcessor(func(update tgbotapi.Update) bool {
-		return update.Message != nil && update.Message.LeftChatMember != nil
-	}, gatekeeper.LeftMemberHandle)
+	b := bot.Arknights.AddHandle()
+	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
+	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
 
 	// callback
-	bot.TeleBot.NewCallBackProcessor("verify", gatekeeper.CallBackData)
-	bot.TeleBot.NewCallBackProcessor("bind", account.ChoosePlayer)
-	bot.TeleBot.NewCallBackProcessor("unbind", account.UnbindPlayer)
-	bot.TeleBot.NewCallBackProcessor("resume", account.SetResume)
-	bot.TeleBot.NewCallBackProcessor("setbtoken", account.ChooseBTokenPlayer)
-	bot.TeleBot.NewCallBackProcessor("sign", sign.SignPlayer)
-	bot.TeleBot.NewCallBackProcessor("player", player.PlayerData)
-	bot.TeleBot.NewCallBackProcessor("report", system.Report)
+	b.NewCallBackProcessor("verify", gatekeeper.CallBackData)
+	b.NewCallBackProcessor("bind", account.ChoosePlayer)
+	b.NewCallBackProcessor("unbind", account.UnbindPlayer)
+	b.NewCallBackProcessor("resume", account.SetResume)
+	b.NewCallBackProcessor("setbtoken", account.ChooseBTokenPlayer)
+	b.NewCallBackProcessor("sign", sign.SignPlayer)
+	b.NewCallBackProcessor("player", player.PlayerData)
+	b.NewCallBackProcessor("report", system.Report)
 
 	// InlineQuery
-	bot.TeleBot.NewInlineQueryProcessor("干员", operator.InlineOperator)
-	bot.TeleBot.NewInlineQueryProcessor("皮肤", skin.InlineSkin)
-	bot.TeleBot.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
-	bot.TeleBot.NewInlineQueryProcessor("材料", material.InlineMaterial)
+	b.NewInlineQueryProcessor("干员", operator.InlineOperator)
+	b.NewInlineQueryProcessor("皮肤", skin.InlineSkin)
+	b.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
+	b.NewInlineQueryProcessor("材料", material.InlineMaterial)
 
 	// 私聊
-	bot.TeleBot.NewPrivateCommandProcessor("start", system.HelpHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("cancel", account.CancelHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("bind", account.BindHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
+	b.NewPrivateCommandProcessor("start", system.HelpHandle)
+	b.NewPrivateCommandProcessor("cancel", account.CancelHandle)
+	b.NewPrivateCommandProcessor("bind", account.BindHandle)
+	b.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
 	//bot.TeleBot.NewPrivateCommandProcessor("resume", account.ResumeHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("import_gacha", player.PlayerHandle)
-	bot.TeleBot.NewPrivateCommandProcessor("export_gacha", player.PlayerHandle)
+	b.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
+	b.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
+	b.NewPrivateCommandProcessor("import_gacha", player.PlayerHandle)
+	b.NewPrivateCommandProcessor("export_gacha", player.PlayerHandle)
 
 	// wait
-	bot.TeleBot.NewWaitMessageProcessor("setToken", account.SetToken)
-	bot.TeleBot.NewWaitMessageProcessor("bToken", account.SetBToken)
+	b.NewWaitMessageProcessor("setToken", account.SetToken)
+	b.NewWaitMessageProcessor("bToken", account.SetBToken)
 	//bot.TeleBot.NewWaitMessageProcessor("resume", account.Resume)
-	bot.TeleBot.NewWaitMessageProcessor("resetToken", account.ResetToken)
-	bot.TeleBot.NewWaitMessageProcessor("importGacha", player.PlayerHandle)
+	b.NewWaitMessageProcessor("resetToken", account.ResetToken)
+	b.NewWaitMessageProcessor("importGacha", player.PlayerHandle)
 
 	// 普通
-	bot.TeleBot.NewCommandProcessor("help", system.HelpHandle)
-	bot.TeleBot.NewCommandProcessor("ping", system.PingHandle)
-	bot.TeleBot.NewCommandProcessor("sign", sign.SignHandle)
-	bot.TeleBot.NewCommandProcessor("state", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("box", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("missing", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("card", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("base", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("gacha", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("operator", operator.OperatorHandle)
-	bot.TeleBot.NewCommandProcessor("skin", skin.SkinHandle)
-	bot.TeleBot.NewCommandProcessor("enemy", enemy.EnemyHandle)
-	bot.TeleBot.NewCommandProcessor("material", material.MaterialHandle)
-	bot.TeleBot.NewCommandProcessor("report", system.ReportHandle)
-	bot.TeleBot.NewCommandProcessor("quiz", system.QuizHandle)
-	bot.TeleBot.NewCommandProcessor("redeem", player.PlayerHandle)
-	bot.TeleBot.NewCommandProcessor("headhunt", system.HeadhuntHandle)
-	bot.TeleBot.NewCommandProcessor("calendar", system.CalendarHandle)
+	b.NewCommandProcessor("help", system.HelpHandle)
+	b.NewCommandProcessor("ping", system.PingHandle)
+	b.NewCommandProcessor("sign", sign.SignHandle)
+	b.NewCommandProcessor("state", player.PlayerHandle)
+	b.NewCommandProcessor("box", player.PlayerHandle)
+	b.NewCommandProcessor("missing", player.PlayerHandle)
+	b.NewCommandProcessor("card", player.PlayerHandle)
+	b.NewCommandProcessor("base", player.PlayerHandle)
+	b.NewCommandProcessor("gacha", player.PlayerHandle)
+	b.NewCommandProcessor("operator", operator.OperatorHandle)
+	b.NewCommandProcessor("skin", skin.SkinHandle)
+	b.NewCommandProcessor("enemy", enemy.EnemyHandle)
+	b.NewCommandProcessor("material", material.MaterialHandle)
+	b.NewCommandProcessor("report", system.ReportHandle)
+	b.NewCommandProcessor("quiz", system.QuizHandle)
+	b.NewCommandProcessor("redeem", player.PlayerHandle)
+	b.NewCommandProcessor("headhunt", system.HeadhuntHandle)
+	b.NewCommandProcessor("calendar", system.CalendarHandle)
 
 	// 图片
-	bot.TeleBot.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)
+	b.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)
 
 	// 权限
-	bot.TeleBot.NewCommandProcessor("update", system.UpdateHandle)
-	bot.TeleBot.NewCommandProcessor("news", system.NewsHandle)
-	bot.TeleBot.NewCommandProcessor("reg", system.RegulationHandle)
-	bot.TeleBot.NewCommandProcessor("clear", system.ClearHandle)
-	bot.TeleBot.NewCommandProcessor("kill", system.KillHandle)
-	log.Println("Run pulling")
-	bot.TeleBot.Run(bot.Arknights.GetUpdatesChan(u))
+	b.NewCommandProcessor("update", system.UpdateHandle)
+	b.NewCommandProcessor("news", system.NewsHandle)
+	b.NewCommandProcessor("reg", system.RegulationHandle)
+	b.NewCommandProcessor("clear", system.ClearHandle)
+	b.NewCommandProcessor("kill", system.KillHandle)
+	b.Run()
 }

@@ -3,7 +3,6 @@ package commandoperation
 import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/utils"
-	"arknights_bot/utils/telebot"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
@@ -11,7 +10,7 @@ var callBackMap = make(map[string]MultiuserCallBackFunction)
 var nextStepMap = make(map[int64]NextStepOperation)
 
 func AddNextStep(chatID int64, operation NextStepOperation, cmd string) bool {
-	telebot.WaitMessage[chatID] = cmd
+	tgbotapi.WaitMessage[chatID] = cmd
 	_, hasKey := nextStepMap[chatID]
 	if hasKey {
 		return false
@@ -22,7 +21,7 @@ func AddNextStep(chatID int64, operation NextStepOperation, cmd string) bool {
 }
 func HaveNextStep(chatID int64) bool {
 	_, hasKey := nextStepMap[chatID]
-	_, hasMainKey := telebot.WaitMessage[chatID]
+	_, hasMainKey := tgbotapi.WaitMessage[chatID]
 	if hasKey && !hasMainKey {
 		delete(nextStepMap, chatID)
 		hasKey = false

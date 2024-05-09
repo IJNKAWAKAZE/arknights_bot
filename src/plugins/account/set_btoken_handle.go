@@ -4,7 +4,6 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
-	"arknights_bot/utils/telebot"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
@@ -47,7 +46,7 @@ func WaitBToken(chatId, userId int64, uid string) {
 		"2\\.打开网址复制content中的 token  [获取token](https://web-api.hypergryph.com/account/info/ak-b)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
-	telebot.WaitMessage[chatId] = "bToken"
+	tgbotapi.WaitMessage[chatId] = "bToken"
 }
 
 // SetBToken 设置btoken
@@ -70,7 +69,7 @@ func SetBToken(update tgbotapi.Update) error {
 	bot.DBEngine.Exec("update user_player set b_token = ? where user_number = ? and uid = ?", token, userId, bToken[userId])
 	sendMessage := tgbotapi.NewMessage(chatId, "角色BToken设置成功！")
 	bot.Arknights.Send(sendMessage)
-	delete(telebot.WaitMessage, chatId)
+	delete(tgbotapi.WaitMessage, chatId)
 	delete(bToken, userId)
 	return nil
 }

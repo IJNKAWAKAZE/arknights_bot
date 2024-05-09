@@ -4,7 +4,6 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
-	"arknights_bot/utils/telebot"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
@@ -22,7 +21,7 @@ func BindHandle(update tgbotapi.Update) error {
 		"手机用户且已登录森空岛直接点击此处获取token：[获取token](https://ss.xingzhige.com/skland.html)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
-	telebot.WaitMessage[chatId] = "setToken"
+	tgbotapi.WaitMessage[chatId] = "setToken"
 	return nil
 }
 
@@ -70,7 +69,7 @@ func SetToken(update tgbotapi.Update) error {
 		}
 		bot.DBEngine.Table("user_account").Create(&userAccount)
 	}
-	delete(telebot.WaitMessage, chatId)
+	delete(tgbotapi.WaitMessage, chatId)
 	// 获取角色列表
 	players, err := skland.ArknightsPlayers(account.Skland)
 	if err != nil || len(players) == 0 {
@@ -98,7 +97,7 @@ func SetToken(update tgbotapi.Update) error {
 // CancelHandle 取消操作
 func CancelHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
-	delete(telebot.WaitMessage, chatId)
+	delete(tgbotapi.WaitMessage, chatId)
 	sendMessage := tgbotapi.NewMessage(chatId, "已取消操作")
 	bot.Arknights.Send(sendMessage)
 	return nil
