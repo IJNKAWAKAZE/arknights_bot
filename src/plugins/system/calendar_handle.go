@@ -17,7 +17,7 @@ func CalendarHandle(update tgbotapi.Update) error {
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/calendar", port), 0, 1)
+	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/calendar", port), 0, 1.5)
 	if pic == nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
 		sendMessage.ReplyToMessageID = messageId
@@ -28,9 +28,9 @@ func CalendarHandle(update tgbotapi.Update) error {
 		messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
 		return nil
 	}
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
-	sendPhoto.ReplyToMessageID = messageId
-	_, err := bot.Arknights.Send(sendPhoto)
+	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "calendar.jpg"})
+	sendDocument.ReplyToMessageID = messageId
+	_, err := bot.Arknights.Send(sendDocument)
 	if err != nil {
 		return err
 	}
