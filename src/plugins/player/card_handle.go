@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// CardHandle 我的名片
+// PlayerOperationCard 我的名片
 type PlayerOperationCard struct {
 	commandoperation.OperationAbstract
 }

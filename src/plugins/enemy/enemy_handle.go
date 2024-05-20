@@ -36,6 +36,9 @@ func EnemyHandle(update tgbotapi.Update) error {
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
+	if name == "多萝西" {
+		name = "多萝西(敌方)"
+	}
 	enemy := ParseEnemy(name)
 	if enemy.Name == "" {
 		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "未查询到此敌人，请输入正确的敌人名称。")

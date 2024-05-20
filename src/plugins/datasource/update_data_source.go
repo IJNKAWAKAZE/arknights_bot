@@ -133,7 +133,7 @@ func UpdateDataSourceRunner() {
 			}
 			continue
 		}
-		if name == "阿米娅(近卫)" {
+		if name == "阿米娅(近卫)" || name == "阿米娅(医疗)" {
 			// 立绘
 			paintingName := fmt.Sprintf("立绘_%s_2.png", name)
 			m := utils.Md5(paintingName)

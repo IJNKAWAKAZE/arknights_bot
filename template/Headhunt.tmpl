@@ -6,7 +6,7 @@
         body {
             margin: 0;
         }
-        .main {
+        #main {
             position: absolute;
             width: 1024px;
             height: 576px;
@@ -40,7 +40,7 @@
     </style>
 </head>
 <body>
-<div class="main">
+<div id="main">
     {{range .}}
     <div class="bg" style="background-image: url('/assets/headhunt/back_{{.Rarity}}.png');">
         <div class="operator">

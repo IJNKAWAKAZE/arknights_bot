@@ -1,0 +1,220 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <script src="/template/js/calendar.js"></script>
+    <title>日历</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        #main {
+            width: 1920px;
+            height: 1080px;
+        }
+        body {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        *,
+        *:before,
+        *:after {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+
+        body {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+        .container {
+            width: 100%;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            height: 100%;
+        }
+        .container > div {
+            height: 100%;
+        }
+        .container .aside {
+            color: #ffffff;
+            width: 10%;
+            padding: 15px 20px;
+        }
+        .container .main {
+            width: 90%;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        .timeNow {
+            text-align: center;
+        }
+        .timeNow span:first-child {
+            margin-right: 10px;
+        }
+        .aside {
+            background: #141516 url("assets/calendar/bg.png") no-repeat;
+            background-size: contain;
+        }
+        .datePicker {
+            height: calc(100% - 4.4rem);
+            overflow: hidden;
+        }
+        .dateUl {
+            height: 100%;
+            position: relative;
+        }
+        .dateUl .dateLi {
+            height: 100%;
+            position: absolute;
+            width: 100%;
+        }
+        .dayThead,
+        .dayTbody,
+        .dayTr {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+        }
+        .dayTbody {
+            height: calc(100% - 40px);
+        }
+        .dayTbody .dayTr {
+            width: 100%;
+            border-top: 1px solid #c8cacc;
+            height: calc(100% / 5);
+        }
+        .dayTbody .dayTr .dayTd {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            justify-content: space-around;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            width: calc(14.28571429%);
+        }
+        .dayTbody .dayTr .dayTd .almanac {
+            width: 100%;
+            word-wrap: break-word;
+            word-break:break-all;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .dayTbody .dayTr .dayTd span.dayNumber {
+            color: #000;
+            font-size: 1.2rem;
+        }
+        .dayTbody .dayTr .dayTd span.almanac {
+            color: #616161;
+            font-size: 1rem;
+        }
+        .dayTbody .dayTr .dayTd.date-reset span:first-child {
+            color: #e02d2d !important;
+        }
+        .dayTbody .dayTr .dayTd.date-prev span:first-child,
+        .dayTbody .dayTr .dayTd.date-next span:first-child,
+        .dayTbody .dayTr .dayTd.date-prev span:last-child,
+        .dayTbody .dayTr .dayTd.date-next span:last-child {
+            color: #bfbfbf !important;
+        }
+        .dayTbody .dayTr .dayTd.date-current {
+            background-color: cornflowerblue;
+        }
+        .dayTbody .dayTr .dayTd.date-current span:first-child,
+        .dayTbody .dayTr .dayTd.date-current span:last-child {
+            color: #ffffff !important;
+        }
+        .prev-month-html {
+            -webkit-transform: translate3d(-100%, 0, 0);
+            transform: translate3d(-100%, 0, 0);
+        }
+        .current-month-html {
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+        .next-month-html {
+            -webkit-transform: translate3d(100%, 0, 0);
+            transform: translate3d(100%, 0, 0);
+        }
+        .dayThead {
+            height: 40px;
+        }
+        .dayThead .dayTd {
+            line-height: 40px;
+            border: none;
+            color: #2c9bb3;
+        }
+        .dayThead .dayTd.active {
+            color: #e02d2d;
+        }
+        .dayTbody .dayTd:hover {
+            box-shadow: inset 0 0 4px #47D5FF;
+        }
+        .dayTd {
+            height: 100%;
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+            text-align: center;
+        }
+        #todayResource {
+            margin-top: 350px;
+        }
+    </style>
+</head>
+<body>
+<div id="main">
+    <div class="container">
+        <div class="aside">
+            <header class="timeNow"></header>
+            <div id="todayResource">
+                <h5>资源关卡开放</h5>
+                <div id="resource" style="font-size: 15px;">经验书、碳、红票</div>
+                <h5>芯片关卡开放</h5>
+                <div id="chip" style="font-size: 15px;">重装医疗、狙击术士</div>
+            </div>
+        </div>
+        <div class="main">
+            <div class="datePicker">
+                <div class="dayThead"></div>
+                <div class="dateUlContainer">
+                    <div class="dateUl">
+                        <div class="dateLi">
+                            <div class="dayTbody"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var defaults = {
+        holiday : {
+            {{range $key,$value:=.}}
+            {{$key}}: {{$value}},
+            {{end}}
+        }
+    }
+    var calendar = new Calendar(defaults);
+</script>
+</body>
+</html>

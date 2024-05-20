@@ -65,10 +65,10 @@ func ParseOperator(name string) Operator {
 	if op.Name != "" {
 		operator.OP = op
 		operator.Painting = op.Skins[0].Url
-		if op.Rarity > 2 {
+		if op.Rarity > 2 && len(op.Skins) > 1 {
 			operator.Painting = op.Skins[1].Url
 		}
-		if op.Name == "阿米娅(近卫)" {
+		if op.Name == "阿米娅(近卫)" || op.Name == "阿米娅(医疗)" {
 			operator.Painting = op.Skins[0].Url
 		}
 		doc, _ := goquery.NewDocumentFromReader(response.Body)

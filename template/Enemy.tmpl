@@ -6,7 +6,7 @@
         body {
             margin: 0;
         }
-        .main {
+        #main {
             background-color: #323332;
             width: 656px;
             height: auto;
@@ -52,7 +52,7 @@
     </style>
 </head>
 <body>
-<div class="main">
+<div id="main">
     <table id="base">
         <tr>
             <td colspan="8" id="name">{{.Name}}</td>
@@ -161,7 +161,7 @@
         </tr>
         {{range .Skills}}
         <tr>
-            <td style="white-space: nowrap;">{{.Name}}</td>
+            <td>{{.Name}}</td>
             <td>{{.SpInit}}</td>
             <td>{{.SpCost}}</td>
             <td style="white-space: nowrap;">{{.SkillType}}</td>

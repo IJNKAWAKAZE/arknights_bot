@@ -22,6 +22,7 @@ func Start() {
 	Enemy(r)
 	Material(r)
 	Recruit(r)
+	Calendar(r)
 	port := viper.GetString("http.port")
 	err := r.Run(":" + port)
 	if err != nil {

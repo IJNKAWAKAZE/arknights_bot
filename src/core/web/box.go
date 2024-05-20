@@ -59,6 +59,9 @@ func Box(r *gin.Engine) {
 				if c.CharID == "char_1001_amiya2" {
 					name = "阿米娅(近卫)"
 				}
+				if c.CharID == "char_1037_amiya3" {
+					name = "阿米娅(医疗)"
+				}
 				char := Char{
 					CharId:        c.CharID,
 					SkinId:        c.SkinID,
