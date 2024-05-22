@@ -21,16 +21,15 @@ func CallBackData(callBack tgbotapi.Update) error {
 
 	userId, _ := strconv.ParseInt(d[1], 10, 64)
 	chatId := callbackQuery.Message.Chat.ID
-	var joinMessageId int
+	joinMessageId, _ := strconv.Atoi(d[3])
 
 	if d[2] == "PASS" || d[2] == "BAN" {
-		joinMessageId, _ = strconv.Atoi(d[3])
 
 		if !bot.Arknights.IsAdmin(chatId, callbackQuery.From.ID) {
 			callbackQuery.Answer(true, "无使用权限！")
 			return nil
 		}
-		if verifySet.checkExistAndRemove(userId, chatId) {
+		if has, _ := verifySet.checkExistAndRemove(userId, chatId); has {
 			if d[2] == "PASS" {
 				err := pass(chatId, userId, callbackQuery, true)
 				return err
@@ -43,14 +42,12 @@ func CallBackData(callBack tgbotapi.Update) error {
 		return nil
 	}
 
-	joinMessageId, _ = strconv.Atoi(d[4])
-
 	if userId != callbackQuery.From.ID {
 		callbackQuery.Answer(true, "这不是你的验证！")
 		return nil
 	}
-	if verifySet.checkExistAndRemove(userId, chatId) {
-		if d[2] != d[3] {
+	if has, correct := verifySet.checkExistAndRemove(userId, chatId); has {
+		if d[2] != correct {
 			callbackQuery.Answer(true, "验证未通过，请一分钟后再试！")
 			ban(chatId, userId, callbackQuery, joinMessageId)
 			go unban(chatId, userId)
