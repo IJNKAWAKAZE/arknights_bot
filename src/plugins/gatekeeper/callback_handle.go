@@ -39,6 +39,8 @@ func CallBackData(callBack tgbotapi.Update) error {
 				ban(chatId, userId, callbackQuery, joinMessageId)
 			}
 		}
+
+		callbackQuery.Answer(false, "")
 		return nil
 	}
 
