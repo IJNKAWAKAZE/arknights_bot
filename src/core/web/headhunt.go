@@ -114,7 +114,7 @@ func randChar(rank int) string {
 		charUpName := config.PoolUP[rank]
 		getChar = randomChar(charUpName)
 	} else {
-		if config.PoolUP[7] != "" && rank == 6 {
+		if config.PoolUP[7] != "empty" && rank == 6 {
 			charRand := getRandomInt(1, 10000-charaProb)
 			if charRand <= (10000-charaProb)/6*5 {
 				charUpName := config.PoolUP[7]

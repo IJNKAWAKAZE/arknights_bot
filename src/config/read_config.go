@@ -13,7 +13,6 @@ var PoolUP = make(map[int]string)
 var Pool = make(map[int]string)
 
 var RecruitMissing map[string]string
-var RecruitTagMap = make(map[string]string)
 
 func init() {
 	// 设置配置文件的名字
@@ -47,14 +46,8 @@ func initData() {
 	Pool[4] = viper.GetString("headhunt.pool_4")
 	Pool[3] = viper.GetString("headhunt.pool_3")
 	jpMissing := viper.GetString("recruit.missing.jp")
-	recruitTags := viper.GetString("recruit.tags")
 	RecruitMissing = make(map[string]string)
-	RecruitTagMap = make(map[string]string)
 	for _, missing := range strings.Split(jpMissing, "/") {
 		RecruitMissing[missing] = missing
-	}
-	for _, tag := range strings.Split(recruitTags, "/") {
-		t := strings.Split(tag, "-")
-		RecruitTagMap[t[0]] = t[1]
 	}
 }
