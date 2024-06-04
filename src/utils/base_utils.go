@@ -253,8 +253,16 @@ func Screenshot(url string, waitTime float64, scale float64) []byte {
 		playwright.Install()
 		pw, _ = playwright.Run()
 	}
-	browser, _ := pw.Chromium.Launch()
+	browser, err := pw.Chromium.Launch()
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
 	page, _ := browser.NewPage(playwright.BrowserNewContextOptions{DeviceScaleFactor: &scale})
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
 	defer func() {
 		log.Println("关闭playwright")
 		page.Close()

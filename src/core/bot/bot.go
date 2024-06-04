@@ -77,6 +77,8 @@ func Serve() {
 
 	// 图片
 	b.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)
+	//回复
+	b.NewReplyMessageProcessor("/recruit", system.ReplyRecruitHandle)
 
 	// 权限
 	b.NewCommandProcessor("update", system.UpdateHandle)

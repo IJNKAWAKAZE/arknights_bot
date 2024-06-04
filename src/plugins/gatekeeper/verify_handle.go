@@ -56,8 +56,8 @@ func VerifyMember(message *tgbotapi.Message) {
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for i := 0; i < len(options); i += 2 {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("verify,%d,%s,%s,%d", userId, options[i].Name, correct.Name, messageId)),
-			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("verify,%d,%s,%s,%d", userId, options[i+1].Name, correct.Name, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("verify,%d,%s,%d", userId, options[i].Name, messageId)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("verify,%d,%s,%d", userId, options[i+1].Name, messageId)),
 		))
 	}
 	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
@@ -77,7 +77,7 @@ func VerifyMember(message *tgbotapi.Message) {
 		bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
 		return
 	}
-	verifySet.add(userId, chatId)
+	verifySet.add(userId, chatId, correct.Name)
 	go verify(chatId, userId, photo.MessageID, messageId)
 }
 
@@ -88,7 +88,7 @@ func unban(chatId, userId int64) {
 
 func verify(chatId int64, userId int64, messageId int, joinMessageId int) {
 	time.Sleep(time.Minute)
-	if !verifySet.checkExistAndRemove(userId, chatId) {
+	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}
 
