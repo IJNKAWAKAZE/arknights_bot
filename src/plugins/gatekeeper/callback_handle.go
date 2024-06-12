@@ -65,8 +65,6 @@ func CallBackData(callBack tgbotapi.Update) error {
 
 func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) error {
 	bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
-	val := fmt.Sprintf("verify%d%d", chatId, userId)
-	utils.RedisDelSetItem("verify", val)
 	callbackQuery.Delete()
 
 	if !adminPass {
@@ -91,8 +89,6 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, joinMessageId int) {
 	bot.Arknights.BanChatMember(chatId, userId)
 	callbackQuery.Delete()
-	val := fmt.Sprintf("verify%d%d", chatId, userId)
-	utils.RedisDelSetItem("verify", val)
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
 	bot.Arknights.Send(delJoinMessage)
 }
