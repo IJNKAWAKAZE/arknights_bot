@@ -64,6 +64,7 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/headhunt", Desc: "寻访模拟", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/recruit", Desc: "公招计算(图片附带)", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/calendar", Desc: "活动日历", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/depot", Desc: "我的仓库", Param: "", IsBind: true})
 
 		// 管理员指令
 		adminCmds = append(adminCmds, Cmd{Cmd: "/news", Desc: "开启/关闭动态推送", Param: "", IsBind: false})

@@ -15,6 +15,7 @@ var (
 		"missing":      PlayerOperationMissing{},
 		"base":         PlayerOperationBase{},
 		"redeem":       PlayerOperationRedeem{},
+		"depot":        PlayerOperationDepot{},
 	}
 )
 

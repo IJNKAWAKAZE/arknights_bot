@@ -49,6 +49,7 @@ This document provides an overview of the features available in the Arknights Te
 /redeem [code] - Redeem the code.
 /headhunt - Emulate current gacha pool.
 /recruit - Check the provided image to find what operator is possible to recruit with provided tags.
+/depot - Show the depot items.
 ```
 ## Admin Commands
 ```

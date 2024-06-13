@@ -1,0 +1,43 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>仓库</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        #main {
+            width: 850px;
+            background-color: #2e3031;
+        }
+        .item {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+        }
+        .icon {
+            width: 75px;
+        }
+        .count {
+            position: absolute;
+            color: white;
+            background-color: rgba(0, 0 ,0 ,0.5);
+            font-size: 12px;
+            margin-top: 50px;
+            margin-right: -30px;
+        }
+    </style>
+</head>
+<body>
+<div id="main">
+    {{range .}}
+    <div class="item">
+        <img class="icon" src="{{.Icon}}" onerror="this.src='assets/common/amiya.png'"/>
+        <div class="count">{{.Count}}</div>
+        <!--<div>{{.Name}}</div>-->
+    </div>
+    {{end}}
+</div>
+</body>
+</html>

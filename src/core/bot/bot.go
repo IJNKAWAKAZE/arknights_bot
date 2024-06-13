@@ -74,6 +74,7 @@ func Serve() {
 	b.NewCommandProcessor("redeem", player.PlayerHandle)
 	b.NewCommandProcessor("headhunt", system.HeadhuntHandle)
 	b.NewCommandProcessor("calendar", system.CalendarHandle)
+	b.NewCommandProcessor("depot", player.PlayerHandle)
 
 	// 图片
 	b.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)
