@@ -1,0 +1,63 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>干员练度</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        #main {
+            position: absolute;
+            background-color: #2e3031;
+        }
+        table {
+            color: white;
+        }
+        tr {
+            box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.14),0 1px 5px rgba(0,0,0,.12);
+        }
+        img {
+            width: 50px;
+        }
+        td {
+            vertical-align: middle;
+            text-align: center;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+<div id="main">
+    <table>
+        <tr>
+            <th>干员</th>
+            <th>等级</th>
+            <th>潜能</th>
+            <th>技能</th>
+            <th>模组</th>
+        </tr>
+        {{range .}}
+        <tr>
+            <td><div style="display: inline-flex;align-items: center;width: 100%;"><img src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Id}}.png" onerror="this.src='assets/common/amiya.png'"/><span>{{.Name}}</span></div></td>
+            <td style="display: inline-flex;align-items: center;flex-direction: column"><img src="/assets/box/Evolve_{{.EvolvePhase}}.png"/>LV{{.Level}}</td>
+            <td><img src="/assets/box/Potential_{{.PotentialRank}}.png"/></td>
+            <td>
+                {{if .Skills}}
+                {{range .Skills}}
+                <div style="display: inline-flex;align-items: center;flex-direction: column"><img src="https://web.hycdn.cn/arknights/game/assets/char_skill/{{.Id}}.png"/>LV{{.Level}}</div>
+                {{end}}
+                {{end}}
+            </td>
+            <td>
+                {{if .Equips}}
+                {{range .Equips}}
+                <div style="display: inline-flex;align-items: center;flex-direction: column"><img src="https://web.hycdn.cn/arknights/game/assets/uniequip/type/icon/{{.Id}}.png"/>LV{{.Level}}</div>
+                {{end}}
+                {{end}}
+            </td>
+        </tr>
+        {{end}}
+    </table>
+</div>
+</body>
+</html>

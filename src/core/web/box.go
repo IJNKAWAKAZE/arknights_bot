@@ -91,7 +91,13 @@ func Box(r *gin.Engine) {
 			if chars[i].EvolvePhase < chars[j].EvolvePhase {
 				return false
 			}
-			return chars[i].Level > chars[j].Level
+			if chars[i].Level > chars[j].Level {
+				return true
+			}
+			if chars[i].Level < chars[j].Level {
+				return false
+			}
+			return chars[i].Profession > chars[j].Profession
 		})
 
 		box.Name = playerData.Status.Name
