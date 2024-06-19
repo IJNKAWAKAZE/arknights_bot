@@ -22,7 +22,7 @@ func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount,
 	bot.Arknights.Send(sendAction)
 	messageId := message.MessageID
 	param := message.CommandArguments()
-	matched, _ := regexp.MatchString("^[0-9\\d]+(,[0-9\\d]+)*$", param)
+	matched, _ := regexp.MatchString("^[1-6](,[1-6])*$", param)
 	if param != "" && param != "all" && !matched {
 		sendMessage := tgbotapi.NewMessage(chatId, "参数错误")
 		sendMessage.ReplyToMessageID = messageId

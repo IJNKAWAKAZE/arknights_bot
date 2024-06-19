@@ -116,7 +116,7 @@ func filter(param string, rarity int) bool {
 	case "all":
 		return true
 	default:
-		matched, _ := regexp.MatchString("^[0-9\\d]+(,[0-9\\d]+)*$", param)
+		matched, _ := regexp.MatchString("^[1-6](,[1-6])*$", param)
 		if matched {
 			nums := strings.Split(param, ",")
 			for _, num := range nums {

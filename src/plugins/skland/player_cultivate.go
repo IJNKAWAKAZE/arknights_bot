@@ -54,3 +54,7 @@ func getPlayerCultivateCharacterStr(characterId string, skland AccountSkland) (s
 	req := SKR().SetQueryParams(gh.MS{"characterId": characterId})
 	return SklandRequestPlayerData(req, "GET", "/api/v1/game/cultivate/character", skland)
 }
+
+func getPlayerCultivateInfoStr(skland AccountSkland) (string, error) {
+	return SklandRequestPlayerData(SKR(), "GET", "/api/v1/game/cultivate/info", skland)
+}
