@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -129,7 +130,16 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	playerCard.Level = playerData.Status.Level
 	playerCard.RegTime = playerData.Status.RegisterTs
 	playerCard.MainStageProgress = playerData.StageInfoMap[playerData.Status.MainStageProgress].Code
-	playerCard.Avatar = playerData.Status.Secretary.SkinID
+	avatarId := playerData.Status.Avatar.Id
+	if strings.HasPrefix(avatarId, "char") {
+		playerCard.Avatar = fmt.Sprintf("https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/%s.png", url.QueryEscape(avatarId))
+	} else {
+		// 头像
+		paintingName := fmt.Sprintf("%s.png", strings.ToUpper(avatarId[:1])+avatarId[1:])
+		m := utils.Md5(paintingName)
+		path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
+		playerCard.Avatar = path + paintingName + "/80px-" + paintingName
+	}
 	playerCard.Resume = playerData.Status.Resume
 	playerCard.CharCnt = len(playerData.Chars)
 	playerCard.NationList = getNationList(playerData)
