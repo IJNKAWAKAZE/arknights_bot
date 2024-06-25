@@ -247,7 +247,7 @@ func MaterialInfo() {
 			material.Name = item.Get("itemName").String()
 			paintingName := fmt.Sprintf("道具_%s.png", material.Name)
 			m := utils.Md5(paintingName)
-			path := "https://prts.wiki" + fmt.Sprintf("/images/thumb/%s/%s/", m[:1], m[:2])
+			path := "https://media.prts.wiki" + fmt.Sprintf("/thumb/%s/%s/", m[:1], m[:2])
 			pic := path + paintingName + "/75px-" + paintingName
 			material.Icon = pic
 			material.ApExpect = fmt.Sprintf("%.1f", item.Get("apExpect").Float())
@@ -256,7 +256,7 @@ func MaterialInfo() {
 			if material.SecondaryItem != "" {
 				paintingName := fmt.Sprintf("道具_%s.png", material.SecondaryItem)
 				m := utils.Md5(paintingName)
-				path := "https://prts.wiki" + fmt.Sprintf("/images/thumb/%s/%s/", m[:1], m[:2])
+				path := "https://media.prts.wiki" + fmt.Sprintf("/thumb/%s/%s/", m[:1], m[:2])
 				pic := path + paintingName + "/75px-" + paintingName
 				material.SecondaryItemIcon = pic
 			}
