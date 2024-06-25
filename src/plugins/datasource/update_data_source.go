@@ -201,11 +201,11 @@ func UpdateDataSourceRunner() {
 	}
 
 	defer response.Body.Close()
-	utils.OperatorMap = make(map[string]utils.Operator)
-	utils.RecruitOperatorList = nil
+
 	utils.RedisSet("operatorList", json.MustMarshalString(operators), 0)
 	MaterialInfo()
 	log.Println("数据源更新完毕")
+	utils.DataNeedUpdate = true
 }
 
 func MaterialInfo() {

@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"arknights_bot/utils/suffixtree"
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -55,64 +57,110 @@ type Material struct {
 	StageEfficiency   string `json:"stageEfficiency"`   // 关卡效率
 }
 
-var OperatorMap = make(map[string]Operator)
-var RecruitOperatorList []Operator
+var operatorMap = make(map[string]Operator)
+var recruitOperatorList []Operator
+var DataNeedUpdate = true
+var operatorTree suffixtree.GST
+var itemTree suffixtree.GST
+var itemArray []string
+var enemyTree suffixtree.GST
+var enemyArray []pair
+var operators []Operator
 
 func GetOperators() []Operator {
-	var operators []Operator
-	operatorsJson := RedisGet("operatorList")
-	json.Unmarshal([]byte(operatorsJson), &operators)
+	updateData()
 	return operators
 }
-
-func GetOperatorByName(name string) Operator {
-	if len(OperatorMap) == 0 {
-		for _, op := range GetOperators() {
-			OperatorMap[op.Name] = op
+func updateData() {
+	if !DataNeedUpdate {
+		return
+	}
+	//operators
+	operatorsJson := RedisGet("operatorList")
+	json.Unmarshal([]byte(operatorsJson), &operators)
+	operatorMap = make(map[string]Operator)
+	operatorTree = suffixtree.NewGeneralizedSuffixTree()
+	for index, operator := range operators {
+		operatorMap[strings.ToLower(operator.Name)] = operator
+		operatorTree.Put(strings.ToLower(operator.Name), index)
+		if strings.Contains(operator.ObtainMethod, "公开招募") {
+			recruitOperatorList = append(recruitOperatorList, operator)
 		}
 	}
-	return OperatorMap[name]
-}
-
-func GetOperatorsByName(name string) []Operator {
-	var operatorList []Operator
-	for _, op := range GetOperators() {
-		if strings.Contains(strings.ToLower(op.Name), strings.ToLower(name)) {
-			operatorList = append(operatorList, op)
-		}
-	}
-	return operatorList
-}
-
-func GetRecruitOperatorList() []Operator {
-	if len(RecruitOperatorList) == 0 {
-		for _, op := range GetOperators() {
-			if strings.Contains(op.ObtainMethod, "公开招募") {
-				RecruitOperatorList = append(RecruitOperatorList, op)
+	//enemy
+	func() {
+		resultArray, resultTree := fetchEnemiesData()
+		enemyArray = resultArray
+		enemyTree = resultTree
+		defer func() {
+			if err := recover(); err != nil {
+				log.Fatal("Can not update enemy")
 			}
-		}
-	}
-	return RecruitOperatorList
+		}()
+	}()
+
+	//items
+	//gjson.Parse(RedisGet("materialMap"))
+	//TODO: check what is the materialMap
+	//set flag
+	DataNeedUpdate = false
+
 }
 
-func GetEnemiesByName(name string) map[string]string {
-	var enemyList = make(map[string]string)
+type pair struct {
+	a, b interface{}
+}
+
+func fetchEnemiesData() ([]pair, suffixtree.GST) {
+	makeurl := func(n string) string {
+		paintingName := fmt.Sprintf("头像_敌人_%s.png", n)
+		m := Md5(paintingName)
+		path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
+		return path + url.PathEscape(paintingName)
+	}
+	emeryTree := suffixtree.NewGeneralizedSuffixTree()
+	var newEnemyArray []pair
 	api := viper.GetString("api.enemy")
 	response, _ := http.Get(api)
 	e, _ := io.ReadAll(response.Body)
 	defer response.Body.Close()
 	enemyJson := gjson.ParseBytes(e)
-	for _, en := range enemyJson.Array() {
+	for index, en := range enemyJson.Array() {
 		n := en.Get("name").String()
-		if strings.Contains(strings.ToLower(n), strings.ToLower(name)) {
-			paintingName := fmt.Sprintf("头像_敌人_%s.png", n)
-			m := Md5(paintingName)
-			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
-			pic := path + url.PathEscape(paintingName)
-			enemyList[n] = pic
-		}
+		newEnemyArray = append(newEnemyArray, pair{n, makeurl(n)})
+		emeryTree.Put(strings.ToLower(n), index)
 	}
-	return enemyList
+	return newEnemyArray, emeryTree
+}
+func GetOperatorByName(name string) Operator {
+	updateData()
+	return operatorMap[name]
+}
+
+func GetOperatorsByName(name string) []Operator {
+	updateData()
+	var operatorList []Operator
+	for _, op := range operatorTree.Search(strings.ToLower(name), 0) {
+		print(operators[op].Name)
+		operatorList = append(operatorList, operators[op])
+	}
+	println()
+	return operatorList
+}
+
+func GetRecruitOperatorList() []Operator {
+	updateData()
+	return recruitOperatorList
+}
+
+func GetEnemiesByName(name string) map[string]string {
+	updateData()
+	var enemyMap = make(map[string]string)
+	for _, index := range enemyTree.Search(strings.ToLower(name), 0) {
+		a := enemyArray[index]
+		enemyMap[a.a.(string)] = a.b.(string)
+	}
+	return enemyMap
 }
 
 func GetItemsByName(name string) map[string]string {
