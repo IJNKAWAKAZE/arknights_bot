@@ -140,7 +140,7 @@ func GetOperatorByName(name string) Operator {
 func GetOperatorsByName(name string) []Operator {
 	updateData()
 	var operatorList []Operator
-	for _, op := range operatorTree.Search(strings.ToLower(name), 0) {
+	for _, op := range operatorTree.Search(strings.ToLower(name)) {
 		print(operators[op].Name)
 		operatorList = append(operatorList, operators[op])
 	}
@@ -156,7 +156,7 @@ func GetRecruitOperatorList() []Operator {
 func GetEnemiesByName(name string) map[string]string {
 	updateData()
 	var enemyMap = make(map[string]string)
-	for _, index := range enemyTree.Search(strings.ToLower(name), 0) {
+	for _, index := range enemyTree.Search(strings.ToLower(name)) {
 		a := enemyArray[index]
 		enemyMap[a.a.(string)] = a.b.(string)
 	}

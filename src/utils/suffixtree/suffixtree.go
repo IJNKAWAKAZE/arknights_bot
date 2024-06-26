@@ -2,6 +2,7 @@
 package suffixtree
 
 import (
+	"fmt"
 	"strings"
 	"unicode/utf8"
 )
@@ -13,12 +14,12 @@ type generalizedSuffixTree struct {
 
 // Search search for the given word within the GST and returns at most the given number of matches.
 // numElments <= 0 get all matches
-func (t *generalizedSuffixTree) Search(word string, numElements int) []int {
+func (t *generalizedSuffixTree) Search(word string) []int {
 	node := t.searchNode(word)
 	if node == nil {
 		return nil
 	}
-	return node.getData(numElements)
+	return node.getData()
 }
 
 // searchNode returns the tree node (if present) that corresponds to the given string.
@@ -281,6 +282,17 @@ func NewGeneralizedSuffixTree() GST {
 	t.root = newNode()
 	t.activeLeaf = t.root
 	return t
+}
+
+// should only be used for debugging
+func PrintTree(n GST) {
+	printnode("\t", n.root)
+}
+func printnode(flag string, n *node) {
+	for _, e := range n.edges {
+		fmt.Printf("%s %s %v \n", flag, string(e.label), e.node.data)
+		printnode(flag+"\t-", e.node)
+	}
 }
 
 type GST = *generalizedSuffixTree

@@ -31,40 +31,15 @@ type node struct {
  * @param numElements the number of results to return. Use <=0 to get all
  * @return the first numElements associated to this node and children
  */
-func (n *node) getData(numElements int) (ret []int) {
+func (n *node) getData() (ret []int) {
 
-	if numElements > 0 {
-		if numElements > len(n.data) {
-			numElements -= len(n.data)
-			ret = n.data
-		} else {
-			ret = n.data[:numElements]
-			return
-		}
-	} else {
-		ret = n.data
-	}
+	ret = n.data
 
 	// need to get more matches from child nodes. This is what may waste time
 	for _, edge := range n.edges {
-		data := edge.node.getData(numElements)
-	NEXTIDX:
-		for _, idx := range data {
-			for _, v := range ret {
-				if v == idx {
-					continue NEXTIDX
-				}
-			}
+		data := edge.node.getData()
+		ret = append(ret, data...)
 
-			if numElements > 0 {
-				numElements--
-			}
-			ret = append(ret, idx)
-		}
-
-		if numElements == 0 {
-			break
-		}
 	}
 
 	return
