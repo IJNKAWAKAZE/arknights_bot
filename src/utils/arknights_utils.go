@@ -101,7 +101,8 @@ func updateData() {
 
 	//items
 	//gjson.Parse(RedisGet("materialMap"))
-	//TODO: check what is the materialMap
+	//NOT_TODO: check what is the materialMap 暂时不做因为yj还没搞出太多材料
+	// 当前复杂度还能用
 	//set flag
 	DataNeedUpdate = false
 

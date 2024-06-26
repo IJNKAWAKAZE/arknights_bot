@@ -41,7 +41,6 @@ func (n *node) getData() (ret []int) {
 		ret = append(ret, data...)
 
 	}
-
 	return
 }
 
