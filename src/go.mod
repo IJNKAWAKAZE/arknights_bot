@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/ijnkawakaze/telegram-bot-api v1.0.7
+	github.com/ijnkawakaze/telegram-bot-api v1.0.8
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/playwright-community/playwright-go v0.2000.1
 	github.com/robfig/cron/v3 v3.0.0
