@@ -245,18 +245,19 @@ func MaterialInfo() {
 			material.ZoneName = item.Get("zoneName").String()
 			material.Code = item.Get("stageCode").String()
 			material.Name = item.Get("itemName").String()
-			paintingName := fmt.Sprintf("道具_%s.png", material.Name)
+			// 图标
+			paintingName := fmt.Sprintf("道具_带框_%s.png", material.Name)
 			m := utils.Md5(paintingName)
-			path := "https://media.prts.wiki" + fmt.Sprintf("/thumb/%s/%s/", m[:1], m[:2])
+			path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			pic := path + paintingName + "/75px-" + paintingName
 			material.Icon = pic
 			material.ApExpect = fmt.Sprintf("%.1f", item.Get("apExpect").Float())
 			material.KnockRating = fmt.Sprintf("%.1f%%", item.Get("knockRating").Float()*100)
 			material.SecondaryItem = itemMap[item.Get("secondaryItemId").String()]
 			if material.SecondaryItem != "" {
-				paintingName := fmt.Sprintf("道具_%s.png", material.SecondaryItem)
+				paintingName := fmt.Sprintf("道具_带框_%s.png", material.SecondaryItem)
 				m := utils.Md5(paintingName)
-				path := "https://media.prts.wiki" + fmt.Sprintf("/thumb/%s/%s/", m[:1], m[:2])
+				path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				pic := path + paintingName + "/75px-" + paintingName
 				material.SecondaryItemIcon = pic
 			}
