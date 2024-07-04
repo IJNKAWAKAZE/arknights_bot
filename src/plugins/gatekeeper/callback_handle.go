@@ -25,7 +25,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 
 	if d[2] == "PASS" || d[2] == "BAN" {
 
-		if !bot.Arknights.IsAdminWithPermissions(chatId, callbackQuery.From.ID, 16) {
+		if !bot.Arknights.IsAdminWithPermissions(chatId, callbackQuery.From.ID, tgbotapi.AdminCanRestrictMembers) {
 			callbackQuery.Answer(true, "无使用权限！")
 			return nil
 		}
