@@ -49,16 +49,11 @@
             width: 20px;
         }
         #pb {
-            position: absolute;
-            bottom: 20%;
-            left: 10px;
             width: 300px;
+            margin-bottom: 5%;
             background-color: rgba(239,238,239,0.4);
         }
         #names {
-            position: absolute;
-            bottom: 5%;
-            left: 10px;
             background-color: rgba(239,238,239,0.4);
         }
         #names table {
@@ -160,44 +155,46 @@
         </tr>
         {{end}}
     </table>
-    <table id="pb">
-        <tr>
-            <td style="width: 75px" rowspan="2">
-                <img src="/assets/box/{{.OP.Profession}}.png"/>
-            </td>
-            <td><img src="/assets/box/Rarity_{{.OP.Rarity}}.png"/></td>
-        </tr>
-        <tr>
-            <td><h3>{{.ProfessionBranch.Name}}</h3></td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                {{.OP.Tags}}
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2"><h5>{{.ProfessionBranch.Desc}}</h5></td>
-        </tr>
-    </table>
-    <div id="names">
-        <table>
+    <div style="position: absolute;bottom: 5%;left: 10px;">
+        <table id="pb">
             <tr>
-                <td>
-                    <h1>{{.OP.Name}}</h1>
+                <td style="width: 75px" rowspan="2">
+                    <img src="/assets/box/{{.OP.Profession}}.png"/>
                 </td>
-                <td>
-                    {{.AttackRange}}
+                <td><img src="/assets/box/Rarity_{{.OP.Rarity}}.png"/></td>
+            </tr>
+            <tr>
+                <td><h3>{{.ProfessionBranch.Name}}</h3></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    {{.OP.Tags}}
                 </td>
             </tr>
             <tr>
-                <td>
-                    <h3 id="code" style="display: inline">{{.OP.Code}}</h3>
-                </td>
-                <td>
-                    <h3 style="display: inline">{{.OP.NameEn}}</h3>
-                </td>
+                <td colspan="2"><h5>{{.ProfessionBranch.Desc}}</h5></td>
             </tr>
         </table>
+        <div id="names">
+            <table>
+                <tr>
+                    <td>
+                        <h1>{{.OP.Name}}</h1>
+                    </td>
+                    <td>
+                        {{.AttackRange}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h3 id="code" style="display: inline">{{.OP.Code}}</h3>
+                    </td>
+                    <td>
+                        <h3 style="display: inline">{{.OP.NameEn}}</h3>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
     <div style="float: right">
         <table id="talent">
