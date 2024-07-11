@@ -75,9 +75,11 @@ func updateData() {
 	if !DataNeedUpdate {
 		return
 	}
+	// 重置
+	recruitOperatorList = nil
+	
 	//operators
 	operatorsJson := RedisGet("operatorList")
-operators=nil
 	json.Unmarshal([]byte(operatorsJson), &operators)
 	operatorMap = make(map[string]Operator)
 	operatorTree = suffixtree.NewGeneralizedSuffixTree()
