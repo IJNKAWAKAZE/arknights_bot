@@ -75,6 +75,9 @@ func updateData() {
 	if !DataNeedUpdate {
 		return
 	}
+	// 重置
+	recruitOperatorList = nil
+	
 	//operators
 	operatorsJson := RedisGet("operatorList")
 	json.Unmarshal([]byte(operatorsJson), &operators)
