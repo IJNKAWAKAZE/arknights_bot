@@ -83,7 +83,9 @@ func VerifyMember(message *tgbotapi.Message) {
 
 func unban(chatId, userId int64) {
 	time.Sleep(time.Minute)
-	bot.Arknights.UnbanChatMember(chatId, userId)
+	if bot.Arknights.GetChatMemberStatus(chatId, userId) != tgbotapi.KICKED {
+		bot.Arknights.UnbanChatMember(chatId, userId)
+	}
 }
 
 func verify(chatId int64, userId int64, messageId int, joinMessageId int) {
@@ -102,5 +104,7 @@ func verify(chatId int64, userId int64, messageId int, joinMessageId int) {
 	bot.Arknights.Send(delMsg)
 	time.Sleep(time.Minute)
 	// 解除用户封禁
-	bot.Arknights.UnbanChatMember(chatId, userId)
+	if bot.Arknights.GetChatMemberStatus(chatId, userId) != tgbotapi.KICKED {
+		bot.Arknights.UnbanChatMember(chatId, userId)
+	}
 }

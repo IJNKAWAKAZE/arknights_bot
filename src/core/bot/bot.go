@@ -61,6 +61,7 @@ func Serve() {
 	b.NewCommandProcessor("sign", sign.SignHandle)
 	b.NewCommandProcessor("state", player.PlayerHandle)
 	b.NewCommandProcessor("box", player.PlayerHandle)
+	b.NewCommandProcessor("box_detail", player.PlayerHandle)
 	b.NewCommandProcessor("missing", player.PlayerHandle)
 	b.NewCommandProcessor("card", player.PlayerHandle)
 	b.NewCommandProcessor("base", player.PlayerHandle)
@@ -74,6 +75,7 @@ func Serve() {
 	b.NewCommandProcessor("redeem", player.PlayerHandle)
 	b.NewCommandProcessor("headhunt", system.HeadhuntHandle)
 	b.NewCommandProcessor("calendar", system.CalendarHandle)
+	b.NewCommandProcessor("depot", player.PlayerHandle)
 
 	// 图片
 	b.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)

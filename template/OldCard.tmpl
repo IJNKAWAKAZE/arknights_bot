@@ -92,7 +92,7 @@
 <div id="main">
     <table id="card" style="border-spacing: 0">
         <tr>
-            <td rowspan="3" style="width: 100px"><img class="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png" onerror="this.src='assets/common/amiya.png'"/></td>
+            <td rowspan="3" style="width: 100px"><img class="avatar" src="{{.Avatar}}" onerror="this.src='assets/common/amiya.png'"/></td>
             <td colspan="2" style="color: white">{{.Name}}&nbsp&nbsp({{.ServerName}})</td>
         </tr>
         <tr>

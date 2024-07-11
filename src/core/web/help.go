@@ -46,6 +46,8 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "我的干员(默认6星)", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "所有干员", Param: "all", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "对应星级干员", Param: "5,6", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/box_detail", Desc: "干员详情(默认6星)", Param: "", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/box_detail", Desc: "对应星级干员", Param: "5", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "未获取干员(默认6星)", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "所有未获取干员", Param: "all", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "对应星级未获取干员", Param: "5,6", IsBind: true})
@@ -64,6 +66,7 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/headhunt", Desc: "寻访模拟", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/recruit", Desc: "公招计算(图片附带)", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/calendar", Desc: "活动日历", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/depot", Desc: "我的仓库", Param: "", IsBind: true})
 
 		// 管理员指令
 		adminCmds = append(adminCmds, Cmd{Cmd: "/news", Desc: "开启/关闭动态推送", Param: "", IsBind: false})

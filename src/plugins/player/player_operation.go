@@ -8,6 +8,7 @@ var (
 	playerOperationMap = map[string]commandoperation.OperationI{
 		"state":        PlayerOperationState{},
 		"box":          PlayerOperationBox{},
+		"box_detail":   PlayerOperationBoxDetail{},
 		"gacha":        PlayerOperationGacha{},
 		"card":         PlayerOperationCard{},
 		"import_gacha": PlayerOperationImportS1{},
@@ -15,6 +16,7 @@ var (
 		"missing":      PlayerOperationMissing{},
 		"base":         PlayerOperationBase{},
 		"redeem":       PlayerOperationRedeem{},
+		"depot":        PlayerOperationDepot{},
 	}
 )
 

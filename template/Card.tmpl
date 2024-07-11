@@ -153,7 +153,7 @@
     </div>
     <div id="nameCard">
         <img style="top: 30px; left: 30px;" src="/assets/card/headicon_back.png"/>
-        <img id="avatar" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .Avatar}}.png" onerror="this.src='assets/common/amiya.png'"/>
+        <img id="avatar" src="{{.Avatar}}" onerror="this.src='assets/common/amiya.png'"/>
         <div id="level">
             <img style="position: absolute;" src="/assets/card/level_bg.png"/>
             <div style="font-size: 20px;padding-top: 8px;">{{.Level}}</div>

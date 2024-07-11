@@ -91,7 +91,13 @@ func Box(r *gin.Engine) {
 			if chars[i].EvolvePhase < chars[j].EvolvePhase {
 				return false
 			}
-			return chars[i].Level > chars[j].Level
+			if chars[i].Level > chars[j].Level {
+				return true
+			}
+			if chars[i].Level < chars[j].Level {
+				return false
+			}
+			return chars[i].Profession > chars[j].Profession
 		})
 
 		box.Name = playerData.Status.Name
@@ -110,7 +116,7 @@ func filter(param string, rarity int) bool {
 	case "all":
 		return true
 	default:
-		matched, _ := regexp.MatchString("^[0-9\\d]+(,[0-9\\d]+)*$", param)
+		matched, _ := regexp.MatchString("^[1-6](,[1-6])*$", param)
 		if matched {
 			nums := strings.Split(param, ",")
 			for _, num := range nums {

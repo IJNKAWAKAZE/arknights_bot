@@ -27,6 +27,8 @@ import (
 
 var ctx = context.Background()
 
+var browser playwright.Browser
+
 type GroupInvite struct {
 	Id           string    `json:"id" gorm:"primaryKey"`
 	GroupName    string    `json:"groupName"`
@@ -45,6 +47,7 @@ type GroupJoined struct {
 	GroupName   string    `json:"groupName"`
 	GroupNumber int64     `json:"groupNumber"`
 	News        int64     `json:"news"`
+	Reg         int       `json:"reg"`
 	CreateTime  time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime  time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark      string    `json:"remark"`
@@ -74,6 +77,7 @@ func SaveJoined(message *tgbotapi.Message) {
 		GroupName:   message.Chat.Title,
 		GroupNumber: message.Chat.ID,
 		News:        0,
+		Reg:         -1,
 	}
 
 	bot.DBEngine.Table("group_joined").Create(&groupJoined)
@@ -247,27 +251,23 @@ func RedisDelSetItem(key string, val string) {
 
 // Screenshot 屏幕截图
 func Screenshot(url string, waitTime float64, scale float64) []byte {
-	pw, err := playwright.Run()
-	if err != nil {
-		log.Println("未检测到playwright，开始自动安装...")
-		playwright.Install()
-		pw, _ = playwright.Run()
-	}
-	browser, err := pw.Chromium.Launch()
-	if err != nil {
-		log.Println(err)
-		return nil
+	if browser == nil {
+		pw, err := playwright.Run()
+		if err != nil {
+			log.Println("未检测到playwright，开始自动安装...")
+			playwright.Install()
+			pw, _ = playwright.Run()
+		}
+		browser, err = pw.Chromium.Launch()
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
 	}
 	page, _ := browser.NewPage(playwright.BrowserNewContextOptions{DeviceScaleFactor: &scale})
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
 	defer func() {
 		log.Println("关闭playwright")
 		page.Close()
-		browser.Close()
-		pw.Stop()
 	}()
 	log.Println("开始进行截图...")
 	page.Goto(url, playwright.PageGotoOptions{

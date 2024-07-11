@@ -1,0 +1,38 @@
+
+services:
+  mysql:
+    container_name: mysql
+    image: mariadb
+    restart: always
+    environment: 
+      MYSQL_DATABASE: 'DATABASE_NAME'
+      MYSQL_USER: 'DATABASE_USER'
+      MYSQL_PASSWORD: 'DATABASE_PASSWORD'
+      MYSQL_ROOT_PASSWORD: 'ROOT_PASSWORD'
+    volumes:
+      - ./database:/var/lib/mysql
+  redis:
+    container_name: redis
+    image: bitnami/redis
+    restart: always
+    environment:
+      REDIS_PASSWORD: 'REDIS_PASSWORD'
+    volumes:
+      - redis-data:/bitnami/redis/data
+  arkbot:
+    container_name: arkbot
+    build: ./
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ./assets:/root/assets
+      - ./template:/root/template
+      - ./arknights.yaml:/root/arknights.yaml
+      - playwright:/root/.cache/ms-playwright-go
+      - ms-playwright:/root/.cache/ms-playwright
+volumes:
+  redis-data:
+  playwright:
+  ms-playwright:

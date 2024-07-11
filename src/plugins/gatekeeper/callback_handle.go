@@ -25,7 +25,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 
 	if d[2] == "PASS" || d[2] == "BAN" {
 
-		if !bot.Arknights.IsAdmin(chatId, callbackQuery.From.ID) {
+		if !bot.Arknights.IsAdminWithPermissions(chatId, callbackQuery.From.ID, tgbotapi.AdminCanRestrictMembers) {
 			callbackQuery.Answer(true, "无使用权限！")
 			return nil
 		}
@@ -70,9 +70,10 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 	if !adminPass {
 		// 新人发送box提醒
 		text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, callbackQuery.From.FullName()), callbackQuery.From.ID)
-		id := utils.RedisGet(fmt.Sprintf("regulation:%d", chatId))
-		if id != "" {
-			text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%s)", callbackQuery.Message.Chat.UserName, id)
+		var joined utils.GroupJoined
+		utils.GetJoinedByChatId(chatId).Scan(&joined)
+		if joined.Reg != -1 {
+			text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%d)", callbackQuery.Message.Chat.UserName, joined.Reg)
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, text)
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
