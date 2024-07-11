@@ -47,6 +47,7 @@ type GroupJoined struct {
 	GroupName   string    `json:"groupName"`
 	GroupNumber int64     `json:"groupNumber"`
 	News        int64     `json:"news"`
+	Reg         int       `json:"reg"`
 	CreateTime  time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime  time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark      string    `json:"remark"`
@@ -76,6 +77,7 @@ func SaveJoined(message *tgbotapi.Message) {
 		GroupName:   message.Chat.Title,
 		GroupNumber: message.Chat.ID,
 		News:        0,
+		Reg:         -1,
 	}
 
 	bot.DBEngine.Table("group_joined").Create(&groupJoined)
