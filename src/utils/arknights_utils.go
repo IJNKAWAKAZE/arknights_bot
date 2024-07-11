@@ -77,6 +77,7 @@ func updateData() {
 	}
 	//operators
 	operatorsJson := RedisGet("operatorList")
+operators=nil
 	json.Unmarshal([]byte(operatorsJson), &operators)
 	operatorMap = make(map[string]Operator)
 	operatorTree = suffixtree.NewGeneralizedSuffixTree()
