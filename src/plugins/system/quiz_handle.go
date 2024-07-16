@@ -116,7 +116,7 @@ func QuizHandle(update tgbotapi.Update) error {
 		}
 		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	}
-	if param == "v" {
+	if param == "vc" || param == "vj" {
 		var voiceList []string
 		resp, err := http.Get(viper.GetString("api.wiki") + correct.Name + "/语音记录")
 		if err != nil {
@@ -132,6 +132,9 @@ func QuizHandle(update tgbotapi.Update) error {
 		voiceType := "voice/"
 		if strings.Contains(voiceBase, "中文-普通话") {
 			voiceType = "voice_cn/"
+		}
+		if param == "vj" {
+			voiceType = "voice/"
 		}
 		doc.Find(".voice-data-item").Each(func(i int, selection *goquery.Selection) {
 			voiceIndex, _ := selection.Attr("data-voice-index")
