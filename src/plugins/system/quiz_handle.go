@@ -6,9 +6,13 @@ import (
 	"arknights_bot/utils"
 	"crypto/rand"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
+	"github.com/spf13/viper"
 	"log"
 	"math/big"
+	"net/http"
+	"strings"
 )
 
 // QuizHandle 云玩家检测
@@ -97,6 +101,7 @@ func QuizHandle(update tgbotapi.Update) error {
 	correct := options[r.Int64()]
 
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.GetImg(correct.ThumbURL)})
+	pollText := "请选择上图干员的正确名字"
 	if param == "h" {
 		pic := utils.ImgConvert(correct.ThumbURL)
 		if pic == nil {
@@ -111,13 +116,46 @@ func QuizHandle(update tgbotapi.Update) error {
 		}
 		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	}
-	photo, err := bot.Arknights.Send(sendPhoto)
-	if err != nil {
-		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
-		return nil
+	if param == "v" {
+		var voiceList []string
+		resp, err := http.Get(viper.GetString("api.wiki") + correct.Name + "/语音记录")
+		if err != nil {
+			return err
+		}
+		doc, err := goquery.NewDocumentFromReader(resp.Body)
+		if err != nil {
+			return err
+		}
+		d := doc.Find("#voice-data-root")
+		voiceKey, _ := d.Attr("data-voice-key")
+		voiceBase, _ := d.Attr("data-voice-base")
+		voiceType := "voice/"
+		if strings.Contains(voiceBase, "中文-普通话") {
+			voiceType = "voice_cn/"
+		}
+		doc.Find(".voice-data-item").Each(func(i int, selection *goquery.Selection) {
+			voiceIndex, _ := selection.Attr("data-voice-index")
+			voiceList = append(voiceList, voiceIndex)
+		})
+		vr, _ := rand.Int(rand.Reader, big.NewInt(int64(len(voiceList))))
+		voiceUrl := tgbotapi.FileURL(viper.GetString("api.voice_data") + voiceType + voiceKey + "/cn_" + fmt.Sprintf("%03s", voiceList[vr.Int64()]) + ".mp3")
+		sendVoice := tgbotapi.NewVoice(chatId, voiceUrl)
+		v, err := bot.Arknights.Send(sendVoice)
+		if err != nil {
+			log.Printf("发送语音失败：%s，原因：%s", voiceUrl, err.Error())
+			return nil
+		}
+		messagecleaner.AddDelQueue(chatId, v.MessageID, 300)
+		pollText = "听语音选择干员的正确名字"
+	} else {
+		photo, err := bot.Arknights.Send(sendPhoto)
+		if err != nil {
+			log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
+			return nil
+		}
+		messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
 	}
-	messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
-	poll := tgbotapi.NewPoll(chatId, "请选择上图干员的正确名字")
+	poll := tgbotapi.NewPoll(chatId, pollText)
 	poll.IsAnonymous = false
 	poll.Type = "quiz"
 	poll.CorrectOptionID = r.Int64()
