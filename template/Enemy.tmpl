@@ -129,8 +129,10 @@
             <td>{{.DamageRes}}</td>
             <td>{{.HpRecovery}}</td>
         </tr>
+    </table>
+    <table class="level">
         <tr>
-            <td colspan="6" style="font-size: 20px;font-weight: 600;">异常抗性</td>
+            <td colspan="7" style="font-size: 20px;font-weight: 600;">异常抗性</td>
         </tr>
         <tr>
             <td>沉默免疫</td>
@@ -139,6 +141,7 @@
             <td>冻结免疫</td>
             <td>浮空免疫</td>
             <td>战栗免疫</td>
+            <td>恐惧免疫</td>
         </tr>
         <tr>
             <td>{{.Silence}}</td>
@@ -147,7 +150,10 @@
             <td>{{.Freeze}}</td>
             <td>{{.Float}}</td>
             <td>{{.Tremble}}</td>
+            <td>{{.Fear}}</td>
         </tr>
+    </table>
+    <table class="level">
         {{if .Skills}}
         <tr>
             <td colspan="6" style="font-size: 20px;font-weight: 600;">技能</td>

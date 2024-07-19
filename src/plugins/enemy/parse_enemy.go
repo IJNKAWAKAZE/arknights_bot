@@ -46,6 +46,7 @@ type Level struct {
 	Freeze     string        `json:"freeze"`     // 冻结免疫
 	Float      string        `json:"float"`      // 浮空免疫
 	Tremble    string        `json:"tremble"`    // 战栗免疫
+	Fear       string        `json:"fear"`       // 恐惧抗性
 	Skills     []Skill       `json:"skills"`     // 技能
 	Talent     template.HTML `json:"talent"`     // 天赋&能力
 }
@@ -107,16 +108,18 @@ func ParseEnemy(name string) Enemy {
 					level.ElementRes = strings.ReplaceAll(td5.Eq(3).Text(), "\n", "")
 					level.DamageRes = strings.ReplaceAll(td5.Eq(4).Text(), "\n", "")
 					level.HpRecovery = strings.ReplaceAll(td5.Eq(5).Text(), "\n", "")
-
-					td8 := trs.Eq(8).Find("td")
-					level.Silence = strings.ReplaceAll(td8.Eq(0).Text(), "\n", "")
-					level.Dizziness = strings.ReplaceAll(td8.Eq(1).Text(), "\n", "")
-					level.Sleep = strings.ReplaceAll(td8.Eq(2).Text(), "\n", "")
-					level.Freeze = strings.ReplaceAll(td8.Eq(3).Text(), "\n", "")
-					level.Float = strings.ReplaceAll(td8.Eq(4).Text(), "\n", "")
-					level.Tremble = strings.ReplaceAll(td8.Eq(5).Text(), "\n", "")
 				}
 				if j == 1 {
+					tds := selection.Find("tr").Eq(2).Find("td")
+					level.Silence = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
+					level.Dizziness = strings.ReplaceAll(tds.Eq(1).Text(), "\n", "")
+					level.Sleep = strings.ReplaceAll(tds.Eq(2).Text(), "\n", "")
+					level.Freeze = strings.ReplaceAll(tds.Eq(3).Text(), "\n", "")
+					level.Float = strings.ReplaceAll(tds.Eq(4).Text(), "\n", "")
+					level.Tremble = strings.ReplaceAll(tds.Eq(5).Text(), "\n", "")
+					level.Fear = strings.ReplaceAll(tds.Eq(6).Text(), "\n", "")
+				}
+				if j == 2 {
 					var skills []Skill
 					selection.Find("tr").Each(func(k int, selection *goquery.Selection) {
 						if !selection.Children().First().Is("th") {
@@ -165,16 +168,18 @@ func ParseEnemy(name string) Enemy {
 					level.ElementRes = strings.ReplaceAll(td5.Eq(3).Text(), "\n", "")
 					level.DamageRes = strings.ReplaceAll(td5.Eq(4).Text(), "\n", "")
 					level.HpRecovery = strings.ReplaceAll(td5.Eq(5).Text(), "\n", "")
-
-					td8 := trs.Eq(8).Find("td")
-					level.Silence = strings.ReplaceAll(td8.Eq(0).Text(), "\n", "")
-					level.Dizziness = strings.ReplaceAll(td8.Eq(1).Text(), "\n", "")
-					level.Sleep = strings.ReplaceAll(td8.Eq(2).Text(), "\n", "")
-					level.Freeze = strings.ReplaceAll(td8.Eq(3).Text(), "\n", "")
-					level.Float = strings.ReplaceAll(td8.Eq(4).Text(), "\n", "")
-					level.Tremble = strings.ReplaceAll(td8.Eq(5).Text(), "\n", "")
 				}
 				if j == 1 {
+					tds := selection.Find("tr").Eq(2).Find("td")
+					level.Silence = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
+					level.Dizziness = strings.ReplaceAll(tds.Eq(1).Text(), "\n", "")
+					level.Sleep = strings.ReplaceAll(tds.Eq(2).Text(), "\n", "")
+					level.Freeze = strings.ReplaceAll(tds.Eq(3).Text(), "\n", "")
+					level.Float = strings.ReplaceAll(tds.Eq(4).Text(), "\n", "")
+					level.Tremble = strings.ReplaceAll(tds.Eq(5).Text(), "\n", "")
+					level.Fear = strings.ReplaceAll(tds.Eq(6).Text(), "\n", "")
+				}
+				if j == 2 {
 					var skills []Skill
 					selection.Find("tr").Each(func(k int, selection *goquery.Selection) {
 						if !selection.Children().First().Is("th") {
@@ -223,16 +228,18 @@ func ParseEnemy(name string) Enemy {
 					level.ElementRes = strings.ReplaceAll(td5.Eq(3).Text(), "\n", "")
 					level.DamageRes = strings.ReplaceAll(td5.Eq(4).Text(), "\n", "")
 					level.HpRecovery = strings.ReplaceAll(td5.Eq(5).Text(), "\n", "")
-
-					td8 := trs.Eq(8).Find("td")
-					level.Silence = strings.ReplaceAll(td8.Eq(0).Text(), "\n", "")
-					level.Dizziness = strings.ReplaceAll(td8.Eq(1).Text(), "\n", "")
-					level.Sleep = strings.ReplaceAll(td8.Eq(2).Text(), "\n", "")
-					level.Freeze = strings.ReplaceAll(td8.Eq(3).Text(), "\n", "")
-					level.Float = strings.ReplaceAll(td8.Eq(4).Text(), "\n", "")
-					level.Tremble = strings.ReplaceAll(td8.Eq(5).Text(), "\n", "")
 				}
 				if j == 1 {
+					tds := selection.Find("tr").Eq(2).Find("td")
+					level.Silence = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
+					level.Dizziness = strings.ReplaceAll(tds.Eq(1).Text(), "\n", "")
+					level.Sleep = strings.ReplaceAll(tds.Eq(2).Text(), "\n", "")
+					level.Freeze = strings.ReplaceAll(tds.Eq(3).Text(), "\n", "")
+					level.Float = strings.ReplaceAll(tds.Eq(4).Text(), "\n", "")
+					level.Tremble = strings.ReplaceAll(tds.Eq(5).Text(), "\n", "")
+					level.Fear = strings.ReplaceAll(tds.Eq(6).Text(), "\n", "")
+				}
+				if j == 2 {
 					var skills []Skill
 					selection.Find("tr").Each(func(k int, selection *goquery.Selection) {
 						if !selection.Children().First().Is("th") {
