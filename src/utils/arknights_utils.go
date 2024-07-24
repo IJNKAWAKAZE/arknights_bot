@@ -144,8 +144,13 @@ func GetOperatorByName(name string) Operator {
 func GetOperatorsByName(name string) []Operator {
 	updateData()
 	var operatorList []Operator
+	var set = make(map[int]bool)
 	for _, op := range operatorTree.Search(strings.ToLower(name)) {
-		operatorList = append(operatorList, operators[op])
+		_, contain := set[op]
+		if !contain {
+			set[op] = true
+			operatorList = append(operatorList, operators[op])
+		}
 	}
 	return operatorList
 }
