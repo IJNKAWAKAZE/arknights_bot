@@ -302,13 +302,23 @@ func Md5(str string) string {
 }
 
 func GetImg(url string) []byte {
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Println("获取图片失败", err)
-		return nil
+	var resp *http.Response
+	var pic []byte
+	times := 0
+	for times < 3 {
+		resp1, err := http.Get(url)
+		resp = resp1
+		if err != nil {
+			log.Println("获取图片失败", err)
+			times++
+			continue
+		}
+		pic, _ = io.ReadAll(resp.Body)
+		break
 	}
-	pic, _ := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	return pic
 }
 

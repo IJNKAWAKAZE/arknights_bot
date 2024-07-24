@@ -77,7 +77,7 @@ func updateData() {
 	}
 	// 重置
 	recruitOperatorList = nil
-	
+
 	//operators
 	operatorsJson := RedisGet("operatorList")
 	json.Unmarshal([]byte(operatorsJson), &operators)
@@ -138,17 +138,15 @@ func fetchEnemiesData() ([]pair, suffixtree.GST) {
 }
 func GetOperatorByName(name string) Operator {
 	updateData()
-	return operatorMap[name]
+	return operatorMap[strings.ToLower(name)]
 }
 
 func GetOperatorsByName(name string) []Operator {
 	updateData()
 	var operatorList []Operator
 	for _, op := range operatorTree.Search(strings.ToLower(name)) {
-		print(operators[op].Name)
 		operatorList = append(operatorList, operators[op])
 	}
-	println()
 	return operatorList
 }
 
