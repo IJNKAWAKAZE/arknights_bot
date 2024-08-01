@@ -14,6 +14,7 @@ sticker:
 api:
   user_agent: Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36 EdgA/118.0.2088.66
   wiki: https://prts.wiki/w/
+  voice_data: https://torappu.prts.wiki/assets/audio/
   enemy: https://prts.wiki/index.php?title=%E6%95%8C%E4%BA%BA%E4%B8%80%E8%A7%88%2F%E6%95%B0%E6%8D%AE&action=raw
   item: https://backend.yituliu.cn/item/value?expCoefficient=0.625
   stage_result: https://backend.yituliu.cn/stage/result?expCoefficient=0.625
