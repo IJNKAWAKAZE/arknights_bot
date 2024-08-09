@@ -89,7 +89,7 @@ func UpdateDataSourceRunner() {
 	response, _ = http.Get(api + "时装回廊")
 	doc, _ = goquery.NewDocumentFromReader(response.Body)
 	doc.Find(".skinwrapper").Each(func(i int, selection *goquery.Selection) {
-		img, _ := url.QueryUnescape(selection.Find(".charimg").First().Nodes[0].FirstChild.Attr[0].Val)
+		img, _ := url.QueryUnescape(selection.Find(".charimg").First().Nodes[0].FirstChild.Attr[1].Val)
 		skinName := selection.Find(".charnameEn").Text()
 		compileRegex := regexp.MustCompile("_(.*?)_")
 		match := compileRegex.FindStringSubmatch(img)
