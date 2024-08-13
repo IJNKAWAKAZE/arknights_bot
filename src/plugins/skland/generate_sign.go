@@ -14,9 +14,9 @@ import (
 )
 
 func addSign(r *resty.Request, method, path string, skland AccountSkland) {
-	ts := strconv.FormatInt(time.Now().Unix(), 10)
+	ts := strconv.FormatInt(time.Now().Unix()-7, 10)
 
-	headers := signHeaders{Platform: "1", Timestamp: ts, DId: "743a446c83032899", VName: "1.5.1"}
+	headers := signHeaders{Platform: "1", Timestamp: ts, DId: "743a446c83032899", VName: "1.21.0"}
 
 	r.SetHeaders(tom(headers))
 

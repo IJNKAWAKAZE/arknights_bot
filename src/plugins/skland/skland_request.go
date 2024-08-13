@@ -2,6 +2,7 @@ package skland
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"github.com/starudream/go-lib/resty/v2"
 )
 
@@ -22,7 +23,12 @@ func (t *SKBaseResp[T]) String() string {
 }
 
 func SKR() *resty.Request {
-	return resty.R().SetHeader("User-Agent", "Skland/1.5.1 (com.hypergryph.skland; build:100501001; Android 33; ) Okhttp/4.11.0").SetHeader("Accept-Encoding", "gzip")
+	r := resty.New()
+	proxy := viper.GetString("proxy")
+	if proxy != "" {
+		r.SetProxy(proxy)
+	}
+	return r.R().SetHeader("User-Agent", "Skland/1.21.0 (com.hypergryph.skland; build:102100065; iOS 17.6.0; ) Alamofire/5.7.1").SetHeader("Accept-Encoding", "gzip").SetHeader("Connection", "close").SetHeader("Content-Type", "application/json")
 }
 
 func SklandRequest[T any](r *resty.Request, method, path string, vs ...any) (t T, _ error) {
