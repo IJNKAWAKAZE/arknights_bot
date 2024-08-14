@@ -38,9 +38,12 @@ func SklandRequest[T any](r *resty.Request, method, path string, vs ...any) (t T
 			addSign(r, method, path, v)
 		}
 	}
-
+	resp, respErr := r.SetError(&SKBaseResp[any]{}).SetResult(&SKBaseResp[T]{}).Execute(method, sklandAddr+path)
+	if resp.StatusCode() == 405 {
+		return t, fmt.Errorf("[skland] %s", "服务器被墙了！")
+	}
 	res, err := resty.ParseResp[*SKBaseResp[any], *SKBaseResp[T]](
-		r.SetError(&SKBaseResp[any]{}).SetResult(&SKBaseResp[T]{}).Execute(method, sklandAddr+path),
+		resp, respErr,
 	)
 	if err != nil {
 		return t, fmt.Errorf("[skland] %w", err)
