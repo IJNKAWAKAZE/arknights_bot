@@ -45,14 +45,6 @@ func HR() *resty.Request {
 	return resty.R().SetHeader("User-Agent", viper.GetString("api.user_agent")).SetHeader("Accept-Encoding", "gzip")
 }
 
-func IsUnauthorized(err error) bool {
-	re, ok := resty.AsRespErr(err)
-	if ok {
-		return re.StatusCode() == 401
-	}
-	return false
-}
-
 func HypergryphRequest[T any](r *resty.Request, method, path string) (t T, _ error) {
 	res, err := resty.ParseResp[*HBaseResp[any], *HBaseResp[T]](
 		r.SetError(&HBaseResp[any]{}).SetResult(&HBaseResp[T]{}).Execute(method, HypergryphAddr+path),

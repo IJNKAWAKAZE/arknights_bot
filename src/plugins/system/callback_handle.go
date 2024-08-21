@@ -2,6 +2,7 @@ package system
 
 import (
 	bot "arknights_bot/config"
+	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
 	"strings"
@@ -28,6 +29,7 @@ func Report(callBack tgbotapi.Update) error {
 	}
 
 	if d[1] == "BAN" {
+		fmt.Printf("在群组 %s 用户 %s 封禁了 %d", callbackQuery.Message.Chat.Title, callbackQuery.From.FullName(), target)
 		banChatMemberConfig := tgbotapi.BanChatMemberConfig{
 			ChatMemberConfig: tgbotapi.ChatMemberConfig{
 				ChatID: chatId,
