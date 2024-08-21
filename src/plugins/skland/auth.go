@@ -17,15 +17,6 @@ type GenCredByCodeData struct {
 	Token  string `json:"token"`
 }
 
-type User struct {
-	User *UserInfo `json:"user"`
-}
-
-type UserInfo struct {
-	Id       string `json:"id"`
-	Nickname string `json:"nickname"`
-}
-
 type AuthRefreshData struct {
 	Token string `json:"token"`
 }
@@ -94,25 +85,17 @@ func authLoginByCode(code string) (*GenCredByCodeData, error) {
 
 // RefreshToken 刷新 token
 func RefreshToken(account Account) (Account, error) {
-	_, err := GetUser(account.Skland)
-	if err == nil {
-		return account, nil
-	}
-	if !IsUnauthorized(err) {
-		return account, fmt.Errorf("get user error: %w", err)
-	}
-
-	res, err := authRefresh(account.Skland.Cred)
+	b, err := CheckUser(account.Skland.Cred)
 	if err != nil {
-		return account, fmt.Errorf("auth refresh error: %w", err)
+		return account, err
 	}
-	account.Skland.Token = res.Token
-
-	_, err = GetUser(account.Skland)
-	if err != nil {
-		if !IsUnauthorized(err) {
-			return account, fmt.Errorf("get user error: %w", err)
+	if b {
+		res, err := authRefresh(account.Skland.Cred)
+		if err != nil {
+			return account, fmt.Errorf("auth refresh error: %w", err)
 		}
+		account.Skland.Token = res.Token
+	} else {
 		err = CheckToken(account.Hypergryph.Token)
 		if err != nil {
 			return account, err
@@ -127,9 +110,16 @@ func RefreshToken(account Account) (Account, error) {
 	return account, nil
 }
 
-// GetUser 获取用户信息
-func GetUser(skland AccountSkland) (*User, error) {
-	return SklandRequest[*User](SKR(), "GET", "/api/v1/user", skland)
+// CheckUser 检查用户cred有效性
+func CheckUser(cred string) (bool, error) {
+	res, err := SKR().SetHeader("cred", cred).Get(sklandAddr + "/api/v1/user/check")
+	if err != nil {
+		return false, err
+	}
+	if res.StatusCode() == 401 {
+		return false, fmt.Errorf("[skland] %s", "用户未登录！")
+	}
+	return true, nil
 }
 
 // CheckToken 检查token有效性
