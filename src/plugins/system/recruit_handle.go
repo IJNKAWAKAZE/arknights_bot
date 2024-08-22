@@ -47,6 +47,7 @@ func recruit(chatId int64, messageId int, param, fileId string) error {
 	}
 	for _, result := range results {
 		if bot.RecruitTagMap[result] != "" {
+			log.Println(bot.RecruitTagMap[result])
 			tags = append(tags, bot.RecruitTagMap[result])
 		}
 	}
@@ -63,9 +64,9 @@ func recruit(chatId int64, messageId int, param, fileId string) error {
 	bot.Arknights.Send(sendAction)
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s&client=%s", port, strings.Join(tags, " "), param), 0, 1.5)
-	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
+	pic, err := utils.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s&client=%s", port, strings.Join(tags, " "), param), 0, 1.5)
+	if err != nil {
+		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ReplyToMessageID = messageId
 		_, err := bot.Arknights.Send(sendMessage)
 		if err != nil {

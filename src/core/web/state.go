@@ -12,6 +12,8 @@ import (
 
 func State(r *gin.Engine) {
 	r.GET("/state", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/State.tmpl")
 		var userAccount account.UserAccount
 		var skAccount skland.Account
@@ -25,11 +27,13 @@ func State(r *gin.Engine) {
 		playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		playStatistic, _, err := skland.GetPlayerStatistic(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 

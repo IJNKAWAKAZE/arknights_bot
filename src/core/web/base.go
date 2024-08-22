@@ -144,6 +144,8 @@ func init() {
 
 func Base(r *gin.Engine) {
 	r.GET("/base", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Base.tmpl")
 		var playerBase PlayerBase
 		var userAccount account.UserAccount
@@ -158,6 +160,7 @@ func Base(r *gin.Engine) {
 		playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 

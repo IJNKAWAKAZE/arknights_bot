@@ -117,7 +117,7 @@ func CheckUser(cred string) (bool, error) {
 		return false, err
 	}
 	if res.StatusCode() == 401 {
-		return false, fmt.Errorf("[skland] %s", "用户未登录！")
+		return false, fmt.Errorf("无效的cred，请重新登录获取。")
 	}
 	return true, nil
 }

@@ -32,6 +32,8 @@ type Char struct {
 
 func Box(r *gin.Engine) {
 	r.GET("/box", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Box.tmpl")
 		var box BoxInfo
 		var userAccount account.UserAccount
@@ -47,6 +49,7 @@ func Box(r *gin.Engine) {
 		playerData, _, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 

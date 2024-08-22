@@ -7,7 +7,6 @@ import (
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
-	"log"
 )
 
 // MaterialHandle 材料查询
@@ -52,19 +51,15 @@ func MaterialHandle(update tgbotapi.Update) error {
 	bot.Arknights.Send(sendAction)
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/material?name=%s", port, name), 0, 1.5)
-	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成图片失败，请重试。")
+	pic, err := utils.Screenshot(fmt.Sprintf("http://localhost:%s/material?name=%s", port, name), 0, 1.5)
+	if err != nil {
+		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
 		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
-	_, err := bot.Arknights.Send(sendPhoto)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
+	bot.Arknights.Send(sendPhoto)
 	return nil
 }

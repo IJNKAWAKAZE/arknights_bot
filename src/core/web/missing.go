@@ -25,6 +25,8 @@ type MissingChar struct {
 
 func Missing(r *gin.Engine) {
 	r.GET("/missing", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Missing.tmpl")
 		var missingInfo MissingInfo
 		param := c.Query("param")
@@ -40,6 +42,7 @@ func Missing(r *gin.Engine) {
 		playerData, _, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 

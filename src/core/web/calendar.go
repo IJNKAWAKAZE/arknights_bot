@@ -1,6 +1,7 @@
 package web
 
 import (
+	"arknights_bot/utils"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
@@ -23,16 +24,20 @@ type CalendarInfo struct {
 
 func Calendar(r *gin.Engine) {
 	r.GET("/calendar", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Calendar.tmpl")
 		var calendarMap = make(map[string]template.HTML)
 		resp, err := http.Get(viper.GetString("api.calendar"))
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		text := doc.Text()

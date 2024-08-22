@@ -43,6 +43,8 @@ func init() {
 
 func Depot(r *gin.Engine) {
 	r.GET("/depot", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Depot.tmpl")
 		var depotItems []DepotItem
 		var userAccount account.UserAccount
@@ -57,6 +59,7 @@ func Depot(r *gin.Engine) {
 		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		for _, item := range playerCultivate.Items {

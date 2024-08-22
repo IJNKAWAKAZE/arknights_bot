@@ -74,24 +74,32 @@ func init() {
 
 func Card(r *gin.Engine) {
 	r.GET("/card", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Card.tmpl")
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		sklandId := c.Query("sklandId")
 		playerCard, err := cardData(userId, sklandId, uid)
 		if err != nil {
+			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		c.HTML(http.StatusOK, "Card.tmpl", playerCard)
 	})
 
 	r.GET("/oldCard", func(c *gin.Context) {
+		utils.WebC = make(chan error, 10)
+		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/OldCard.tmpl")
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		sklandId := c.Query("sklandId")
 		playerCard, err := cardData(userId, sklandId, uid)
 		if err != nil {
+			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		c.HTML(http.StatusOK, "OldCard.tmpl", playerCard)
@@ -113,7 +121,7 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount)
 	if err != nil {
 		log.Println(err)
-		return playerCard, fmt.Errorf("获取名片信息失败")
+		return playerCard, err
 	}
 
 	charMap := playerData.CharInfoMap
