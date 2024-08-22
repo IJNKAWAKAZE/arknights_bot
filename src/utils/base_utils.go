@@ -28,7 +28,7 @@ import (
 
 var ctx = context.Background()
 
-var WebC chan error
+var WebC = make(chan error, 10)
 
 var browser playwright.Browser
 
@@ -276,8 +276,9 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 	page.Goto(url, playwright.PageGotoOptions{
 		WaitUntil: playwright.WaitUntilStateNetworkidle,
 	})
-	e := <-WebC
-	if e != nil {
+	if len(WebC) > 0 {
+		e := <-WebC
+		close(WebC)
 		return nil, e
 	}
 	page.WaitForTimeout(waitTime)

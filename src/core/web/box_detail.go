@@ -34,8 +34,6 @@ type Equip struct {
 
 func BoxDetail(r *gin.Engine) {
 	r.GET("/boxDetail", func(c *gin.Context) {
-		utils.WebC = make(chan error, 10)
-		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/BoxDetail.tmpl")
 		var detailList []Detail
 		var userAccount account.UserAccount

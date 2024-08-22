@@ -43,8 +43,6 @@ func init() {
 
 func Depot(r *gin.Engine) {
 	r.GET("/depot", func(c *gin.Context) {
-		utils.WebC = make(chan error, 10)
-		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Depot.tmpl")
 		var depotItems []DepotItem
 		var userAccount account.UserAccount

@@ -144,8 +144,6 @@ func init() {
 
 func Base(r *gin.Engine) {
 	r.GET("/base", func(c *gin.Context) {
-		utils.WebC = make(chan error, 10)
-		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Base.tmpl")
 		var playerBase PlayerBase
 		var userAccount account.UserAccount

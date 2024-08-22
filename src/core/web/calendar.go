@@ -24,8 +24,6 @@ type CalendarInfo struct {
 
 func Calendar(r *gin.Engine) {
 	r.GET("/calendar", func(c *gin.Context) {
-		utils.WebC = make(chan error, 10)
-		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Calendar.tmpl")
 		var calendarMap = make(map[string]template.HTML)
 		resp, err := http.Get(viper.GetString("api.calendar"))

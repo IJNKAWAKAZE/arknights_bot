@@ -74,8 +74,6 @@ func init() {
 
 func Card(r *gin.Engine) {
 	r.GET("/card", func(c *gin.Context) {
-		utils.WebC = make(chan error, 10)
-		defer close(utils.WebC)
 		r.LoadHTMLFiles("./template/Card.tmpl")
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
