@@ -278,7 +278,6 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 	})
 	if len(WebC) > 0 {
 		e := <-WebC
-		close(WebC)
 		return nil, e
 	}
 	page.WaitForTimeout(waitTime)

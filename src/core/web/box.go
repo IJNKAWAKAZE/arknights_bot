@@ -4,6 +4,7 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -103,6 +104,10 @@ func Box(r *gin.Engine) {
 
 		box.Name = playerData.Status.Name
 		box.Chars = chars
+		if len(box.Chars) == 0 {
+			utils.WebC <- fmt.Errorf("无符合干员")
+			return
+		}
 
 		c.HTML(http.StatusOK, "Box.tmpl", box)
 	})
