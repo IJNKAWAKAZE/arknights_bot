@@ -53,7 +53,7 @@ func SetToken(update tgbotapi.Update) error {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
 		userAccount.SklandToken = account.Skland.Token
-		userAccount.SklandToken = account.Skland.Cred
+		userAccount.SklandCred = account.Skland.Cred
 		bot.DBEngine.Table("user_account").Save(&userAccount)
 	} else {
 		// 不存在 新增账户

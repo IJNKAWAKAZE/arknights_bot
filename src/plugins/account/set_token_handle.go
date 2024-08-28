@@ -63,7 +63,7 @@ func ResetToken(update tgbotapi.Update) error {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
 		userAccount.SklandToken = account.Skland.Token
-		userAccount.SklandToken = account.Skland.Cred
+		userAccount.SklandCred = account.Skland.Cred
 		bot.DBEngine.Table("user_account").Save(&userAccount)
 		sendMessage := tgbotapi.NewMessage(chatId, "重设token成功！")
 		bot.Arknights.Send(sendMessage)

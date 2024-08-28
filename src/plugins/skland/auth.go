@@ -4,6 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"fmt"
 	"github.com/starudream/go-lib/core/v2/gh"
+	"log"
 )
 
 type GrantAppData struct {
@@ -86,26 +87,29 @@ func authLoginByCode(code string) (*GenCredByCodeData, error) {
 // RefreshToken 刷新 token
 func RefreshToken(account Account) (Account, error) {
 	b, err := CheckUser(account.Skland.Cred)
-	if err != nil {
-		return account, err
-	}
-	if b {
+	if err == nil {
 		res, err := authRefresh(account.Skland.Cred)
 		if err != nil {
 			return account, fmt.Errorf("auth refresh error: %w", err)
 		}
 		account.Skland.Token = res.Token
 	} else {
-		err = CheckToken(account.Hypergryph.Token)
-		if err != nil {
+		// 是cred失效尝试重新登录
+		if b {
+			log.Println("cred失效，尝试重新登录。")
+			err = CheckToken(account.Hypergryph.Token)
+			if err != nil {
+				return account, err
+			}
+			account, err = Login(account.Hypergryph.Token)
+			if err != nil {
+				return account, err
+			}
+			// 更新token
+			bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
+		} else {
 			return account, err
 		}
-		account, err = Login(account.Hypergryph.Token)
-		if err != nil {
-			return account, err
-		}
-		// 更新token
-		bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
 	}
 	return account, nil
 }
@@ -117,9 +121,9 @@ func CheckUser(cred string) (bool, error) {
 		return false, err
 	}
 	if res.StatusCode() == 401 {
-		return false, fmt.Errorf("无效的cred，请重新登录获取。")
+		return true, fmt.Errorf("无效的cred，请重新登录获取。")
 	}
-	return true, nil
+	return false, nil
 }
 
 // CheckToken 检查token有效性
