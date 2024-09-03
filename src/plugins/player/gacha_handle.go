@@ -63,7 +63,7 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 	chars, err := skland.GetPlayerGacha(token, channelId)
 	if err != nil {
 		log.Println(err)
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("token可能已失效请[重设token](https://t.me/%s)。", viper.GetString("bot.name")))
+		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)
