@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -26,6 +27,8 @@ import (
 )
 
 var ctx = context.Background()
+
+var WebC = make(chan error, 10)
 
 var browser playwright.Browser
 
@@ -250,7 +253,7 @@ func RedisDelSetItem(key string, val string) {
 }
 
 // Screenshot 屏幕截图
-func Screenshot(url string, waitTime float64, scale float64) []byte {
+func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 	if browser == nil {
 		pw, err := playwright.Run()
 		if err != nil {
@@ -261,7 +264,7 @@ func Screenshot(url string, waitTime float64, scale float64) []byte {
 		browser, err = pw.Chromium.Launch()
 		if err != nil {
 			log.Println(err)
-			return nil
+			return nil, fmt.Errorf("playerwright启动失败")
 		}
 	}
 	page, _ := browser.NewPage(playwright.BrowserNewContextOptions{DeviceScaleFactor: &scale})
@@ -273,18 +276,22 @@ func Screenshot(url string, waitTime float64, scale float64) []byte {
 	page.Goto(url, playwright.PageGotoOptions{
 		WaitUntil: playwright.WaitUntilStateNetworkidle,
 	})
+	if len(WebC) > 0 {
+		e := <-WebC
+		return nil, e
+	}
 	page.WaitForTimeout(waitTime)
 	locator, _ := page.Locator("#main")
 	if v, _ := locator.IsVisible(); !v {
 		log.Println("元素未加载取消截图操作")
-		return nil
+		return nil, fmt.Errorf("元素未加载")
 	}
 	screenshot, err := locator.Screenshot(playwright.LocatorScreenshotOptions{Type: playwright.ScreenshotTypeJpeg})
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("截图失败")
 	}
 	log.Println("截图完成...")
-	return screenshot
+	return screenshot, nil
 }
 
 // ReverseSlice 反转切片

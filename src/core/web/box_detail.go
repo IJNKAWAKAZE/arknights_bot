@@ -49,11 +49,13 @@ func BoxDetail(r *gin.Engine) {
 		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		playerData, _, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 

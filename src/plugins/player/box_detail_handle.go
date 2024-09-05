@@ -32,9 +32,9 @@ func (_ PlayerOperationBoxDetail) Run(uid string, userAccount account.UserAccoun
 	}
 
 	port := viper.GetString("http.port")
-	pic := utils.Screenshot(fmt.Sprintf("http://localhost:%s/boxDetail?userId=%d&uid=%s&param=%s&sklandId=%s", port, userAccount.UserNumber, uid, param, userAccount.SklandId), 0, 1.5)
-	if pic == nil {
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("生成图片失败，token可能已失效请[重设token](https://t.me/%s)。", viper.GetString("bot.name")))
+	pic, err := utils.Screenshot(fmt.Sprintf("http://localhost:%s/boxDetail?userId=%d&uid=%s&param=%s&sklandId=%s", port, userAccount.UserNumber, uid, param, userAccount.SklandId), 0, 1.5)
+	if err != nil {
+		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
 		bot.Arknights.Send(sendMessage)

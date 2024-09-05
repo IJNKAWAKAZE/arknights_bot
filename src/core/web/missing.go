@@ -4,6 +4,7 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -40,6 +41,7 @@ func Missing(r *gin.Engine) {
 		playerData, _, err := skland.GetPlayerInfo(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 
@@ -101,6 +103,10 @@ func Missing(r *gin.Engine) {
 
 		missingInfo.Name = playerData.Status.Name
 		missingInfo.Chars = chars
+		if len(missingInfo.Chars) == 0 {
+			utils.WebC <- fmt.Errorf("你什么都不缺")
+			return
+		}
 
 		c.HTML(http.StatusOK, "Missing.tmpl", missingInfo)
 	})

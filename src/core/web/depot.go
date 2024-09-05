@@ -57,6 +57,7 @@ func Depot(r *gin.Engine) {
 		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount)
 		if err != nil {
 			log.Println(err)
+			utils.WebC <- err
 			return
 		}
 		for _, item := range playerCultivate.Items {
