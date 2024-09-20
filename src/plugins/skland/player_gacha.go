@@ -21,7 +21,7 @@ type Char struct {
 func GetPlayerGacha(token, channelId string) ([]Char, error) {
 	var chars []Char
 	if channelId == "1" {
-		err := CheckToken(token)
+		_, err := CheckToken(token)
 		if err != nil {
 			log.Println(err)
 			return chars, err
