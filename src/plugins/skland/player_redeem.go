@@ -11,7 +11,7 @@ import (
 // GetPlayerRedeem CDK兑换
 func GetPlayerRedeem(token, cdk, channelId string) (string, error) {
 	if channelId == "1" {
-		err := CheckToken(token)
+		_, err := CheckToken(token)
 		if err != nil {
 			log.Println(err)
 			return err.Error(), err

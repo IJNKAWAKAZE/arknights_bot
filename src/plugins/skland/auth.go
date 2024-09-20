@@ -47,6 +47,10 @@ type GenTokenByUidData struct {
 	Token string `json:"token"`
 }
 
+type User struct {
+	HgId string `json:"hgId"`
+}
+
 // Login 使用token登录
 func Login(token string) (Account, error) {
 	account := Account{}
@@ -66,7 +70,8 @@ func Login(token string) (Account, error) {
 	if err != nil {
 		return account, fmt.Errorf("auth login by code error: %w", err)
 	}
-	account.UserId = res1.UserId
+	u, _ := CheckToken(token)
+	account.UserId = u.HgId
 	account.Skland.Cred = res1.Cred
 	account.Skland.Token = res1.Token
 	return account, nil
@@ -80,60 +85,43 @@ func grantApp(token string, code string) (*GrantAppData, error) {
 
 // 获取Cred
 func authLoginByCode(code string) (*GenCredByCodeData, error) {
-	req := SKR().SetBody(gh.M{"kind": 1, "code": code})
-	return SklandRequest[*GenCredByCodeData](req, "POST", "/api/v1/user/auth/generate_cred_by_code")
+	req := SKR().SetHeader("did", did).SetBody(gh.M{"kind": 1, "code": code})
+	return SklandRequest[*GenCredByCodeData](req, "POST", "/web/v1/user/auth/generate_cred_by_code")
 }
 
 // RefreshToken 刷新 token
 func RefreshToken(account Account) (Account, error) {
-	b, err := CheckUser(account.Skland.Cred)
-	if err == nil {
-		res, err := authRefresh(account.Skland.Cred)
+	res, err := authRefresh(account.Skland.Cred)
+	if err != nil {
+		return account, fmt.Errorf("auth refresh error: %w", err)
+	}
+	account.Skland.Token = res.Token
+	// 检查cred是否有效
+	_, err = listPlayer(account.Skland)
+	if err != nil {
+		log.Println("cred失效，尝试重新登录。")
+		_, err = CheckToken(account.Hypergryph.Token)
 		if err != nil {
-			return account, fmt.Errorf("auth refresh error: %w", err)
-		}
-		account.Skland.Token = res.Token
-	} else {
-		// 是cred失效尝试重新登录
-		if b {
-			log.Println("cred失效，尝试重新登录。")
-			err = CheckToken(account.Hypergryph.Token)
-			if err != nil {
-				return account, err
-			}
-			account, err = Login(account.Hypergryph.Token)
-			if err != nil {
-				return account, err
-			}
-			// 更新token
-			bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
-		} else {
 			return account, err
 		}
+		account, err = Login(account.Hypergryph.Token)
+		if err != nil {
+			return account, err
+		}
+		// 更新token
+		bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
 	}
 	return account, nil
 }
 
-// CheckUser 检查用户cred有效性
-func CheckUser(cred string) (bool, error) {
-	res, err := SKR().SetHeader("cred", cred).Get(sklandAddr + "/api/v1/user/check")
-	if err != nil {
-		return false, err
-	}
-	if res.StatusCode() == 401 {
-		return true, fmt.Errorf("无效的cred，请重新登录获取。")
-	}
-	return false, nil
-}
-
 // CheckToken 检查token有效性
-func CheckToken(token string) error {
-	req := SKR().SetQueryParam("token", token)
-	_, err := HypergryphRequest[any](req, "GET", "/user/info/v1/basic")
+func CheckToken(token string) (*User, error) {
+	req := HR().SetQueryParam("token", token)
+	user, err := HypergryphRequest[*User](req, "GET", "/user/info/v1/basic")
 	if err != nil {
-		return fmt.Errorf("token已失效请重新登录！")
+		return nil, fmt.Errorf("token已失效请重新登录！")
 	}
-	return err
+	return user, err
 }
 
 // CheckBToken 检查BToken有效性

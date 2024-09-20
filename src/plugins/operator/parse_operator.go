@@ -134,19 +134,17 @@ func ParseOperator(name string) Operator {
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "天赋" {
 				selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
-					if j == 0 {
-						selection.Find("td").Each(func(k int, selection *goquery.Selection) {
-							if k%3 == 0 {
-								var talent Talent
-								talentName := strings.ReplaceAll(selection.Text(), "\n", "")
-								talent.Evolve = strings.ReplaceAll(selection.Next().Text(), "\n", "")
-								desc, _ := selection.Next().Next().Html()
-								talent.Name = talentName
-								talent.Desc = template.HTML(desc)
-								talents = append(talents, talent)
-							}
-						})
-					}
+					selection.Find("td").Each(func(k int, selection *goquery.Selection) {
+						if k%3 == 0 {
+							var talent Talent
+							talentName := strings.ReplaceAll(selection.Text(), "\n", "")
+							talent.Evolve = strings.ReplaceAll(selection.Next().Text(), "\n", "")
+							desc, _ := selection.Next().Next().Html()
+							talent.Name = talentName
+							talent.Desc = template.HTML(desc)
+							talents = append(talents, talent)
+						}
+					})
 				})
 			}
 		})

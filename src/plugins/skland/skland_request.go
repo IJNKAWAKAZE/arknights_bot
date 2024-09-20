@@ -9,6 +9,8 @@ import (
 
 var sklandAddr = "https://zonai.skland.com"
 
+var did = "BdkL3Yma2k0SGhC9gqjAFI1JBHhirLCFy999II1w7jPuI+X4JWl4m7nVeHGA9E5GD8fU0UlpmZQJIZckyN6WBNA=="
+
 type SKBaseResp[T any] struct {
 	Code    *int   `json:"code"`
 	Message string `json:"message"`
@@ -43,6 +45,10 @@ func SklandRequest[T any](r *resty.Request, method, path string, vs ...any) (t T
 	if resp.StatusCode() == 405 {
 		log.Println(string(resp.Body()))
 		return t, fmt.Errorf("服务器被墙了！")
+	}
+	if resp.StatusCode() == 401 {
+		log.Println(string(resp.Body()))
+		return t, fmt.Errorf("cred无效！")
 	}
 	res, err := resty.ParseResp[*SKBaseResp[any], *SKBaseResp[T]](
 		resp, respErr,
