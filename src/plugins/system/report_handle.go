@@ -12,7 +12,6 @@ import (
 func ReportHandle(update tgbotapi.Update) error {
 	message := update.Message
 	chatId := message.Chat.ID
-	messageId := message.MessageID
 
 	message.Delete()
 
@@ -24,7 +23,6 @@ func ReportHandle(update tgbotapi.Update) error {
 
 		if bot.Arknights.IsAdmin(chatId, target) {
 			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
-			sendMessage.ReplyToMessageID = messageId
 			msg, err := bot.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
