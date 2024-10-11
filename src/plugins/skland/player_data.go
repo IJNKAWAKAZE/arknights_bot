@@ -45,6 +45,7 @@ type PlayerData struct {
 		SkillID         string `json:"skillId"`
 		MainSkillLvl    int    `json:"mainSkillLvl"`
 		SpecializeLevel int    `json:"specializeLevel"`
+		IsSpecMax       bool   `json:"isSpecMax"`
 		Equip           struct {
 			ID           string `json:"id"`
 			Level        int    `json:"level"`
