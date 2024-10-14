@@ -34,7 +34,7 @@ type Potential struct {
 
 type Talent struct {
 	Evolve string        `json:"evolve"` // 精英级别
-	Name   string        `json:"name"`   // 名称
+	Name   template.HTML `json:"name"`   // 名称
 	Desc   template.HTML `json:"desc"`   // 描述
 }
 
@@ -137,10 +137,10 @@ func ParseOperator(name string) Operator {
 					selection.Find("td").Each(func(k int, selection *goquery.Selection) {
 						if k%3 == 0 {
 							var talent Talent
-							talentName := strings.ReplaceAll(selection.Text(), "\n", "")
+							talentName, _ := selection.Html()
 							talent.Evolve = strings.ReplaceAll(selection.Next().Text(), "\n", "")
 							desc, _ := selection.Next().Next().Html()
-							talent.Name = talentName
+							talent.Name = template.HTML(talentName)
 							talent.Desc = template.HTML(desc)
 							talents = append(talents, talent)
 						}
