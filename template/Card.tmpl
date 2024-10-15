@@ -105,6 +105,7 @@
         .level {
             position: absolute;
             text-align: center;
+            line-height: 1;
             color: white;
             width: 25px;
             padding: 3px;
@@ -191,7 +192,10 @@
                 <td>
                     <div style="background-image: url('assets/card/back_end.png'); width: 150px;height: 150px;">
                         <img style="width: 130px;left: 10px;top: 2px;" src="https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/{{urlquery .SkinID}}.png" onerror="this.src='assets/common/amiya.png'"/>
-                        <img style="position: absolute;width: 40px;left: 100px;top: 5px;" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/>
+                        {{if .IsSpecMax}}
+                        <img style="position:absolute;width: 50px; right: 5px;" src="/assets/card/spec_max_icon.png"/>
+                        {{end}}
+                        <img style="position: absolute;width: 40px;left: 100px;bottom: 20px;" src="/assets/box/Evolve_{{.EvolvePhase}}.png"/>
                         <div class="level"><span style="font-size: 10px;">LV</span><br>{{.Level}}</div>
                     </div>
                 </td>

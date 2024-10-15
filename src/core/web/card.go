@@ -42,6 +42,7 @@ type PlayerCard struct {
 		SkillID         string `json:"skillId"`
 		MainSkillLvl    int    `json:"mainSkillLvl"`
 		SpecializeLevel int    `json:"specializeLevel"`
+		IsSpecMax       bool   `json:"isSpecMax"`
 		Equip           struct {
 			ID           string `json:"id"`
 			Level        int    `json:"level"`
@@ -159,13 +160,27 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	playerCard.FurnitureCnt = playerData.Building.Furniture.Total
 	playerCard.AssistChars = playerData.AssistChars
 	for i, char := range playerCard.AssistChars {
-		name := playerData.CharInfoMap[char.CharID].Name
+		name := charMap[char.CharID].Name
 		equipId := playerCard.AssistChars[i].Equip.ID
 		playerCard.AssistChars[i].Name = name
 		playerCard.AssistChars[i].Equip.Name = strings.ToUpper(playerData.EquipmentInfoMap[equipId].TypeIcon)
 		playerCard.AssistChars[i].Equip.TypeIcon = playerData.EquipmentInfoMap[equipId].TypeIcon
 		playerCard.AssistChars[i].Equip.ShiningColor = playerData.EquipmentInfoMap[equipId].ShiningColor
 		playerCard.AssistChars[i].MainSkillLvl = playerCard.AssistChars[i].MainSkillLvl + playerCard.AssistChars[i].SpecializeLevel
+		for _, c := range playerData.Chars {
+			if c.CharID == char.CharID {
+				count := len(c.Skills)
+				maxCount := 0
+				for _, skill := range c.Skills {
+					if skill.SpecializeLevel == 3 {
+						maxCount++
+					}
+				}
+				if count > 0 && count == maxCount {
+					playerCard.AssistChars[i].IsSpecMax = true
+				}
+			}
+		}
 	}
 	return playerCard, nil
 }
