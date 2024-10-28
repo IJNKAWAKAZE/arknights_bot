@@ -11,6 +11,7 @@ import (
 	"arknights_bot/plugins/sign"
 	"arknights_bot/plugins/skin"
 	"arknights_bot/plugins/system"
+	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 )
 
@@ -18,6 +19,19 @@ import (
 func Serve() {
 	log.Println("机器人启动成功")
 	b := bot.Arknights.AddHandle()
+	b.NewProcessor(
+		func(update tgbotapi.Update) bool {
+			if update.Message != nil {
+				return update.Message.ViaBot.ID == 273234066 //PostBot Id
+			}
+			return false
+		},
+		func(update tgbotapi.Update) error {
+			msg := tgbotapi.NewDeleteMessage(update.FromChat().ID, update.Message.MessageID)
+			_, err := bot.Arknights.Send(msg)
+			return err
+		},
+	)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
 
