@@ -21,15 +21,14 @@ func Serve() {
 	b := bot.Arknights.AddHandle()
 	b.NewProcessor(
 		func(update tgbotapi.Update) bool {
-			if update.Message != nil {
+			if update.Message != nil && update.Message.ViaBot != nil {
 				return update.Message.ViaBot.ID == 273234066 //PostBot Id
 			}
 			return false
 		},
 		func(update tgbotapi.Update) error {
-			msg := tgbotapi.NewDeleteMessage(update.FromChat().ID, update.Message.MessageID)
-			_, err := bot.Arknights.Send(msg)
-			return err
+			update.Message.Delete()
+			return nil
 		},
 	)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)

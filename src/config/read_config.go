@@ -16,6 +16,8 @@ var RecruitMissing map[string]string
 
 var RecruitTagMap map[string]string
 
+var ADWords []string
+
 func init() {
 	// 设置配置文件的名字
 	viper.SetConfigName("arknights")
@@ -51,6 +53,7 @@ func initData() {
 	recruitTags := viper.GetString("recruit.tags")
 	RecruitMissing = make(map[string]string)
 	RecruitTagMap = make(map[string]string)
+	ADWords = viper.GetStringSlice("ad")
 	for _, missing := range strings.Split(jpMissing, "/") {
 		RecruitMissing[missing] = missing
 	}
