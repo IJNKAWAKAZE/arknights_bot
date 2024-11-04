@@ -39,6 +39,9 @@ func EnemyHandle(update tgbotapi.Update) error {
 	if name == "多萝西" {
 		name = "多萝西(敌方)"
 	}
+	if name == "弑君者" {
+		name = "弑君者(敌方)"
+	}
 	enemy := ParseEnemy(name)
 	if enemy.Name == "" {
 		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "未查询到此敌人，请输入正确的敌人名称。")
