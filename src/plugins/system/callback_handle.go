@@ -30,14 +30,7 @@ func Report(callBack tgbotapi.Update) error {
 
 	if d[1] == "BAN" {
 		fmt.Printf("在群组 %s 用户 %s 封禁了 %d", callbackQuery.Message.Chat.Title, callbackQuery.From.FullName(), target)
-		banChatMemberConfig := tgbotapi.BanChatMemberConfig{
-			ChatMemberConfig: tgbotapi.ChatMemberConfig{
-				ChatID: chatId,
-				UserID: target,
-			},
-			RevokeMessages: true,
-		}
-		bot.Arknights.Send(banChatMemberConfig)
+		bot.Arknights.BanChatMember(chatId, target)
 		delMsg := tgbotapi.NewDeleteMessage(chatId, targetMessageId)
 		bot.Arknights.Send(delMsg)
 
