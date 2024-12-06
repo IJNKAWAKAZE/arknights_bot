@@ -16,8 +16,8 @@ api:
   wiki: https://prts.wiki/w/
   voice_data: https://torappu.prts.wiki/assets/audio/
   enemy: https://prts.wiki/index.php?title=%E6%95%8C%E4%BA%BA%E4%B8%80%E8%A7%88%2F%E6%95%B0%E6%8D%AE&action=raw
-  item: https://backend.yituliu.cn/item/value?expCoefficient=0.625
-  stage_result: https://backend.yituliu.cn/stage/result?expCoefficient=0.625
+  item: https://backend.yituliu.cn/item/value?expCoefficient=0.633
+  stage_result: https://backend.yituliu.cn/stage/result?expCoefficient=0.633
   bilibili_buvid: https://api.bilibili.com/x/frontend/finger/spi
   bilibili_register_buvid: https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi
   bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly
