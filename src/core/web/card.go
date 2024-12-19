@@ -262,10 +262,13 @@ func getNationList(playerData *skland.PlayerData) []Nation {
 	resp, _ := http.Get(viper.GetString("api.nation_table"))
 	r, _ := io.ReadAll(resp.Body)
 	gjson.ParseBytes(r).Get("groupList").ForEach(func(key, value gjson.Result) bool {
-		charList := value.Get("charList").Array()
-		for _, c := range charList {
-			if _, has := ignoreChar[c.Get("charId").String()]; !has {
-				m[key.String()] = append(m[key.String()], c.Get("charId").String())
+		forceDataList := value.Get("forceDataList").Array()
+		for _, f := range forceDataList {
+			charList := f.Get("charList").Array()
+			for _, c := range charList {
+				if _, has := ignoreChar[c.String()]; !has {
+					m[key.String()] = append(m[key.String()], c.String())
+				}
 			}
 		}
 		return true
