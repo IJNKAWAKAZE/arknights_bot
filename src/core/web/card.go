@@ -259,13 +259,20 @@ func getNationList(playerData *skland.PlayerData) []Nation {
 		{Name: "followers"}}
 
 	var m = make(map[string][]string)
+	var charInfoMap = make(map[string]string)
+	for _, char := range playerData.Chars {
+		charInfoMap[char.CharID] = char.CharID
+	}
 	resp, _ := http.Get(viper.GetString("api.nation_table"))
 	r, _ := io.ReadAll(resp.Body)
 	gjson.ParseBytes(r).Get("groupList").ForEach(func(key, value gjson.Result) bool {
-		charList := value.Get("charList").Array()
-		for _, c := range charList {
-			if _, has := ignoreChar[c.Get("charId").String()]; !has {
-				m[key.String()] = append(m[key.String()], c.Get("charId").String())
+		forceDataList := value.Get("forceDataList").Array()
+		for _, f := range forceDataList {
+			charList := f.Get("charList").Array()
+			for _, c := range charList {
+				if _, has := ignoreChar[c.String()]; !has {
+					m[key.String()] = append(m[key.String()], c.String())
+				}
 			}
 		}
 		return true
@@ -275,7 +282,7 @@ func getNationList(playerData *skland.PlayerData) []Nation {
 		count := 0
 		key := nation.Name
 		for _, char := range m[key] {
-			if _, has := playerData.CharInfoMap[char]; has {
+			if _, has := charInfoMap[char]; has {
 				count++
 			}
 		}
