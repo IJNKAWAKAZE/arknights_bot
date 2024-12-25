@@ -107,12 +107,9 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	}
 	return nil
 }
-func ResetHeadhuntTimes() func() {
-	resetHeadhuntTimes := func() {
-		res, ctx := utils.RedisScanKeys("headhuntTimes:*")
-		for res.Next(ctx) {
-			utils.RedisDel(res.Val())
-		}
+func ResetHeadhuntTimes() {
+	res, ctx := utils.RedisScanKeys("headhuntTimes:*")
+	for res.Next(ctx) {
+		utils.RedisDel(res.Val())
 	}
-	return resetHeadhuntTimes
 }

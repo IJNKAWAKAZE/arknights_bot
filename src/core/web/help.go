@@ -52,7 +52,6 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "所有未获取干员", Param: "all", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "对应星级未获取干员", Param: "5,6", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/card", Desc: "我的名片", Param: "", IsBind: true})
-		publicCmds = append(publicCmds, Cmd{Cmd: "/card", Desc: "我的名片(旧版)", Param: "o", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/base", Desc: "基建信息", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/gacha", Desc: "抽卡记录", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/operator", Desc: "干员查询", Param: "", IsBind: false})
@@ -70,6 +69,7 @@ func Help(r *gin.Engine) {
 
 		// 管理员指令
 		adminCmds = append(adminCmds, Cmd{Cmd: "/news", Desc: "开启/关闭动态推送", Param: "", IsBind: false})
+		adminCmds = append(adminCmds, Cmd{Cmd: "/birthday", Desc: "开启/关闭生日推送", Param: "", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/quiz", Desc: "开启云玩家检测", Param: "start", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/quiz", Desc: "关闭云玩家检测", Param: "stop", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/headhunt", Desc: "开启寻访模拟", Param: "start", IsBind: false})

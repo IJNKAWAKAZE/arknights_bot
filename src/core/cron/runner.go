@@ -2,6 +2,7 @@ package cron
 
 import (
 	"arknights_bot/plugins/arknightsnews"
+	"arknights_bot/plugins/birthday"
 	"arknights_bot/plugins/datasource"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/sign"
@@ -20,13 +21,19 @@ func StartCron() error {
 	}
 
 	//每周五凌晨2点33更新数据源 0 33 02 ? * FRI
-	_, err = crontab.AddFunc("0 33 02 ? * FRI", datasource.UpdateDataSource())
+	_, err = crontab.AddFunc("0 33 02 ? * FRI", datasource.UpdateDataSource)
+	if err != nil {
+		return err
+	}
+
+	//每日4点执行生日祝福 0 0 4 * * ?
+	_, err = crontab.AddFunc("0 0 4 * * ?", birthday.Birthday)
 	if err != nil {
 		return err
 	}
 
 	//每日1点执行自动签到 0 0 1 * * ?
-	_, err = crontab.AddFunc("0 0 1 * * ?", sign.AutoSign())
+	_, err = crontab.AddFunc("0 0 1 * * ?", sign.AutoSign)
 	if err != nil {
 		return err
 	}
@@ -38,7 +45,7 @@ func StartCron() error {
 	}
 
 	//重置每日寻访次数 0 0 0 * * ?
-	_, err = crontab.AddFunc("0 0 0 * * ?", system.ResetHeadhuntTimes())
+	_, err = crontab.AddFunc("0 0 0 * * ?", system.ResetHeadhuntTimes)
 	if err != nil {
 		return err
 	}

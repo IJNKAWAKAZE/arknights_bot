@@ -51,6 +51,7 @@ type GroupJoined struct {
 	GroupNumber int64     `json:"groupNumber"`
 	News        int64     `json:"news"`
 	Reg         int       `json:"reg"`
+	Birthday    int64     `json:"birthday"`
 	CreateTime  time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime  time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark      string    `json:"remark"`
@@ -81,6 +82,7 @@ func SaveJoined(message *tgbotapi.Message) {
 		GroupNumber: message.Chat.ID,
 		News:        0,
 		Reg:         -1,
+		Birthday:    0,
 	}
 
 	bot.DBEngine.Table("group_joined").Create(&groupJoined)
@@ -140,10 +142,17 @@ func GetAutoSignByUserId(userId int64) *gorm.DB {
 	return bot.DBEngine.Raw("select * from user_sign where user_number = ?", userId)
 }
 
-// GetJoinedGroups 获取加入的群组
-func GetJoinedGroups() []int64 {
+// GetNewsGroups 获取开启消息推送的群组
+func GetNewsGroups() []int64 {
 	var groups []int64
 	bot.DBEngine.Raw("select group_number from group_joined where news = 1 group by group_number").Scan(&groups)
+	return groups
+}
+
+// GetBirthdayGroups 获取开启生日推送的群组
+func GetBirthdayGroups() []int64 {
+	var groups []int64
+	bot.DBEngine.Raw("select group_number from group_joined where birthday = 1 group by group_number").Scan(&groups)
 	return groups
 }
 

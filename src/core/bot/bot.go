@@ -85,6 +85,7 @@ func Serve() {
 	// 权限
 	b.NewCommandProcessor("update", system.UpdateHandle)
 	b.NewCommandProcessor("news", system.NewsHandle)
+	b.NewCommandProcessor("birthday", system.BirthdayHandle)
 	b.NewCommandProcessor("reg", system.RegulationHandle)
 	b.NewCommandProcessor("clear", system.ClearHandle)
 	b.NewCommandProcessor("kill", system.KillHandle)

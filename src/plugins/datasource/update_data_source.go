@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"arknights_bot/config"
 	"arknights_bot/utils"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -32,11 +33,8 @@ func init() {
 }
 
 // UpdateDataSource 更新数据源
-func UpdateDataSource() func() {
-	updateDataSource := func() {
-		go UpdateDataSourceRunner()
-	}
-	return updateDataSource
+func UpdateDataSource() {
+	go UpdateDataSourceRunner()
 }
 
 // UpdateDataSourceRunner 更新数据源
@@ -85,6 +83,15 @@ func UpdateDataSourceRunner() {
 		operators = append(operators, operator)
 	})
 
+	// 老干员map
+	var oldOperators = make(map[string]string)
+	var os []utils.Operator
+	operatorsJson := utils.RedisGet("operatorList")
+	json.Unmarshal([]byte(operatorsJson), &os)
+	for _, o := range os {
+		oldOperators[o.Name] = o.Name
+	}
+
 	skinCount := make(map[string][]string)
 	response, _ = http.Get(api + "时装回廊")
 	doc, _ = goquery.NewDocumentFromReader(response.Body)
@@ -99,6 +106,7 @@ func UpdateDataSourceRunner() {
 		}
 	})
 
+	var birthdayMap = make(map[string][]utils.Operator)
 	for i, operator := range operators {
 		name := operator.Name
 		if name == "阿米娅" {
@@ -131,9 +139,7 @@ func UpdateDataSourceRunner() {
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
-			continue
-		}
-		if name == "阿米娅(近卫)" || name == "阿米娅(医疗)" {
+		} else if name == "阿米娅(近卫)" || name == "阿米娅(医疗)" {
 			// 立绘
 			paintingName := fmt.Sprintf("立绘_%s_2.png", name)
 			m := utils.Md5(paintingName)
@@ -153,7 +159,6 @@ func UpdateDataSourceRunner() {
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
-			continue
 		}
 		if operator.Rarity < 3 {
 			// 立绘
@@ -198,6 +203,29 @@ func UpdateDataSourceRunner() {
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 		}
+		// 新增干员
+		if _, has := oldOperators[name]; !has && config.IgnoreBirthday[name] == "" {
+			response, _ := http.Get(api + name)
+			doc, _ := goquery.NewDocumentFromReader(response.Body)
+			doc.Find(".poem").Each(func(j int, selection *goquery.Selection) {
+				text := selection.Text()
+				if strings.Contains(text, "【生日】") {
+					t := strings.Split(text, "\n")
+					birthday := t[5][strings.Index(t[5], "】")+3:]
+					reg := regexp.MustCompile("[0-9]+")
+					if reg.MatchString(birthday) {
+						birthdayMap[birthday] = append(birthdayMap[birthday], operators[i])
+					} else {
+						birthdayMap["未知"] = append(birthdayMap["未知"], operators[i])
+					}
+					return
+				}
+			})
+		}
+	}
+
+	for k, v := range birthdayMap {
+		utils.RedisSet("birthday:"+k, json.MustMarshalString(v), 0)
 	}
 
 	defer response.Body.Close()
