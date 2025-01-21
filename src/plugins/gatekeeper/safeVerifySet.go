@@ -22,6 +22,17 @@ func (b *safeCallBack) add(userId useridT, chatId chatidT, correct string) {
 	b.correct = correct
 	b.mu.Unlock()
 }
+
+func (b *safeCallBack) checkExist(userId useridT, chatId chatidT) bool {
+	defer b.mu.Unlock()
+	b.mu.Lock()
+	val := fmt.Sprintf("%d%d", chatId, userId)
+	if b._checkVal(val) {
+		return true
+	}
+	return false
+}
+
 func (b *safeCallBack) checkExistAndRemove(userId useridT, chatId chatidT) (bool, string) {
 	defer b.mu.Unlock()
 	b.mu.Lock()

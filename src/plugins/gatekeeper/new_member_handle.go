@@ -11,7 +11,10 @@ import (
 func NewMemberHandle(update tgbotapi.Update) error {
 	message := update.Message
 	for _, member := range message.NewChatMembers {
+		chatId := message.Chat.ID
+		userId := member.ID
 		if member.ID == message.From.ID { // 自己加入群组
+			verifySet.add(userId, chatId, "")
 			chat, err := bot.Arknights.GetChat(tgbotapi.ChatInfoConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: member.ID}})
 			if err != nil {
 				return err
@@ -19,7 +22,7 @@ func NewMemberHandle(update tgbotapi.Update) error {
 			for _, word := range bot.ADWords {
 				if strings.Contains(chat.Bio, word) {
 					message.Delete()
-					bot.Arknights.BanChatMember(message.Chat.ID, member.ID)
+					bot.Arknights.BanChatMember(chatId, userId)
 					return nil
 				}
 			}

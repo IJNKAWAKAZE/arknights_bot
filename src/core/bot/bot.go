@@ -20,6 +20,7 @@ func Serve() {
 	b := bot.Arknights.AddHandle()
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
+	b.NewProcessor(gatekeeper.CheckMember, gatekeeper.KickMember)
 
 	// callback
 	b.NewCallBackProcessor("verify", gatekeeper.CallBackData)
