@@ -22,7 +22,7 @@ func Birthday() {
 	for _, group := range groups {
 		if month == time.December && day == 24 {
 			sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FilePath("./assets/common/FrostNova.jpg"))
-			sendPhoto.Caption = "很抱歉打断您的浏览🖐\n今天是霜星的上岛纪念日，把这条消息转发在五个群，霜星就会变成至纯源石上岛陪你，我试过了没有用，还会被群友骂舟批，但是今天真的是霜星变成至纯源石上岛纪念日。"
+			sendPhoto.Caption = "很抱歉打断您的浏览🖐\n今天是霜星的上岛纪念日，把这条消息转发在五个群，霜星就会上岛来陪你，我试过了没有用，还会被群友骂舟批，但是今天真的是霜星上岛纪念日。"
 			bot.Arknights.Send(sendPhoto)
 		}
 		if len(operators) == 1 {
