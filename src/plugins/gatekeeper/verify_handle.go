@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var verifyC = make(chan interface{}, 10)
+
 func VerifyMember(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -52,6 +54,7 @@ func VerifyMember(message *tgbotapi.Message) {
 
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
 	correct := options[r.Int64()+1]
+	verifySet.add(userId, chatId, correct.Name)
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for i := 0; i < len(options); i += 2 {
@@ -67,6 +70,14 @@ func VerifyMember(message *tgbotapi.Message) {
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
+	if len(verifyC) > 0 {
+		obj := <-verifyC
+		log.Println(obj, "停止发送验证信息")
+		message.Delete()
+		bot.Arknights.BanChatMember(chatId, userId)
+		verifySet.checkExistAndRemove(userId, chatId)
+		return
+	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.GetImg(correct.ThumbURL)})
 	sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 	sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, name), userId)
@@ -75,9 +86,9 @@ func VerifyMember(message *tgbotapi.Message) {
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
 		bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
+		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
-	verifySet.add(userId, chatId, correct.Name)
 	go verify(chatId, userId, photo.MessageID, messageId)
 }
 

@@ -1,7 +1,7 @@
 package arknightsnews
 
 import (
-	"arknights_bot/config"
+	bot "arknights_bot/config"
 	"arknights_bot/utils"
 	"bytes"
 	"encoding/json"
@@ -31,11 +31,11 @@ func BilibiliNews() {
 	if len(text) == 0 {
 		return
 	}
-	groups := utils.GetJoinedGroups()
+	groups := utils.GetNewsGroups()
 	if pics == nil {
 		for _, group := range groups {
 			sendMessage := tgbotapi.NewMessage(group, text)
-			config.Arknights.Send(sendMessage)
+			bot.Arknights.Send(sendMessage)
 		}
 		return
 	}
@@ -45,11 +45,11 @@ func BilibiliNews() {
 			if pics[0].Height > pics[0].Width*2 {
 				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url), Name: pics[0].Url})
 				sendDocument.Caption = text
-				config.Arknights.Send(sendDocument)
+				bot.Arknights.Send(sendDocument)
 			} else {
 				sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url)})
 				sendPhoto.Caption = text
-				config.Arknights.Send(sendPhoto)
+				bot.Arknights.Send(sendPhoto)
 			}
 		}
 		return
@@ -94,7 +94,7 @@ func BilibiliNews() {
 			}
 		}
 		mediaGroup.Media = media
-		config.Arknights.SendMediaGroup(mediaGroup)
+		bot.Arknights.SendMediaGroup(mediaGroup)
 	}
 }
 

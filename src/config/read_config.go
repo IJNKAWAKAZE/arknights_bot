@@ -16,6 +16,8 @@ var RecruitMissing map[string]string
 
 var RecruitTagMap map[string]string
 
+var IgnoreBirthday map[string]string
+
 var ADWords []string
 
 func init() {
@@ -53,6 +55,10 @@ func initData() {
 	recruitTags := viper.GetString("recruit.tags")
 	RecruitMissing = make(map[string]string)
 	RecruitTagMap = make(map[string]string)
+	IgnoreBirthday = make(map[string]string)
+	for _, ignore := range viper.GetStringSlice("ignore_birthday") {
+		IgnoreBirthday[ignore] = ignore
+	}
 	ADWords = viper.GetStringSlice("ad")
 	for _, missing := range strings.Split(jpMissing, "/") {
 		RecruitMissing[missing] = missing

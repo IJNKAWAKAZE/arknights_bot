@@ -29,6 +29,7 @@ CREATE TABLE `group_joined`  (
   `group_number` bigint(20) NULL DEFAULT NULL,
   `news` int(1) NOT NULL DEFAULT 0,
   `reg` int(32) NULL DEFAULT NULL,
+  `birthday` int(1) NOT NULL DEFAULT 0,
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `create_time` timestamp(0) NULL DEFAULT NULL,
   `update_time` timestamp(0) NULL DEFAULT NULL,
