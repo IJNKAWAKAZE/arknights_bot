@@ -93,7 +93,7 @@
             background-color: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
         }
-        #mainline {
+        #mainline, #equip {
             width: 605px;
             height: 196px;
             float: right;
@@ -101,6 +101,14 @@
             right: 16px;
             background-color: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
+        }
+        .equipCnt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #a3a3a2;
+            font-size: 21px;
+            padding-right: 20px;
         }
         .level {
             position: absolute;
@@ -203,7 +211,7 @@
             </tr>
         </table>
     </div>
-    <div id="mainline">
+    <!--<div id="mainline">
         <img style="float: right" src="/assets/card/mainline_human.png"/>
         <img style="left: 200px;top: 30px;" src="/assets/card/mainline_icon.png"/>
         <div style="display: flex;flex-direction: column;align-items: center;left: -50px;top: -90px;">
@@ -215,6 +223,15 @@
                 全部完成
                 {{end}}
             </div>
+        </div>
+    </div>-->
+    <div id="equip">
+        <img style="float: right" src="/assets/card/module_collection_bg.png"/>
+        <img style="left: 40px;top: -160px;opacity: 0.3;" src="/assets/card/module_collection_bg_icon.png"/>
+        <div style="display: flex;justify-content: flex-end; top: -270px;">
+            <div class="equipCnt"><div style="font-size: 50px;font-weight: 600;padding-bottom: 10px;">{{.EquipCnt}}</div><div>总收集模组</div></div>
+            <div class="equipCnt"><div style="font-size: 50px;font-weight: 600;padding-bottom: 10px;">{{.EquipStage3Cnt}}</div><div>STAGE3模组</div></div>
+            <div class="equipCnt"><div style="font-size: 50px;font-weight: 600;padding-bottom: 10px;">{{.EquipOperatorCnt}}</div><div>拥有模组干员</div></div>
         </div>
     </div>
 </div>
