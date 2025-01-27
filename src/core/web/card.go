@@ -31,6 +31,9 @@ type PlayerCard struct {
 	CharCnt           int      `json:"charCnt"`
 	FurnitureCnt      int      `json:"furnitureCnt"`
 	SkinCnt           int      `json:"skinCnt"`
+	EquipCnt          int      `json:"equipCnt"`
+	EquipOperatorCnt  int      `json:"equipOperatorCnt"`
+	EquipStage3Cnt    int      `json:"equipStage3Cnt"`
 	NationList        []Nation `json:"nationList"`
 	AssistChars       []struct {
 		Name            string `json:"name"`
@@ -122,6 +125,34 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 		log.Println(err)
 		return playerCard, err
 	}
+	playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount)
+	if err != nil {
+		log.Println(err)
+		utils.WebC <- err
+		return playerCard, err
+	}
+	// 计算模组数据
+	equipCnt := 0
+	equipOperatorCnt := 0
+	equipStage3Cnt := 0
+	for _, char := range playerCultivate.Characters {
+		flag := false
+		for _, equip := range char.Equips {
+			if equip.Level != 0 {
+				equipCnt++
+				flag = true
+				if equip.Level == 3 {
+					equipStage3Cnt++
+				}
+			}
+		}
+		if flag {
+			equipOperatorCnt++
+		}
+	}
+	playerCard.EquipCnt = equipCnt
+	playerCard.EquipOperatorCnt = equipOperatorCnt
+	playerCard.EquipStage3Cnt = equipStage3Cnt
 
 	charMap := playerData.CharInfoMap
 	secretaryName := charMap[playerData.Status.Secretary.CharID].Name
