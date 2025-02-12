@@ -142,6 +142,9 @@ func ParseOperator(name string) Operator {
 							desc, _ := selection.Next().Next().Html()
 							talent.Name = template.HTML(talentName)
 							talent.Desc = template.HTML(desc)
+							if talent.Evolve == "" && len(talents) > 1 && talents[len(talents)-1].Name == talent.Name {
+								return
+							}
 							talents = append(talents, talent)
 						}
 					})
