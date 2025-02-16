@@ -59,7 +59,7 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 			return nil
 		}
 	}
-	result, err := skland.GetPlayerRedeem(token, cdk, channelId)
+	result, err := skland.GetPlayerRedeem(token, cdk, channelId, uid)
 	if err != nil {
 		SendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		SendMessage.ReplyToMessageID = messageId

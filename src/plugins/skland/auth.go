@@ -4,6 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"fmt"
 	"github.com/starudream/go-lib/core/v2/gh"
+	"github.com/tidwall/gjson"
 	"log"
 )
 
@@ -79,7 +80,7 @@ func Login(token string) (Account, error) {
 
 // 获取 OAuth2 授权代码
 func grantApp(token string, code string) (*GrantAppData, error) {
-	req := HR().SetBody(gh.M{"type": 0, "token": token, "appCode": code})
+	req := HR().SetBody(gh.M{"type": "0", "token": token, "appCode": code})
 	return HypergryphRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant")
 }
 
@@ -158,4 +159,33 @@ func ArknightsPlayers(skland AccountSkland) ([]*Player, error) {
 		}
 	}
 	return players, nil
+}
+
+// LoginHypergryph  官网登录
+func LoginHypergryph(token, uid string) (string, error) {
+	if token == "" {
+		return "", fmt.Errorf("token is empty")
+	}
+
+	reqGrantApp := HR().SetBody(gh.M{"type": 1, "token": token, "appCode": "be36d44aa36bfb5b"})
+	grantAppToken, err := HypergryphASRequest(reqGrantApp, "POST", "/user/oauth2/v2/grant")
+	if err != nil {
+		return "", fmt.Errorf("grant app error: %w", err)
+	}
+
+	reqU8Token := HR().SetBody(gh.M{"token": gjson.Parse(grantAppToken).Get("data.token").String(), "uid": uid})
+	res, err := reqU8Token.Execute("POST", "https://binding-api-account-prod.hypergryph.com/account/binding/v1/u8_token_by_uid")
+	if err != nil {
+		return "", fmt.Errorf("get u8token error: %w", err)
+	}
+
+	u8Token := gjson.Parse(string(res.Body())).Get("data.token").String()
+
+	reqLogin := HR().SetBody(gh.M{"share_by": "", "share_type": "", "source_from": "", "token": u8Token})
+	resLogin, err := HypergryphAKRequest(reqLogin, "POST", "/user/api/role/login")
+	if err != nil || resLogin == "" {
+		return "", fmt.Errorf("登录失败：%w", err)
+	}
+
+	return u8Token, nil
 }

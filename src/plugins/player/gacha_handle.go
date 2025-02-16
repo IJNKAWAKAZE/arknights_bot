@@ -60,7 +60,7 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 		}
 	}
 	// 获取角色抽卡记录
-	chars, err := skland.GetPlayerGacha(token, channelId)
+	chars, err := skland.GetPlayerGacha(token, channelId, uid)
 	if err != nil {
 		log.Println(err)
 		sendMessage := tgbotapi.NewMessage(chatId, err.Error())

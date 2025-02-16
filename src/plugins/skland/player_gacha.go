@@ -1,12 +1,17 @@
 package skland
 
 import (
+	"fmt"
 	"github.com/starudream/go-lib/core/v2/gh"
 	"github.com/tidwall/gjson"
 	"log"
-	"math"
 	"strconv"
 )
+
+type PoolInfo struct {
+	PoolName string `json:"poolName"`
+	PoolId   string `json:"poolId"`
+}
 
 type Char struct {
 	PoolName  string `json:"poolName"`
@@ -18,7 +23,7 @@ type Char struct {
 }
 
 // GetPlayerGacha 抽卡记录
-func GetPlayerGacha(token, channelId string) ([]Char, error) {
+func GetPlayerGacha(token, channelId, uid string) ([]Char, error) {
 	var chars []Char
 	if channelId == "1" {
 		_, err := CheckToken(token)
@@ -33,46 +38,103 @@ func GetPlayerGacha(token, channelId string) ([]Char, error) {
 			return chars, err
 		}
 	}
-	res, err := getPlayerGacha(token, "1", channelId)
+
+	u8Token, err := LoginHypergryph(token, uid)
 	if err != nil {
 		log.Println(err)
-		return chars, err
+		return nil, fmt.Errorf("登录失败")
 	}
 
-	totalPage := int(math.Ceil(gjson.Get(res, "data.pagination.total").Float() / 10))
+	//  获取卡池信息
+	pools, err := getPoolList(token, u8Token, uid)
+	if err != nil {
+		return nil, err
+	}
 
-	for i := 1; i <= totalPage; i++ {
-		res, err = getPlayerGacha(token, strconv.Itoa(i), channelId)
+	for _, pool := range pools {
+		//  获取卡池抽卡记录
+		res, err := getPlayerGacha(token, u8Token, uid, pool.PoolId, "0", "0")
 		if err != nil {
-			break
+			log.Println(err)
+			return chars, err
 		}
-		for _, d := range gjson.Get(res, "data.list").Array() {
-			poolName := d.Get("pool").String()
-			ts := d.Get("ts").Int()
-			order := 1
-			for _, c := range d.Get("chars").Array() {
+
+		// 最后一条记录时间戳
+		lastTs := ""
+		lastPos := ""
+		for _, d := range res.Get("data.list").Array() {
+			ts := d.Get("gachaTs").Int()
+			pos := int(d.Get("pos").Int())
+			char := Char{
+				PoolName:  pool.PoolName,
+				PoolOrder: pos,
+				Name:      d.Get("charName").String(),
+				IsNew:     d.Get("isNew").Bool(),
+				Rarity:    d.Get("rarity").Int(),
+				Ts:        ts,
+			}
+			lastTs = strconv.FormatInt(ts, 10)
+			lastPos = strconv.Itoa(pos)
+			chars = append(chars, char)
+		}
+
+		// 是否有更多记录
+		hasMore := res.Get("data.hasMore").Bool()
+
+		for hasMore {
+			// 获取下一页抽卡记录
+			res, err = getPlayerGacha(token, u8Token, uid, pool.PoolId, lastTs, lastPos)
+			if err != nil {
+				log.Println(err)
+				return chars, err
+			}
+			for _, d := range res.Get("data.list").Array() {
+				ts := d.Get("gachaTs").Int()
+				pos := int(d.Get("pos").Int())
 				char := Char{
-					PoolName:  poolName,
-					PoolOrder: order,
-					Name:      c.Get("name").String(),
-					IsNew:     c.Get("isNew").Bool(),
-					Rarity:    c.Get("rarity").Int(),
+					PoolName:  pool.PoolName,
+					PoolOrder: pos,
+					Name:      d.Get("charName").String(),
+					IsNew:     d.Get("isNew").Bool(),
+					Rarity:    d.Get("rarity").Int(),
 					Ts:        ts,
 				}
-				order++
+				lastTs = strconv.FormatInt(ts, 10)
+				lastPos = strconv.Itoa(pos)
 				chars = append(chars, char)
 			}
+			hasMore = res.Get("data.hasMore").Bool()
 		}
 	}
 	return chars, err
 }
 
-func getPlayerGacha(token, page, channelId string) (string, error) {
-	req := SKR().SetQueryParams(gh.MS{"token": token, "page": page, "channelId": channelId})
-	res, err := HypergryphAKRequest(req, "GET", "/user/api/inquiry/gacha")
+func getPoolList(token, u8Token, uid string) ([]PoolInfo, error) {
+	var pools []PoolInfo
+	req := HR().SetQueryParams(gh.MS{"uid": uid})
+	req.SetHeader("X-Account-Token", token).SetHeader("X-Role-Token", u8Token)
+	res, err := HypergryphAKRequest(req, "GET", "/user/api/inquiry/gacha/cate")
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return nil, err
 	}
-	return res, nil
+	for _, p := range gjson.Parse(res).Get("data").Array() {
+		pool := PoolInfo{
+			PoolId:   p.Get("id").String(),
+			PoolName: p.Get("name").String(),
+		}
+		pools = append(pools, pool)
+	}
+	return pools, nil
+}
+
+func getPlayerGacha(token, u8Token, uid, category, lastTs, pos string) (gjson.Result, error) {
+	req := HR().SetQueryParams(gh.MS{"uid": uid, "category": category, "size": "199", "gachaTs": lastTs, "pos": pos})
+	req.SetHeader("X-Account-Token", token).SetHeader("X-Role-Token", u8Token)
+	res, err := HypergryphAKRequest(req, "GET", "/user/api/inquiry/gacha/history")
+	if err != nil {
+		log.Println(err)
+		return gjson.Result{}, err
+	}
+	return gjson.Parse(res), nil
 }

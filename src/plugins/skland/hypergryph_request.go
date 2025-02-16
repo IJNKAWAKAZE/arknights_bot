@@ -55,6 +55,14 @@ func HypergryphRequest[T any](r *resty.Request, method, path string) (t T, _ err
 	return res.Data, nil
 }
 
+func HypergryphASRequest(r *resty.Request, method, path string) (d string, _ error) {
+	res, err := r.Execute(method, HypergryphAddr+path)
+	if err != nil {
+		return d, fmt.Errorf("[hypergryph] %w", err)
+	}
+	return string(res.Body()), nil
+}
+
 func HypergryphAKRequest(r *resty.Request, method, path string) (d string, _ error) {
 	res, err := r.Execute(method, HypergryphAKAddr+path)
 	if err != nil {
