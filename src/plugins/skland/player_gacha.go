@@ -66,7 +66,7 @@ func GetPlayerGacha(token, channelId, uid string) ([]Char, error) {
 			ts := d.Get("gachaTs").Int()
 			pos := int(d.Get("pos").Int())
 			char := Char{
-				PoolName:  pool.PoolName,
+				PoolName:  d.Get("poolName").String(),
 				PoolOrder: pos,
 				Name:      d.Get("charName").String(),
 				IsNew:     d.Get("isNew").Bool(),
@@ -92,7 +92,7 @@ func GetPlayerGacha(token, channelId, uid string) ([]Char, error) {
 				ts := d.Get("gachaTs").Int()
 				pos := int(d.Get("pos").Int())
 				char := Char{
-					PoolName:  pool.PoolName,
+					PoolName:  d.Get("poolName").String(),
 					PoolOrder: pos,
 					Name:      d.Get("charName").String(),
 					IsNew:     d.Get("isNew").Bool(),
