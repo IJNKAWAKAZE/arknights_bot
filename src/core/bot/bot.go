@@ -26,8 +26,6 @@ func Serve() {
 	b.NewCallBackProcessor("verify", gatekeeper.CallBackData)
 	b.NewCallBackProcessor("bind", account.ChoosePlayer)
 	b.NewCallBackProcessor("unbind", account.UnbindPlayer)
-	b.NewCallBackProcessor("resume", account.SetResume)
-	b.NewCallBackProcessor("setbtoken", account.ChooseBTokenPlayer)
 	b.NewCallBackProcessor("sign", sign.SignPlayer)
 	b.NewCallBackProcessor("player", player.PlayerData)
 	b.NewCallBackProcessor("report", system.Report)
@@ -43,16 +41,12 @@ func Serve() {
 	b.NewPrivateCommandProcessor("cancel", account.CancelHandle)
 	b.NewPrivateCommandProcessor("bind", account.BindHandle)
 	b.NewPrivateCommandProcessor("unbind", account.UnbindHandle)
-	//bot.TeleBot.NewPrivateCommandProcessor("resume", account.ResumeHandle)
 	b.NewPrivateCommandProcessor("reset_token", account.SetTokenHandle)
-	b.NewPrivateCommandProcessor("btoken", account.SetBTokenHandle)
 	b.NewPrivateCommandProcessor("import_gacha", player.PlayerHandle)
 	b.NewPrivateCommandProcessor("export_gacha", player.PlayerHandle)
 
 	// wait
 	b.NewWaitMessageProcessor("setToken", account.SetToken)
-	b.NewWaitMessageProcessor("bToken", account.SetBToken)
-	//bot.TeleBot.NewWaitMessageProcessor("resume", account.Resume)
 	b.NewWaitMessageProcessor("resetToken", account.ResetToken)
 	b.NewWaitMessageProcessor("importGacha", player.PlayerHandle)
 

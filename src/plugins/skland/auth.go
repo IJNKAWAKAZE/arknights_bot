@@ -80,7 +80,7 @@ func Login(token string) (Account, error) {
 
 // 获取 OAuth2 授权代码
 func grantApp(token string, code string) (*GrantAppData, error) {
-	req := HR().SetBody(gh.M{"type": "0", "token": token, "appCode": code})
+	req := HR().SetBody(gh.M{"type": 0, "token": token, "appCode": code})
 	return HypergryphRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant")
 }
 
@@ -123,16 +123,6 @@ func CheckToken(token string) (*User, error) {
 		return nil, fmt.Errorf("token已失效请重新登录！")
 	}
 	return user, err
-}
-
-// CheckBToken 检查BToken有效性
-func CheckBToken(token string) error {
-	req := HR().SetBody(gh.MS{"token": token})
-	_, err := HypergryphRequest[any](req, "POST", "/u8/user/info/v1/basic")
-	if err != nil {
-		return fmt.Errorf("btoken已失效请重新登录！")
-	}
-	return err
 }
 
 // 刷新 auth
@@ -178,7 +168,6 @@ func LoginHypergryph(token, uid string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get u8token error: %w", err)
 	}
-
 	u8Token := gjson.Parse(string(res.Body())).Get("data.token").String()
 
 	reqLogin := HR().SetBody(gh.M{"share_by": "", "share_type": "", "source_from": "", "token": u8Token})

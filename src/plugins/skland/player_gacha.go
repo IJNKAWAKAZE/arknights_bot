@@ -23,20 +23,12 @@ type Char struct {
 }
 
 // GetPlayerGacha 抽卡记录
-func GetPlayerGacha(token, channelId, uid string) ([]Char, error) {
+func GetPlayerGacha(token, uid string) ([]Char, error) {
 	var chars []Char
-	if channelId == "1" {
-		_, err := CheckToken(token)
-		if err != nil {
-			log.Println(err)
-			return chars, err
-		}
-	} else if channelId == "2" {
-		err := CheckBToken(token)
-		if err != nil {
-			log.Println(err)
-			return chars, err
-		}
+	_, err := CheckToken(token)
+	if err != nil {
+		log.Println(err)
+		return chars, err
 	}
 
 	u8Token, err := LoginHypergryph(token, uid)

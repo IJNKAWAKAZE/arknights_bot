@@ -8,19 +8,11 @@ import (
 )
 
 // GetPlayerRedeem CDK兑换
-func GetPlayerRedeem(token, cdk, channelId, uid string) (string, error) {
-	if channelId == "1" {
-		_, err := CheckToken(token)
-		if err != nil {
-			log.Println(err)
-			return err.Error(), err
-		}
-	} else if channelId == "2" {
-		err := CheckBToken(token)
-		if err != nil {
-			log.Println(err)
-			return err.Error(), err
-		}
+func GetPlayerRedeem(token, cdk, uid string) (string, error) {
+	_, err := CheckToken(token)
+	if err != nil {
+		log.Println(err)
+		return err.Error(), err
 	}
 
 	res, err := getPlayerRedeem(token, cdk, uid)
@@ -36,7 +28,6 @@ func GetPlayerRedeem(token, cdk, channelId, uid string) (string, error) {
 }
 
 func getPlayerRedeem(token, cdk, uid string) (string, error) {
-
 	u8Token, err := LoginHypergryph(token, uid)
 	if err != nil {
 		return "", fmt.Errorf("登录失败")

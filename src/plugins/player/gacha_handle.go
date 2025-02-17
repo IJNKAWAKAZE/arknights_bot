@@ -4,7 +4,6 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
-	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"fmt"
@@ -39,28 +38,8 @@ type UserGacha struct {
 func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	token := userAccount.HypergryphToken
-	channelId := "1"
-	var userPlayer account.UserPlayer
-	utils.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
-	if userPlayer.ServerName == "b服" || userPlayer.ServerName == "bilibili服" {
-		token = userPlayer.BToken
-		channelId = "2"
-		// BToken为空设置BToken
-		if token == "" {
-			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("BToken未设置，请先进行[设置](https://t.me/%s)。", viper.GetString("bot.name")))
-			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-			sendMessage.ReplyToMessageID = messageId
-			msg, err := bot.Arknights.Send(sendMessage)
-			messagecleaner.AddDelQueue(chatId, messageId, 5)
-			if err != nil {
-				return err
-			}
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-			return nil
-		}
-	}
 	// 获取角色抽卡记录
-	chars, err := skland.GetPlayerGacha(token, channelId, uid)
+	chars, err := skland.GetPlayerGacha(token, uid)
 	if err != nil {
 		log.Println(err)
 		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
