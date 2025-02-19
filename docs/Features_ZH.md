@@ -6,9 +6,7 @@
 ```
 /bind - 绑定森空岛账号(支持多账号与单账号多角色)
 /unbind - 解绑角色
-/resume - 设置角色签名(因官方开放签名此功能已关闭)
 /reset_token - 重设森空岛Token
-/btoken - 设置BToken(B服用户才需要)
 /import_gacha - 导入抽卡记录
 /export_gacha - 导出抽卡记录
 /cancel - 取消当前操作

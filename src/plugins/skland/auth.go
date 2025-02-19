@@ -4,6 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"fmt"
 	"github.com/starudream/go-lib/core/v2/gh"
+	"github.com/tidwall/gjson"
 	"log"
 )
 
@@ -124,16 +125,6 @@ func CheckToken(token string) (*User, error) {
 	return user, err
 }
 
-// CheckBToken 检查BToken有效性
-func CheckBToken(token string) error {
-	req := HR().SetBody(gh.MS{"token": token})
-	_, err := HypergryphRequest[any](req, "POST", "/u8/user/info/v1/basic")
-	if err != nil {
-		return fmt.Errorf("btoken已失效请重新登录！")
-	}
-	return err
-}
-
 // 刷新 auth
 func authRefresh(cred string) (*AuthRefreshData, error) {
 	req := SKR().SetHeader("cred", cred)
@@ -158,4 +149,32 @@ func ArknightsPlayers(skland AccountSkland) ([]*Player, error) {
 		}
 	}
 	return players, nil
+}
+
+// LoginHypergryph  官网登录
+func LoginHypergryph(token, uid string) (string, error) {
+	if token == "" {
+		return "", fmt.Errorf("token is empty")
+	}
+
+	reqGrantApp := HR().SetBody(gh.M{"type": 1, "token": token, "appCode": "be36d44aa36bfb5b"})
+	grantAppToken, err := HypergryphASRequest(reqGrantApp, "POST", "/user/oauth2/v2/grant")
+	if err != nil {
+		return "", fmt.Errorf("grant app error: %w", err)
+	}
+
+	reqU8Token := HR().SetBody(gh.M{"token": gjson.Parse(grantAppToken).Get("data.token").String(), "uid": uid})
+	res, err := reqU8Token.Execute("POST", "https://binding-api-account-prod.hypergryph.com/account/binding/v1/u8_token_by_uid")
+	if err != nil {
+		return "", fmt.Errorf("get u8token error: %w", err)
+	}
+	u8Token := gjson.Parse(string(res.Body())).Get("data.token").String()
+
+	reqLogin := HR().SetBody(gh.M{"share_by": "", "share_type": "", "source_from": "", "token": u8Token})
+	resLogin, err := HypergryphAKRequest(reqLogin, "POST", "/user/api/role/login")
+	if err != nil || resLogin == "" {
+		return "", fmt.Errorf("登录失败：%w", err)
+	}
+
+	return u8Token, nil
 }

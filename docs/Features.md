@@ -6,9 +6,7 @@ This document provides an overview of the features available in the Arknights Te
 ```
 /bind - Bind your Telegram account with your Arknights account.
 /unbind - Unbind your Telegram account from your Arknights account.
-/resume - Set your resume for the card(closed).
 /reset_token - Reset your token status.
-/btoken - Set your bilibili token.
 /import_gacha - Import your gacha history.
 /export_gacha - Export your gacha history.
 /cancel - Cancel the current operation.

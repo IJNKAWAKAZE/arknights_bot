@@ -341,7 +341,7 @@
     }
     function timestampToTime(timestamp) {
         timestamp = timestamp ? timestamp : null;
-        let date = new Date(timestamp*1000);
+        let date = new Date(timestamp);
         let Y = date.getFullYear() + '-';
         let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
         let D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
@@ -352,7 +352,7 @@
     }
     function formatDate(timestamp) {
         timestamp = timestamp ? timestamp : null;
-        let date = new Date(timestamp*1000);
+        let date = new Date(Number(timestamp));
         let Y = date.getFullYear() + '-';
         let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
         let D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';

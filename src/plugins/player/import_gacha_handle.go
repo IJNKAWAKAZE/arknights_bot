@@ -16,8 +16,12 @@ import (
 
 type ImportGachaData struct {
 	Data map[string]struct {
-		C [][]interface{} `json:"c"`
-		P string          `json:"p"`
+		P   string          `json:"p"`
+		Pi  string          `json:"pi"`
+		C   [][]interface{} `json:"c"`
+		Cn  string          `json:"cn"`
+		Ci  string          `json:"ci"`
+		Pos int             `json:"pos"`
 	} `json:"data"`
 }
 
@@ -73,12 +77,13 @@ func (operation PlayerOperationImportS2) HintOnRequirementsFailed() (string, boo
 func addGacha(importGachaData ImportGachaData, userNumber int64, uid string, name string) {
 	// 遍历抽卡记录
 	for k, d := range importGachaData.Data {
-		key, _ := strconv.ParseInt(k, 10, 64)
+		key, _ := strconv.ParseFloat(k, 64)
+		key *= 1000
 		var gacha UserGacha
 		res := bot.DBEngine.Raw("select * from user_gacha where user_number = ? and uid = ? and ts = ?", userNumber, uid, key).Scan(&gacha)
 		if res.RowsAffected == 0 {
 			// 同步抽卡数据
-			for i, c := range d.C {
+			for _, c := range d.C {
 				id, _ := gonanoid.New(32)
 				n := strconv.Itoa(int(c[2].(float64)))
 				isNew, _ := strconv.ParseBool(n)
@@ -88,11 +93,11 @@ func addGacha(importGachaData ImportGachaData, userNumber int64, uid string, nam
 					UserNumber: userNumber,
 					Uid:        uid,
 					PoolName:   d.P,
-					PoolOrder:  i + 1,
+					PoolOrder:  int(c[2].(float64)),
 					CharName:   c[0].(string),
 					IsNew:      isNew,
 					Rarity:     int64(c[1].(float64)),
-					Ts:         key,
+					Ts:         int64(key),
 				}
 				bot.DBEngine.Table("user_gacha").Create(&userGacha)
 			}
