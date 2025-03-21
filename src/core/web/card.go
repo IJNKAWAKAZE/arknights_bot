@@ -4,14 +4,12 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -116,16 +114,22 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	var userPlayer account.UserPlayer
 	utils.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
 	playerCard.ServerName = userPlayer.ServerName
-	//playerCard.Resume = userPlayer.Resume
 	skAccount.Hypergryph.Token = userAccount.HypergryphToken
 	skAccount.Skland.Token = userAccount.SklandToken
 	skAccount.Skland.Cred = userAccount.SklandCred
 	playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount)
 	if err != nil {
 		log.Println(err)
+		utils.WebC <- err
 		return playerCard, err
 	}
 	playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount)
+	if err != nil {
+		log.Println(err)
+		utils.WebC <- err
+		return playerCard, err
+	}
+	playerCards, err := skland.GetPlayerCards(skAccount)
 	if err != nil {
 		log.Println(err)
 		utils.WebC <- err
@@ -168,7 +172,7 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	playerCard.Level = playerData.Status.Level
 	playerCard.RegTime = playerData.Status.RegisterTs
 	playerCard.MainStageProgress = playerData.StageInfoMap[playerData.Status.MainStageProgress].Code
-	avatarId := playerData.Status.Avatar.Id
+	/*avatarId := playerData.Status.Avatar.Id
 	if strings.HasPrefix(avatarId, "char") {
 		playerCard.Avatar = fmt.Sprintf("https://web.hycdn.cn/arknights/game/assets/char_skin/avatar/%s.png", url.QueryEscape(avatarId))
 	} else {
@@ -177,8 +181,9 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 		m := utils.Md5(paintingName)
 		path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 		playerCard.Avatar = path + paintingName + "/80px-" + paintingName
-	}
-	playerCard.Resume = playerData.Status.Resume
+	}*/
+	playerCard.Avatar = playerCards.List[0].Arknights.Avatar.URL
+	playerCard.Resume = playerCards.List[0].Arknights.Resume
 	playerCard.CharCnt = len(playerData.Chars)
 	playerCard.NationList = getNationList(playerData)
 	if _, has := charMap["char_1001_amiya2"]; has {
