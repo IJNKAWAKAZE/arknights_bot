@@ -57,6 +57,7 @@ func Serve() {
 	b.NewCommandProcessor("state", player.PlayerHandle)
 	b.NewCommandProcessor("box", player.PlayerHandle)
 	b.NewCommandProcessor("box_detail", player.PlayerHandle)
+	b.NewCommandProcessor("box_summary", player.PlayerHandle)
 	b.NewCommandProcessor("missing", player.PlayerHandle)
 	b.NewCommandProcessor("card", player.PlayerHandle)
 	b.NewCommandProcessor("base", player.PlayerHandle)

@@ -9,6 +9,7 @@ var (
 		"state":        PlayerOperationState{},
 		"box":          PlayerOperationBox{},
 		"box_detail":   PlayerOperationBoxDetail{},
+		"box_summary":  PlayerOperationBoxSummary{},
 		"gacha":        PlayerOperationGacha{},
 		"card":         PlayerOperationCard{},
 		"import_gacha": PlayerOperationImportS1{},

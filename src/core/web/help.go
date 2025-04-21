@@ -46,6 +46,7 @@ func Help(r *gin.Engine) {
 		publicCmds = append(publicCmds, Cmd{Cmd: "/box", Desc: "对应星级干员", Param: "5,6", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/box_detail", Desc: "干员详情(默认6星)", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/box_detail", Desc: "对应星级干员", Param: "5", IsBind: true})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/box_summary", Desc: "干员信息汇总", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "未获取干员(默认6星)", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "所有未获取干员", Param: "all", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/missing", Desc: "对应星级未获取干员", Param: "5,6", IsBind: true})
