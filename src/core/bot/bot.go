@@ -83,6 +83,7 @@ func Serve() {
 	b.NewCommandProcessor("news", system.NewsHandle)
 	b.NewCommandProcessor("birthday", system.BirthdayHandle)
 	b.NewCommandProcessor("reg", system.RegulationHandle)
+	b.NewCommandProcessor("welcome", system.WelcomeHandle)
 	b.NewCommandProcessor("clear", system.ClearHandle)
 	b.NewCommandProcessor("kill", system.KillHandle)
 	b.Run()

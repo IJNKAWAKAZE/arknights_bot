@@ -74,6 +74,7 @@ func Help(r *gin.Engine) {
 		adminCmds = append(adminCmds, Cmd{Cmd: "/headhunt", Desc: "开启寻访模拟", Param: "start", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/headhunt", Desc: "关闭寻访模拟", Param: "stop", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/reg", Desc: "回复消息设置为群规", Param: "", IsBind: false})
+		adminCmds = append(adminCmds, Cmd{Cmd: "/welcome", Desc: "设置入群欢迎信息", Param: "文本", IsBind: false})
 
 		helpCmd.PrivateCmds = privateCmds
 		helpCmd.PublicCmds = publicCmds
