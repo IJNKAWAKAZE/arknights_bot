@@ -9,6 +9,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/ijnkawakaze/telegram-bot-api v1.0.9
 	github.com/matoous/go-nanoid/v2 v2.0.0
+	github.com/mozillazg/go-pinyin v0.20.0
 	github.com/playwright-community/playwright-go v0.2000.1
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/spf13/viper v1.14.0

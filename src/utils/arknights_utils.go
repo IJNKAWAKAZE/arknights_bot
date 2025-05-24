@@ -1,22 +1,25 @@
 package utils
 
 import (
+	"arknights_bot/utils/pinyin"
 	"arknights_bot/utils/suffixtree"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
-	"github.com/tidwall/gjson"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
 )
 
 type Operator struct {
 	Name         string `json:"name"`         // 名字
 	NameEn       string `json:"nameEn"`       // 英文名
 	NameJa       string `json:"nameJp"`       // 日文名
+	Pinyin       [][]string `json:"pinyin"`     // 拼音变体数组
 	Code         string `json:"code"`         // 编号
 	Race         string `json:"race"`         // 种族
 	Profession   string `json:"profession"`   // 职业
@@ -84,8 +87,43 @@ func updateData() {
 	operatorMap = make(map[string]Operator)
 	operatorTree = suffixtree.NewGeneralizedSuffixTree()
 	for index, operator := range operators {
+		// 生成所有拼音变体并建立索引
+		pinyinArgs := pinyin.NewArgs()
+		pinyinArgs.Style = pinyin.Normal
+		pinyinArgs.Heteronym = true // 启用多音字模式
+
+		// 原始名称索引
 		operatorMap[strings.ToLower(operator.Name)] = operator
 		operatorTree.Put(strings.ToLower(operator.Name), index)
+
+		// 生成所有拼音变体
+		variations := pinyin.NameVariations(operator.Name, pinyinArgs)
+		operator.Pinyin = variations // 存储拼音变体供后续使用
+
+		// 生成所有可能的拼音组合并建立索引
+		var possibleKeys []string
+		for _, charPinyin := range variations {
+			if len(possibleKeys) == 0 {
+				possibleKeys = charPinyin
+				continue
+			}
+			var newKeys []string
+			for _, key := range possibleKeys {
+				for _, py := range charPinyin {
+					newKeys = append(newKeys, key+py)
+				}
+			}
+			possibleKeys = newKeys
+		}
+
+		// 索引所有拼音组合
+		for _, key := range possibleKeys {
+			lowerKey := strings.ToLower(key)
+			if _, exists := operatorMap[lowerKey]; !exists {
+				operatorMap[lowerKey] = operator
+				operatorTree.Put(lowerKey, index)
+			}
+		}
 		if strings.Contains(operator.ObtainMethod, "公开招募") {
 			recruitOperatorList = append(recruitOperatorList, operator)
 		}
@@ -136,15 +174,63 @@ func fetchEnemiesData() ([]pair, suffixtree.GST) {
 	}
 	return newEnemyArray, emeryTree
 }
+
+var isTesting = false
+
 func GetOperatorByName(name string) Operator {
-	updateData()
-	return operatorMap[strings.ToLower(name)]
+	if !isTesting {
+		updateData()
+	}
+
+	// 先尝试精确匹配
+	lowerName := strings.ToLower(name)
+	if op, ok := operatorMap[lowerName]; ok {
+		return op
+	}
+
+	// 生成输入名的所有拼音组合
+	pinyinArgs := pinyin.NewArgs()
+	pinyinArgs.Style = pinyin.Normal
+	pinyinArgs.Heteronym = true
+	inputPinyin := pinyin.Pinyin(name, pinyinArgs)
+
+	// 生成所有可能的拼音组合
+	var possibleKeys []string
+	for _, charPinyin := range inputPinyin {
+		if len(possibleKeys) == 0 {
+			possibleKeys = charPinyin
+			continue
+		}
+		var newKeys []string
+		for _, key := range possibleKeys {
+			for _, py := range charPinyin {
+				newKeys = append(newKeys, key+py)
+			}
+		}
+		possibleKeys = newKeys
+	}
+
+	// 检查每个拼音组合是否匹配
+	for _, key := range possibleKeys {
+		if op, ok := operatorMap[strings.ToLower(key)]; ok {
+			return op
+		}
+	}
+
+	// 最后尝试后缀树搜索
+	if indices := operatorTree.Search(lowerName); len(indices) > 0 {
+		return operators[indices[0]]
+	}
+
+	return Operator{} // 未找到返回空结构体
 }
 
 func GetOperatorsByName(name string) []Operator {
 	updateData()
 	var operatorList []Operator
 	var set = make(map[int]bool)
+
+	// 原始名称搜索
 	for _, op := range operatorTree.Search(strings.ToLower(name)) {
 		_, contain := set[op]
 		if !contain {
@@ -152,6 +238,40 @@ func GetOperatorsByName(name string) []Operator {
 			operatorList = append(operatorList, operators[op])
 		}
 	}
+
+	// 拼音搜索 - 使用预先生成的拼音索引
+	pinyinArgs := pinyin.NewArgs()
+	pinyinArgs.Style = pinyin.Normal
+	pinyinArgs.Heteronym = true
+	inputPinyin := pinyin.Pinyin(name, pinyinArgs)
+	
+	// 生成所有可能的拼音组合
+	var possibleKeys []string
+	for _, charPinyin := range inputPinyin {
+		if len(possibleKeys) == 0 {
+			possibleKeys = charPinyin
+			continue
+		}
+		var newKeys []string
+		for _, key := range possibleKeys {
+			for _, py := range charPinyin {
+				newKeys = append(newKeys, key+py)
+			}
+		}
+		possibleKeys = newKeys
+	}
+
+	// 搜索所有拼音组合
+	for _, key := range possibleKeys {
+		for _, op := range operatorTree.Search(strings.ToLower(key)) {
+			_, contain := set[op]
+			if !contain {
+				set[op] = true
+				operatorList = append(operatorList, operators[op])
+			}
+		}
+	}
+
 	return operatorList
 }
 

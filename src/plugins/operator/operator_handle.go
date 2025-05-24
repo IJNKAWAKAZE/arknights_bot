@@ -5,9 +5,10 @@ import (
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
 	"fmt"
+	"log"
+
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
-	"log"
 )
 
 // OperatorHandle 干员查询
@@ -47,7 +48,7 @@ func OperatorHandle(update tgbotapi.Update) error {
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
-
+	name = operator.OP.Name
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 
