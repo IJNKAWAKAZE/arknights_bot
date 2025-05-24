@@ -16,6 +16,8 @@ var RecruitMissing map[string]string
 
 var RecruitTagMap map[string]string
 
+var EnemyName map[string]string
+
 var IgnoreBirthday map[string]string
 
 var ADWords []string
@@ -53,8 +55,10 @@ func initData() {
 	Pool[3] = viper.GetString("headhunt.pool_3")
 	jpMissing := viper.GetString("recruit.missing.jp")
 	recruitTags := viper.GetString("recruit.tags")
+	enemyName := viper.GetString("enemy_name")
 	RecruitMissing = make(map[string]string)
 	RecruitTagMap = make(map[string]string)
+	EnemyName = make(map[string]string)
 	IgnoreBirthday = make(map[string]string)
 	for _, ignore := range viper.GetStringSlice("ignore_birthday") {
 		IgnoreBirthday[ignore] = ignore
@@ -67,6 +71,12 @@ func initData() {
 		for _, tag := range strings.Split(recruitTags, "/") {
 			t := strings.Split(tag, "-")
 			RecruitTagMap[t[0]] = t[1]
+		}
+	}
+	if len(enemyName) > 0 {
+		for _, enemy := range strings.Split(enemyName, "/") {
+			t := strings.Split(enemy, "-")
+			EnemyName[t[0]] = t[1]
 		}
 	}
 }

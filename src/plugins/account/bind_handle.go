@@ -16,8 +16,10 @@ func BindHandle(update tgbotapi.Update) error {
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
 	bot.Arknights.Send(sendMessage)
 	sendMessage.Text = "如何获取token\n\n" +
+		"方法一：\n" +
 		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
 		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)\n\n" +
+		"方法二：\n" +
 		"手机用户且已登录森空岛直接点击此处获取token：[获取token](https://ss.xingzhige.com/skland.html)"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)

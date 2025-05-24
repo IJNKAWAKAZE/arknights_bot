@@ -1,0 +1,126 @@
+<html>
+<head>
+    <meta name="referrer" content="no-referrer" />
+    <title>干员信息汇总</title>
+    <style>
+        @font-face{
+            font-family: 'NotoSansHans';
+            src : url('/assets/font/NotoSansHans-Regular.ttf');
+        }
+        body {
+            margin: 0;
+            font-family: 'NotoSansHans',serif;
+        }
+        #main {
+            width: 900px;
+            background-color: #2e3031;
+        }
+        #label {
+            float: left;
+            width: 100%;
+            height: 60px;
+        }
+        #title {
+            float: left;
+            color: white;
+            margin-left: 25px;
+            margin-top: -55px;
+            font-size: 30px;
+        }
+        table {
+            width: 100%;
+            color: white;
+            border-spacing: 20px 5px;
+        }
+        td {
+            border-bottom: solid 1px;
+        }
+        td div {
+            display: flex;
+            justify-content: space-between;
+            margin: 0 10px;
+        }
+        .operator {
+            width: 40px;
+        }
+    </style>
+</head>
+<body>
+<div id="main">
+    <div>
+        <img id="label" src="/assets/help/label.png"/>
+        {{if .Name}}
+        <span id="title">Dr {{.Name}}</span>
+        {{end}}
+    </div>
+    <table>
+        <tr>
+            <th>全部干员</th>
+            <th>六星干员</th>
+            <th>五星干员</th>
+            <th>四星干员</th>
+        </tr>
+        <tr>
+            <td><div><span>招募干员数量</span><span>{{.AllCharCnt}}</span></div></td>
+            <td><div><span>招募干员数量</span><span>{{.Star6CharCnt}}</span></div></td>
+            <td><div><span>招募干员数量</span><span>{{.Star5CharCnt}}</span></div></td>
+            <td><div><span>招募干员数量</span><span>{{.Star4CharCnt}}</span></div></td>
+        </tr>
+        <tr>
+            <td><div><span>精英阶段2干员</span><span>{{.AllEvolvePhase2Cnt}}</span></div></td>
+            <td><div><span>精英阶段2干员</span><span>{{.Star6EvolvePhase2Cnt}}</span></div></td>
+            <td><div><span>精英阶段2干员</span><span>{{.Star5EvolvePhase2Cnt}}</span></div></td>
+            <td><div><span>精英阶段2干员</span><span>{{.Star4EvolvePhase2Cnt}}</span></div></td>
+        </tr>
+        <tr>
+            <td><div><span>专精三技能数量</span><span>{{.AllSkill10Cnt}}</span></div></td>
+            <td><div><span>专精三技能数量</span><span>{{.Star6Skill10Cnt}}</span></div></td>
+            <td><div><span>专精三技能数量</span><span>{{.Star5Skill10Cnt}}</span></div></td>
+            <td><div><span>专精三技能数量</span><span>{{.Star4Skill10Cnt}}</span></div></td>
+        </tr>
+        <tr>
+            <td><div><span>专精二技能数量</span><span>{{.AllSkill9Cnt}}</span></div></td>
+            <td><div><span>专精二技能数量</span><span>{{.Star6Skill9Cnt}}</span></div></td>
+            <td><div><span>专精二技能数量</span><span>{{.Star5Skill9Cnt}}</span></div></td>
+            <td><div><span>专精二技能数量</span><span>{{.Star4Skill9Cnt}}</span></div></td>
+        </tr>
+        <tr>
+            <td><div><span>专精一技能数量</span><span>{{.AllSkill8Cnt}}</span></div></td>
+            <td><div><span>专精一技能数量</span><span>{{.Star6Skill8Cnt}}</span></div></td>
+            <td><div><span>专精一技能数量</span><span>{{.Star5Skill8Cnt}}</span></div></td>
+            <td><div><span>专精一技能数量</span><span>{{.Star4Skill8Cnt}}</span></div></td>
+        </tr>
+        <tr>
+            <td><div><span>三级模组数量</span><span>{{.AllEquipStage3Cnt}}</span></div></td>
+            <td><div><span>三级模组数量</span><span>{{.Star6EquipStage3Cnt}}</span></div></td>
+            <td><div><span>三级模组数量</span><span>{{.Star5EquipStage3Cnt}}</span></div></td>
+            <td><div><span>三级模组数量</span><span>{{.Star4EquipStage3Cnt}}</span></div></td>
+        </tr>
+        <tr>
+            <td><div><span>二级模组数量</span><span>{{.AllEquipStage2Cnt}}</span></div></td>
+            <td><div><span>二级模组数量</span><span>{{.Star6EquipStage2Cnt}}</span></div></td>
+            <td><div><span>二级模组数量</span><span>{{.Star5EquipStage2Cnt}}</span></div></td>
+            <td><div><span>二级模组数量</span><span>{{.Star4EquipStage2Cnt}}</span></div></td>
+        </tr>
+        <tr>
+            <td><div><span>一级模组数量</span><span>{{.AllEquipStage1Cnt}}</span></div></td>
+            <td><div><span>一级模组数量</span><span>{{.Star6EquipStage1Cnt}}</span></div></td>
+            <td><div><span>一级模组数量</span><span>{{.Star5EquipStage1Cnt}}</span></div></td>
+            <td><div><span>一级模组数量</span><span>{{.Star4EquipStage1Cnt}}</span></div></td>
+        </tr>
+        {{if .MissingChars}}
+        <tr>
+            <th colspan="4">未招募干员</th>
+        </tr>
+        <tr>
+            <td colspan="4" style="border-bottom:none;text-align: justify;">
+                {{range .MissingChars}}
+                <img class="operator" src="{{.SkinId}}" onerror="this.src='assets/common/amiya.png'"/>
+                {{end}}
+            </td>
+        </tr>
+        {{end}}
+    </table>
+</div>
+</body>
+</html>

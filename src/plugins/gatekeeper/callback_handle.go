@@ -68,10 +68,14 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 	callbackQuery.Delete()
 
 	if !adminPass {
-		// 新人发送box提醒
-		text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请向群内发送自己的干员列表截图（或其他截图证明您是真正的玩家），否则可能会被移出群聊。\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, callbackQuery.From.FullName()), callbackQuery.From.ID)
 		var joined utils.GroupJoined
 		utils.GetJoinedByChatId(chatId).Scan(&joined)
+		// 新人入群提醒
+		var welcome string
+		if joined.Welcome != "" {
+			welcome = "，" + joined.Welcome
+		}
+		text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)%s\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, callbackQuery.From.FullName()), callbackQuery.From.ID, welcome)
 		if joined.Reg != -1 {
 			text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%d)", callbackQuery.Message.Chat.UserName, joined.Reg)
 		}

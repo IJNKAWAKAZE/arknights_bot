@@ -1,8 +1,6 @@
 package enemy
 
 import (
-	"arknights_bot/utils"
-	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 	"html/template"
@@ -67,10 +65,8 @@ func ParseEnemy(name string) Enemy {
 	// 基本属性
 	trs := doc.Find(".hlist").First().Find("tr")
 	enemy.Name = strings.ReplaceAll(trs.Eq(0).Text(), "\n", "")
-	paintingName := fmt.Sprintf("头像_敌人_%s.png", enemy.Name)
-	m := utils.Md5(paintingName)
-	path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
-	enemy.Pic = path + paintingName
+	pic, _ := trs.Eq(1).Find(".enemyicon a img").Attr("data-src")
+	enemy.Pic = pic
 	enemy.Desc = strings.ReplaceAll(trs.Eq(1).Find("td").Eq(1).Text(), "\n", "")
 	td3 := trs.Eq(3).Find("td")
 	enemy.EnemyRace = strings.ReplaceAll(td3.Eq(0).Text(), "\n", "")

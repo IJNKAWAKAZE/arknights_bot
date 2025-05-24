@@ -36,11 +36,8 @@ func EnemyHandle(update tgbotapi.Update) error {
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		return nil
 	}
-	if name == "多萝西" {
-		name = "多萝西(敌方)"
-	}
-	if name == "弑君者" {
-		name = "弑君者(敌方)"
+	if _, has := bot.EnemyName[name]; has {
+		name = bot.EnemyName[name]
 	}
 	enemy := ParseEnemy(name)
 	if enemy.Name == "" {

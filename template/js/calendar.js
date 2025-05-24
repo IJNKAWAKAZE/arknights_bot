@@ -50,7 +50,7 @@ Calendar.prototype = {
         this.timeNowEle.innerHTML =   "<span>" + year + "年" + (month + 1) + "月" + day + "日" + "</span>"
                                     + "<span>" + this.attrs.dayLongNames[week] + "</span>";
         if(week === 0) {
-            resource.textContent = "经验书、技能书、钱、h红票、";
+            resource.textContent = "经验书、技能书、钱、红票、";
             chip.textContent = "近卫、特种、医疗、重装、辅助、先锋";
         }
         if(week === 1) {

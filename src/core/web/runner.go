@@ -25,6 +25,7 @@ func Start() {
 	Calendar(r)
 	Depot(r)
 	BoxDetail(r)
+	Summary(r)
 	port := viper.GetString("http.port")
 	err := r.Run(":" + port)
 	if err != nil {
