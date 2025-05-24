@@ -121,7 +121,7 @@ func updateData() {
 			lowerKey := strings.ToLower(key)
 			if _, exists := operatorMap[lowerKey]; !exists {
 				operatorMap[lowerKey] = operator
-				operatorTree.Put(lowerKey, index)
+				//operatorTree.Put(lowerKey, index)
 			}
 		}
 		if strings.Contains(operator.ObtainMethod, "公开招募") {
