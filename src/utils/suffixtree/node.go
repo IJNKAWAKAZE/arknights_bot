@@ -32,14 +32,19 @@ type node struct {
  * @return the first numElements associated to this node and children
  */
 func (n *node) getData() (ret []int) {
+	if n == nil {
+		return nil
+	}
 
-	ret = n.data
+	ret = make([]int, len(n.data))
+	copy(ret, n.data)
 
 	// need to get more matches from child nodes. This is what may waste time
 	for _, edge := range n.edges {
-		data := edge.node.getData()
-		ret = append(ret, data...)
-
+		if edge != nil && edge.node != nil {
+			data := edge.node.getData()
+			ret = append(ret, data...)
+		}
 	}
 	return
 }
@@ -98,5 +103,9 @@ func (n *node) addIndex(idx int) {
 }
 
 func newNode() *node {
-	return &node{}
+	return &node{
+		data:   make([]int, 0),
+		edges:  make([]*edge, 0),
+		suffix: nil,
+	}
 }
