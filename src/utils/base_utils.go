@@ -106,7 +106,7 @@ func DownloadFile(fileId string) (io.ReadCloser, string) {
 
 // GetAccountByUserId 查询账号信息
 func GetAccountByUserId(userId int64) *gorm.DB {
-	return bot.DBEngine.Raw("select * from user_account where user_number = ?", userId)
+	return bot.DBEngine.Raw("select * from user_account where user_number = ? limit 1", userId)
 }
 
 // GetAccountByUserIdAndSklandId 查询账号信息
@@ -475,6 +475,7 @@ func CreateTelegraphPage(content, title string) string {
 		return ""
 	}
 	jsonStr := string(readAll)
-	skinUrl := gjson.Get(jsonStr, "result.url").String()
-	return skinUrl
+	log.Println(jsonStr)
+	url := gjson.Get(jsonStr, "result.url").String()
+	return url
 }

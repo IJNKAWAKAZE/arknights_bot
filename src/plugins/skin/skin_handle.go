@@ -4,6 +4,7 @@ import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils"
+	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/tidwall/sjson"
 )
@@ -51,13 +52,19 @@ func SkinHandle(update tgbotapi.Update) error {
 
 	content := "[]"
 	for _, skin := range operator.Skins {
+		if skin.Name != "" {
+			children, _ := sjson.Set("{}", "tag", "h4")
+			children, _ = sjson.Set(children, "children", []string{skin.Name})
+			content, _ = sjson.SetRaw(content, "-1", children)
+		}
 		src, _ := sjson.Set("", "attrs.src", skin.Url)
 		attrs, _ := sjson.Set(src, "tag", "img")
 		content, _ = sjson.SetRaw(content, "-1", attrs)
 	}
 	skinUrl := utils.CreateTelegraphPage(content, name+"的皮肤")
-	sendMessage := tgbotapi.NewMessage(chatId, skinUrl)
+	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("[%s的皮肤](%s)", name, skinUrl))
 	sendMessage.ReplyToMessageID = messageId
+	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	bot.Arknights.Send(sendMessage)
 	return nil
 }
