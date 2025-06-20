@@ -10,6 +10,11 @@ import (
 
 func NewMemberHandle(update tgbotapi.Update) error {
 	message := update.Message
+	var joined utils.GroupJoined
+	utils.GetJoinedByChatId(message.Chat.ID).Scan(&joined)
+	if joined.RequestMode == 1 { // 不使用此验证
+		return nil
+	}
 	for _, member := range message.NewChatMembers {
 		chatId := message.Chat.ID
 		userId := member.ID

@@ -69,6 +69,7 @@ func Help(r *gin.Engine) {
 		// 管理员指令
 		adminCmds = append(adminCmds, Cmd{Cmd: "/news", Desc: "开启/关闭动态推送", Param: "", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/birthday", Desc: "开启/关闭生日推送", Param: "", IsBind: false})
+		adminCmds = append(adminCmds, Cmd{Cmd: "/request_mode", Desc: "切换群验证模式", Param: "", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/quiz", Desc: "开启云玩家检测", Param: "start", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/quiz", Desc: "关闭云玩家检测", Param: "stop", IsBind: false})
 		adminCmds = append(adminCmds, Cmd{Cmd: "/headhunt", Desc: "开启寻访模拟", Param: "start", IsBind: false})
