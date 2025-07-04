@@ -11,6 +11,7 @@ import (
 	"arknights_bot/plugins/sign"
 	"arknights_bot/plugins/skin"
 	"arknights_bot/plugins/system"
+	"github.com/spf13/viper"
 	"log"
 )
 
@@ -18,6 +19,7 @@ import (
 func Serve() {
 	log.Println("机器人启动成功")
 	b := bot.Arknights.AddHandle()
+	bot.Arknights.Debug = viper.GetBool("bot.debug")
 	b.NewProcessor(gatekeeper.JoinRequest, gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)

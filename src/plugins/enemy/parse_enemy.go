@@ -21,6 +21,10 @@ type Enemy struct {
 	Attack     string        `json:"attack"`     // 攻击力
 	Defence    string        `json:"defence"`    // 防御力
 	Resistance string        `json:"resistance"` // 法抗
+	MoveSpeed  string        `json:"moveSpeed"`  // 移动速度
+	ATKSpeed   string        `json:"ATKSpeed"`   // 攻击速度
+	ElementRes string        `json:"elementRes"` // 元素抵抗
+	DamageRes  string        `json:"damageRes"`  // 损伤抵抗
 	Ability    template.HTML `json:"ability"`    // 能力
 	Levels     []Level       `json:"level"`      // 级别信息
 }
@@ -78,7 +82,12 @@ func ParseEnemy(name string) Enemy {
 	enemy.Attack = strings.ReplaceAll(td5.Eq(1).Text(), "\n", "")
 	enemy.Defence = strings.ReplaceAll(td5.Eq(2).Text(), "\n", "")
 	enemy.Resistance = strings.ReplaceAll(td5.Eq(3).Text(), "\n", "")
-	ability, _ := trs.Eq(7).Html()
+	td7 := trs.Eq(7).Find("td")
+	enemy.MoveSpeed = strings.ReplaceAll(td7.Eq(0).Text(), "\n", "")
+	enemy.ATKSpeed = strings.ReplaceAll(td7.Eq(1).Text(), "\n", "")
+	enemy.ElementRes = strings.ReplaceAll(td7.Eq(2).Text(), "\n", "")
+	enemy.DamageRes = strings.ReplaceAll(td7.Eq(3).Text(), "\n", "")
+	ability, _ := trs.Eq(9).Html()
 	enemy.Ability = template.HTML(ability)
 
 	// 级别详情

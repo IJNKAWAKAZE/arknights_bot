@@ -7,6 +7,8 @@ bot:
   owner:
   # 消息删除延迟
   msg_del_delay: 10
+  # debug模式
+  debug: false
 
 sticker:
   ping: CAACAgUAAxkBAAPBZYTpA2TK3cnNG1CfXiLG_9Yo7t8AAiYEAAML4FddSAYCSfeu2jME
