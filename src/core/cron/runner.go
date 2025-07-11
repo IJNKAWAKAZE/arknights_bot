@@ -26,8 +26,8 @@ func StartCron() error {
 		return err
 	}
 
-	//每日4点执行生日祝福 0 0 4 * * ?
-	_, err = crontab.AddFunc("0 0 4 * * ?", birthday.Birthday)
+	//每日8点执行生日祝福 0 0 8 * * ?
+	_, err = crontab.AddFunc("0 0 8 * * ?", birthday.Birthday)
 	if err != nil {
 		return err
 	}
