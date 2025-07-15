@@ -61,6 +61,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
+		approveChatJoinRequest := tgbotapi.ApproveChatJoinRequestConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}, UserID: userId}
+		bot.Arknights.Request(approveChatJoinRequest)
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
