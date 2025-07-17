@@ -27,7 +27,7 @@ func Serve() {
 
 	// callback
 	b.NewCallBackProcessor("verify", gatekeeper.CallBackData)
-	b.NewCallBackProcessor("request_verify", gatekeeper.RequestCallBackData)
+	b.NewCallBackProcessor("request", gatekeeper.RequestCallBackData)
 	b.NewCallBackProcessor("bind", account.ChoosePlayer)
 	b.NewCallBackProcessor("unbind", account.UnbindPlayer)
 	b.NewCallBackProcessor("sign", sign.SignPlayer)

@@ -48,8 +48,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for i := 0; i < len(options); i += 2 {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("request_verify,%d,%d,%s", userId, chatId, options[i].Name)),
-			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("request_verify,%d,%d,%s", userId, chatId, options[i+1].Name)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("request,%d,%d,%s", userId, chatId, options[i].Name)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("request,%d,%d,%s", userId, chatId, options[i+1].Name)),
 		))
 	}
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
