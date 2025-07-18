@@ -136,6 +136,9 @@ func ParseOperator(name string) Operator {
 				selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 					selection.Find("td").Each(func(k int, selection *goquery.Selection) {
 						if k%3 == 0 {
+							if selection.Nodes[0].FirstChild.Data == "ul" {
+								return
+							}
 							var talent Talent
 							talentName, _ := selection.Html()
 							talent.Evolve = strings.ReplaceAll(selection.Next().Text(), "\n", "")
@@ -158,12 +161,14 @@ func ParseOperator(name string) Operator {
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "后勤技能" {
 				selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
-					var buildingSkill BuildingSkill
 					selection.Find("td").Each(func(k int, selection *goquery.Selection) {
+						var buildingSkill BuildingSkill
 						if k%5 == 0 {
 							buildingSkill.Evolve = selection.Text()
 							img, _ := selection.Next().Children().Attr("data-src")
-							buildingSkill.Icon = "https:" + img
+							if img != "" {
+								buildingSkill.Icon = "https:" + img
+							}
 							buildingSkill.Name = selection.Next().Next().Text()
 							buildingSkill.Desc = strings.ReplaceAll(selection.Next().Next().Next().Next().Text(), "\n", "")
 							buildingSkills = append(buildingSkills, buildingSkill)
