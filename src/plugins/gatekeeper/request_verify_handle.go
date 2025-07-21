@@ -14,6 +14,9 @@ import (
 func VerifyRequestMember(update tgbotapi.Update) {
 	chatId := update.ChatJoinRequest.Chat.ID
 	userId := update.ChatJoinRequest.From.ID
+	if verifySet.checkExist(userId, chatId) {
+		return
+	}
 	// 抽取验证信息
 	operatorsPool := utils.GetOperators()
 	var randNumMap = make(map[int64]struct{})

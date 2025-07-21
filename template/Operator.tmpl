@@ -226,10 +226,14 @@
             </tr>
             {{range .BuildingSkills}}
             <tr>
+                {{if .Desc}}
                 <td style="white-space: nowrap">{{.Evolve}}</td>
                 <td><img src="{{.Icon}}"/></td>
                 <td style="white-space: nowrap">{{.Name}}</td>
                 <td>{{.Desc}}</td>
+                {{else}}
+                <td colspan="4" style="white-space: nowrap">{{.Evolve}}</td>
+                {{end}}
             </tr>
             {{end}}
         </table>
