@@ -54,6 +54,12 @@
         .term {
             color: white !important;
         }
+        .mdi-play-circle::before {
+            content: "▶";
+        }
+        .mdi-circle-slice-5::before {
+            content: "🕓";
+        }
     </style>
 </head>
 <body>
@@ -79,30 +85,6 @@
             <td colspan="2">{{.Motion}}</td>
         </tr>
         <tr>
-            <td colspan="2">耐久</td>
-            <td colspan="2">攻击</td>
-            <td colspan="2">防御</td>
-            <td colspan="2">法抗</td>
-        </tr>
-        <tr>
-            <td colspan="2">{{.Endure}}</td>
-            <td colspan="2">{{.Attack}}</td>
-            <td colspan="2">{{.Defence}}</td>
-            <td colspan="2">{{.Resistance}}</td>
-        </tr>
-        <tr>
-            <td colspan="2">移动速度</td>
-            <td colspan="2">攻击速度</td>
-            <td colspan="2">元素抗性</td>
-            <td colspan="2">损伤抵抗</td>
-        </tr>
-        <tr>
-            <td colspan="2">{{.MoveSpeed}}</td>
-            <td colspan="2">{{.ATKSpeed}}</td>
-            <td colspan="2">{{.ElementRes}}</td>
-            <td colspan="2">{{.DamageRes}}</td>
-        </tr>
-        <tr>
             <td colspan="8" style="font-size: 20px;font-weight: 600;">能力</td>
         </tr>
         <tr>
@@ -115,59 +97,54 @@
             <td class="title" colspan="6">级别{{$i}}</td>
         </tr>
         <tr>
+            <td class="title" colspan="6">描述</td>
+        </tr>
+        <tr>
+            <td colspan="6">{{.Desc}}</td>
+        </tr>
+        <tr>
+            <td style="white-space: nowrap;">攻击方式</td>
+            <td style="white-space: nowrap;">{{.AttackType}}</td>
+            <td style="white-space: nowrap;">行动方式</td>
+            <td style="white-space: nowrap;">{{.Motion}}</td>
+            <td style="white-space: nowrap;">生命恢复速度</td>
+            <td style="white-space: nowrap;">{{.HpRecovery}}</td>
+        </tr>
+        <tr>
             <td style="white-space: nowrap;">最大生命值</td>
             <td style="white-space: nowrap;">攻击力</td>
             <td style="white-space: nowrap;">防御力</td>
             <td style="white-space: nowrap;">法抗</td>
-            <td style="white-space: nowrap;">攻击间隔</td>
             <td style="white-space: nowrap;">攻击范围半径</td>
+            <td style="white-space: nowrap;">重量</td>
         </tr>
         <tr>
             <td>{{.HP}}</td>
             <td>{{.ATK}}</td>
             <td>{{.DEF}}</td>
             <td>{{.Res}}</td>
-            <td>{{.Interval}}</td>
             <td>{{.ATKRadius}}</td>
-        </tr>
-        <tr>
-            <td style="white-space: nowrap;">进点损失</td>
-            <td style="white-space: nowrap;">移动速度</td>
-            <td style="white-space: nowrap;">重量等级</td>
-            <td style="white-space: nowrap;">元素抗性</td>
-            <td style="white-space: nowrap;">损伤抗性</td>
-            <td style="white-space: nowrap;">生命恢复速度</td>
-        </tr>
-        <tr>
-            <td>{{.Point}}</td>
-            <td>{{.MoveSpeed}}</td>
             <td>{{.Weight}}</td>
-            <td>{{.ElementRes}}</td>
+        </tr>
+        <tr>
+            <td style="white-space: nowrap;">移动速度</td>
+            <td style="white-space: nowrap;">攻击间隔 </td>
+            <td style="white-space: nowrap;">损伤抗性</td>
+            <td style="white-space: nowrap;">元素抗性</td>
+            <td style="white-space: nowrap;">基础嘲讽等级</td>
+            <td style="white-space: nowrap;">进点损失</td>
+        </tr>
+        <tr>
+            <td>{{.MoveSpeed}}</td>
+            <td>{{.Interval}}</td>
             <td>{{.DamageRes}}</td>
-            <td>{{.HpRecovery}}</td>
-        </tr>
-    </table>
-    <table class="level">
-        <tr>
-            <td colspan="7" style="font-size: 20px;font-weight: 600;">异常抗性</td>
+            <td>{{.ElementRes}}</td>
+            <td>{{.Ridicule}}</td>
+            <td>{{.Point}}</td>
         </tr>
         <tr>
-            <td>沉默免疫</td>
-            <td>眩晕免疫</td>
-            <td>沉睡免疫</td>
-            <td>冻结免疫</td>
-            <td>浮空免疫</td>
-            <td>战栗免疫</td>
-            <td>恐惧免疫</td>
-        </tr>
-        <tr>
-            <td>{{.Silence}}</td>
-            <td>{{.Dizziness}}</td>
-            <td>{{.Sleep}}</td>
-            <td>{{.Freeze}}</td>
-            <td>{{.Float}}</td>
-            <td>{{.Tremble}}</td>
-            <td>{{.Fear}}</td>
+            <td style="white-space: nowrap;">异常抗性</td>
+            <td colspan="5">{{.Abnormal}}</td>
         </tr>
     </table>
     <table class="level">
@@ -177,18 +154,16 @@
         </tr>
         <tr>
             <td>名称</td>
-            <td>初始</td>
-            <td>消耗</td>
-            <td>类型</td>
-            <td colspan="2">效果</td>
+            <td>冷却时间</td>
+            <td>技力消耗</td>
+            <td colspan="3">效果</td>
         </tr>
         {{range .Skills}}
         <tr>
-            <td>{{.Name}}</td>
-            <td>{{.SpInit}}</td>
-            <td>{{.SpCost}}</td>
-            <td style="white-space: nowrap;">{{.SkillType}}</td>
-            <td colspan="2">{{.Desc}}</td>
+            <td style="white-space: nowrap;">{{.Name}}</td>
+            <td style="white-space: nowrap;">{{.SpInit}}</td>
+            <td style="white-space: nowrap;">{{.SpCost}}</td>
+            <td colspan="3">{{.Desc}}</td>
         </tr>
         {{end}}
         {{end}}
