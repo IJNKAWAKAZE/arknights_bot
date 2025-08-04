@@ -19,7 +19,7 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	headhuntKey := fmt.Sprintf("headhuntFlag:%d", chatId)
 
 	if param == "" {
-		if utils.RedisIsExists(headhuntKey) && utils.RedisGet(headhuntKey) == "stop" {
+		if utils.RedisIsExists(headhuntKey) && utils.RedisGet(headhuntKey) == "off" {
 			sendMessage := tgbotapi.NewMessage(chatId, "模拟寻访功能已关闭！")
 			msg, err := bot.Arknights.Send(sendMessage)
 			if err != nil {
@@ -33,11 +33,11 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	if param != "" {
 		if bot.Arknights.IsAdmin(chatId, userId) {
 			text := ""
-			if param == "start" {
-				utils.RedisSet(headhuntKey, "start", 0)
+			if param == "on" {
+				utils.RedisSet(headhuntKey, "on", 0)
 				text = "模拟寻访已开启！"
-			} else if param == "stop" {
-				utils.RedisSet(headhuntKey, "stop", 0)
+			} else if param == "off" {
+				utils.RedisSet(headhuntKey, "off", 0)
 				text = "模拟寻访已关闭！"
 			}
 			sendMessage := tgbotapi.NewMessage(chatId, text)
