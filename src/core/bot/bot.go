@@ -83,13 +83,15 @@ func Serve() {
 	b.NewReplyMessageProcessor("/recruit", system.ReplyRecruitHandle)
 
 	// 权限
-	b.NewCommandProcessor("update", system.UpdateHandle)
 	b.NewCommandProcessor("news", system.NewsHandle)
 	b.NewCommandProcessor("birthday", system.BirthdayHandle)
 	b.NewCommandProcessor("request_mode", system.RequestModeHandle)
 	b.NewCommandProcessor("reg", system.RegulationHandle)
 	b.NewCommandProcessor("welcome", system.WelcomeHandle)
 	b.NewCommandProcessor("clear", system.ClearHandle)
+	// 仅拥有者
+	b.NewCommandProcessor("update", system.UpdateHandle)
+	b.NewCommandProcessor("sign_all", sign.SignAllHandle)
 	b.NewCommandProcessor("kill", system.KillHandle)
 	b.Run()
 }

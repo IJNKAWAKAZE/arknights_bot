@@ -19,15 +19,17 @@ func AutoSign() {
 	var users []UserSign
 	res := utils.GetAutoSign().Scan(&users)
 	if res.RowsAffected > 0 {
-		log.Println("开始执行自动签到...")
-		// 遍历所有自动签到用户
-		for _, user := range users {
-			r, _ := rand.Int(rand.Reader, big.NewInt(60))
-			random, _ := strconv.Atoi(r.String())
-			time.Sleep(time.Second * time.Duration(random))
-			sign(user)
-		}
-		log.Println("自动签到执行完毕...")
+		go func() {
+			log.Println("开始执行自动签到...")
+			// 遍历所有自动签到用户
+			for _, user := range users {
+				r, _ := rand.Int(rand.Reader, big.NewInt(60))
+				random, _ := strconv.Atoi(r.String())
+				time.Sleep(time.Second * time.Duration(random))
+				sign(user)
+			}
+			log.Println("自动签到执行完毕...")
+		}()
 	}
 }
 
