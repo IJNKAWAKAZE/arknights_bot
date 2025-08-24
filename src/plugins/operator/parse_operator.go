@@ -3,11 +3,12 @@ package operator
 import (
 	"arknights_bot/utils"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/spf13/viper"
 	"html/template"
 	"net/http"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/spf13/viper"
 )
 
 type Operator struct {
@@ -215,7 +216,11 @@ func ParseOperator(name string) Operator {
 									skill.SpCost = text
 								}
 								if j == 4 {
-									skill.Duration = text
+									if text != "" {
+										skill.Duration = "持续时间" + text + "s"
+									} else {
+										skill.Duration = "持续时间无限"
+									}
 								}
 							})
 						}

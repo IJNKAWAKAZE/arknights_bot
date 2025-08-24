@@ -1,16 +1,19 @@
 <html>
+
 <head>
     <meta name="referrer" content="no-referrer" />
     <title>干员信息</title>
     <style>
-        @font-face{
+        @font-face {
             font-family: 'NotoSansHans';
-            src : url('/assets/font/NotoSansHans-Regular.ttf');
+            src: url('/assets/font/NotoSansHans-Regular.ttf');
         }
+
         body {
             margin: 0;
-            font-family: 'NotoSansHans',serif;
+            font-family: 'NotoSansHans', serif;
         }
+
         #main {
             background-image: url("assets/operator/bg.png");
             width: 1200px;
@@ -19,6 +22,7 @@
             position: absolute;
             background-size: cover;
         }
+
         #painting {
             position: absolute;
             height: 650px;
@@ -26,48 +30,58 @@
             left: 5%;
             z-index: 0;
         }
+
         #attr {
             position: absolute;
             top: 20px;
             left: 10px;
             border-spacing: 0;
         }
+
         .b {
             background-color: black;
             color: white;
             width: 100px;
             opacity: 0.8;
         }
+
         .w {
             background-color: #efeeef;
             color: black;
             width: 70px;
             opacity: 0.8;
         }
+
         #potential {
             position: absolute;
             top: 110px;
             left: 10px;
-            background-color: rgba(239,238,239,0.4);
+            background-color: rgba(239, 238, 239, 0.4);
         }
+
         .potential {
             width: 20px;
         }
+
         #pb {
             width: 300px;
             margin-bottom: 5%;
-            background-color: rgba(239,238,239,0.4);
+            background-color: rgba(239, 238, 239, 0.4);
         }
+
         #names {
-            background-color: rgba(239,238,239,0.4);
+            background-color: rgba(239, 238, 239, 0.4);
         }
+
         #names table {
             white-space: nowrap;
         }
+
         #code {
             background-color: black;
             color: white;
         }
+
         #talent {
             position: relative;
             z-index: 9999;
@@ -75,138 +89,154 @@
             margin-top: 20px;
             border-spacing: 0;
         }
+
         #talent td {
             font-size: 12px;
-            background-color: rgba(176,177,177,0.7);
+            background-color: rgba(176, 177, 177, 0.7);
         }
+
         #talent span {
             color: black !important;
         }
+
         #bsk {
             position: relative;
             z-index: 9999;
             width: 600px;
             border-spacing: 0;
         }
+
         #bsk td {
             font-size: 12px;
-            background-color: rgba(176,177,177,0.7);
+            background-color: rgba(176, 177, 177, 0.7);
         }
+
         #skill {
             position: relative;
             z-index: 9999;
             width: 600px;
             border-spacing: 0;
         }
+
         #skill td {
             font-size: 12px;
             color: white;
-            background-color: rgba(63,63,62,0.99);
+            background-color: rgba(63, 63, 62, 0.99);
         }
+
         #skill .term {
             color: white !important;
         }
+
         #skill mark {
             color: white;
         }
+
         mark {
             background-color: transparent !important;
         }
+
         sup {
             display: none;
         }
+
         .skill {
             width: 50px;
         }
     </style>
 </head>
+
 <body>
-<div id="main">
-    <img id="painting" src="{{.Painting}}"/>
-    <table id="attr">
-        <tr>
-            <td class="b">最大生命值</td>
-            <td class="w">{{html .OP.HP}}</td>
-            <td class="b">攻击力</td>
-            <td class="w">{{.OP.ATK}}</td>
-            <td class="b">防御力</td>
-            <td class="w">{{.OP.DEF}}</td>
-        </tr>
-        <tr>
-            <td class="b">法抗</td>
-            <td class="w">{{.OP.Res}}</td>
-            <td class="b">攻击间隔</td>
-            <td class="w">{{.OP.Interval}}</td>
-            <td class="b">再部署时间</td>
-            <td class="w">{{.OP.ReDeploy}}</td>
-        </tr>
-        <tr>
-            <td class="b">阻挡数</td>
-            <td class="w">{{.OP.Block}}</td>
-            <td class="b">部署费用</td>
-            <td class="w">{{.OP.Cost}}</td>
-            <td class="b">所属</td>
-            <td class="w">{{.OP.Logo}}</td>
-        </tr>
-    </table>
-    <table id="potential">
-        <tr>
-            <td colspan="2" style="background-color: black;color: white;opacity: 0.8;">潜能提升</td>
-        </tr>
-        {{range .Potentials}}
-        <tr>
-            <td><img class="potential" src="/assets/box/Potential_{{.Rank}}.png"/></td>
-            <td>{{.Desc}}</td>
-        </tr>
-        {{end}}
-    </table>
-    <div style="position: absolute;bottom: 5%;left: 10px;">
-        <table id="pb">
+    <div id="main">
+        <img id="painting" src="{{.Painting}}" />
+        <table id="attr">
             <tr>
-                <td style="width: 75px" rowspan="2">
-                    <img src="/assets/box/{{.OP.Profession}}.png"/>
-                </td>
-                <td><img src="/assets/box/Rarity_{{.OP.Rarity}}.png"/></td>
+                <td class="b">最大生命值</td>
+                <td class="w">{{html .OP.HP}}</td>
+                <td class="b">攻击力</td>
+                <td class="w">{{.OP.ATK}}</td>
+                <td class="b">防御力</td>
+                <td class="w">{{.OP.DEF}}</td>
             </tr>
             <tr>
-                <td><h3>{{.ProfessionBranch.Name}}</h3></td>
+                <td class="b">法抗</td>
+                <td class="w">{{.OP.Res}}</td>
+                <td class="b">攻击间隔</td>
+                <td class="w">{{.OP.Interval}}</td>
+                <td class="b">再部署时间</td>
+                <td class="w">{{.OP.ReDeploy}}</td>
             </tr>
             <tr>
-                <td colspan="2">
-                    {{.OP.Tags}}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2"><h5>{{.ProfessionBranch.Desc}}</h5></td>
+                <td class="b">阻挡数</td>
+                <td class="w">{{.OP.Block}}</td>
+                <td class="b">部署费用</td>
+                <td class="w">{{.OP.Cost}}</td>
+                <td class="b">所属</td>
+                <td class="w">{{.OP.Logo}}</td>
             </tr>
         </table>
-        <div id="names">
-            <table>
+        <table id="potential">
+            <tr>
+                <td colspan="2" style="background-color: black;color: white;opacity: 0.8;">潜能提升</td>
+            </tr>
+            {{range .Potentials}}
+            <tr>
+                <td><img class="potential" src="/assets/box/Potential_{{.Rank}}.png" /></td>
+                <td>{{.Desc}}</td>
+            </tr>
+            {{end}}
+        </table>
+        <div style="position: absolute;bottom: 5%;left: 10px;">
+            <table id="pb">
                 <tr>
-                    <td>
-                        <h1>{{.OP.Name}}</h1>
+                    <td style="width: 75px" rowspan="2">
+                        <img src="/assets/box/{{.OP.Profession}}.png" />
                     </td>
-                    <td>
-                        {{.AttackRange}}
-                    </td>
+                    <td><img src="/assets/box/Rarity_{{.OP.Rarity}}.png" /></td>
                 </tr>
                 <tr>
                     <td>
-                        <h3 id="code" style="display: inline">{{.OP.Code}}</h3>
+                        <h3>{{.ProfessionBranch.Name}}</h3>
                     </td>
-                    <td>
-                        <h3 style="display: inline">{{.OP.NameEn}}</h3>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        {{.OP.Tags}}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <h5>{{.ProfessionBranch.Desc}}</h5>
                     </td>
                 </tr>
             </table>
+            <div id="names">
+                <table>
+                    <tr>
+                        <td>
+                            <h1>{{.OP.Name}}</h1>
+                        </td>
+                        <td>
+                            {{.AttackRange}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h3 id="code" style="display: inline">{{.OP.Code}}</h3>
+                        </td>
+                        <td>
+                            <h3 style="display: inline">{{.OP.NameEn}}</h3>
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
-    </div>
-    <div style="float: right">
-        <table id="talent">
-            <tr>
-                <td colspan="3" style="background-color: black;color: white;opacity: 0.8;width: 100px">天赋</td>
-            </tr>
-            {{range .Talents}}
+        <div style="float: right">
+            <table id="talent">
+                <tr>
+                    <td colspan="3" style="background-color: black;color: white;opacity: 0.8;width: 100px">天赋</td>
+                </tr>
+                {{range .Talents}}
                 {{if .Evolve}}
                 <tr>
                     <td style="white-space: nowrap">{{.Evolve}}</td>
@@ -218,44 +248,48 @@
                     <td colspan="3">{{.Name}}</td>
                 </tr>
                 {{end}}
-            {{end}}
-        </table>
-        <table id="bsk">
-            <tr>
-                <td colspan="4" style="background-color: black;color: white;opacity: 0.8;width: 100px">基建技能</td>
-            </tr>
-            {{range .BuildingSkills}}
-            <tr>
-                <td style="white-space: nowrap">{{.Evolve}}</td>
-                <td><img src="{{.Icon}}"/></td>
-                <td style="white-space: nowrap">{{.Name}}</td>
-                <td>{{.Desc}}</td>
-            </tr>
-            {{end}}
-        </table>
-        <table id="skill">
-            {{range .Skills}}
-            <tr>
-                <td style="text-align: center" rowspan="2">
-                    <img class="skill" src="{{.Icon}}" onerror="this.src='assets/common/amiya.png'"/>
-                </td>
-                <td style="text-align: center">
-                    {{range .SpType}}
-                    {{.}}
-                    {{end}}
-                    <span style="cursor: help;margin-left:5px;padding-left:5px;padding-right:5px;background-color:#808080;border-radius:3px;color:#FFF;">技力{{.SpInit}}/{{.SpCost}}  持续时间{{.Duration}}s</spasn>
-                </td>
-                <td style="text-align: center" rowspan="3">{{.SkillRange}}</td>
-            </tr>
-            <tr>
-                <td style="padding-left: 10px" rowspan="2">{{.Desc}}</td>
-            </tr>
-            <tr style="text-align: center">
-                <td style="white-space: nowrap;vertical-align: top">{{.Name}}</td>
-            </tr>
-            {{end}}
-        </table>
+                {{end}}
+            </table>
+            <table id="bsk">
+                <tr>
+                    <td colspan="4" style="background-color: black;color: white;opacity: 0.8;width: 100px">基建技能</td>
+                </tr>
+                {{range .BuildingSkills}}
+                <tr>
+                    <td style="white-space: nowrap">{{.Evolve}}</td>
+                    <td><img src="{{.Icon}}" /></td>
+                    <td style="white-space: nowrap">{{.Name}}</td>
+                    <td>{{.Desc}}</td>
+                </tr>
+                {{end}}
+            </table>
+            <table id="skill">
+                {{range .Skills}}
+                <tr>
+                    <td style="text-align: center" rowspan="2">
+                        <img class="skill" src="{{.Icon}}" onerror="this.src='assets/common/amiya.png'" />
+                    </td>
+                    <td style="text-align: center">
+                        {{range .SpType}}
+                        {{.}}
+                        {{end}}
+                        <span
+                            style="cursor: help;margin-left:5px;padding-left:5px;padding-right:5px;background-color:#808080;border-radius:3px;color:#FFF;">技力{{.SpInit}}/{{.SpCost}}</span>
+                        <span
+                            style="cursor: help;margin-left:5px;padding-left:5px;padding-right:5px;background-color:#808080;border-radius:3px;color:#FFF;">{{.Duration}}s</span>
+                    </td>
+                    <td style="text-align: center" rowspan="3">{{.SkillRange}}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 10px" rowspan="2">{{.Desc}}</td>
+                </tr>
+                <tr style="text-align: center">
+                    <td style="white-space: nowrap;vertical-align: top">{{.Name}}</td>
+                </tr>
+                {{end}}
+            </table>
+        </div>
     </div>
-</div>
 </body>
+
 </html>
