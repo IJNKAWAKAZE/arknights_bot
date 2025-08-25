@@ -248,6 +248,9 @@
                     {{.}}
                     {{end}}
                     <span style="cursor: help;margin-left:5px;padding-left:5px;padding-right:5px;background-color:#808080;border-radius:3px;color:#FFF;">技力{{.SpInit}}/{{.SpCost}}</span>
+                    {{if .Duration}}
+                    <span style="cursor: help;margin-left:5px;padding-left:5px;padding-right:5px;background-color:#808080;border-radius:3px;color:#FFF;">持续时间{{.Duration}}s</span>
+                    {{end}}
                 </td>
                 <td style="text-align: center" rowspan="3">{{.SkillRange}}</td>
             </tr>
