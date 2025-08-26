@@ -16,6 +16,16 @@ func ClearHandle(update tgbotapi.Update) error {
 	param := update.Message.CommandArguments()
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
+	if param == "" {
+		sendMessage := tgbotapi.NewMessage(chatId, "参数不能为空")
+		sendMessage.ReplyToMessageID = messageId
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return err
+		}
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return nil
+	}
 	if owner == userId {
 		res, ctx := utils.RedisScanKeys(param)
 		for res.Next(ctx) {
