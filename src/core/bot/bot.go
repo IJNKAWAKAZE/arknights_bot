@@ -23,7 +23,7 @@ func Serve() {
 	b.NewProcessor(gatekeeper.JoinRequest, gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
-	b.NewProcessor(gatekeeper.CheckMember, gatekeeper.KickMember)
+	//b.NewProcessor(gatekeeper.CheckMember, gatekeeper.KickMember) // 申请入群模式下管理员手动通过后可能导致用户被封禁
 
 	// callback
 	b.NewCallBackProcessor("verify", gatekeeper.CallBackData)
