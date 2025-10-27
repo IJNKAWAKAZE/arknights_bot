@@ -9,9 +9,10 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -61,22 +62,28 @@ func BilibiliNews() {
 
 		d := false
 		for _, p := range pics {
-			if (p.Height > p.Width*2) || strings.HasSuffix(p.Url, ".gif") {
+			if p.Height > p.Width*2 {
 				d = true
 			}
 		}
-		content := "[]"
-		children, _ := sjson.Set("{}", "tag", "p")
-		children, _ = sjson.Set(children, "children", []string{text})
-		content, _ = sjson.SetRaw(content, "-1", children)
+
 		for i, pic := range pics {
 			if d {
-				// 改为telegraph发送
-				replacer := strings.NewReplacer("https://", "", "http://", "", "//", "")
-				src, _ := sjson.Set("", "attrs.src", "https://i1.wp.com/"+replacer.Replace(pic.Url))
-				attrs, _ := sjson.Set(src, "tag", "img")
-				content, _ = sjson.SetRaw(content, "-1", attrs)
+				var inputDocument tgbotapi.InputMediaDocument
+				inputDocument.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url), Name: pic.Url}
+				inputDocument.Type = "document"
+				if i == len(pics)-1 {
+					inputDocument.Caption = text
+				}
+				media = append(media, inputDocument)
 			} else {
+				if strings.HasSuffix(pic.Url, ".gif") {
+					var inputVideo tgbotapi.InputMediaVideo
+					inputVideo.Media = tgbotapi.FileBytes{Bytes: convert2Video(pic.Url, i)}
+					inputVideo.Type = "video"
+					media = append(media, inputVideo)
+					continue
+				}
 				var inputPhoto tgbotapi.InputMediaPhoto
 				inputPhoto.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url)}
 				inputPhoto.Type = "photo"
@@ -86,16 +93,27 @@ func BilibiliNews() {
 				media = append(media, inputPhoto)
 			}
 		}
-		if d {
-			url := utils.CreateTelegraphPage(content, "游戏资讯")
-			sendMessage := tgbotapi.NewMessage(group, fmt.Sprintf("[游戏资讯](%s)", url))
-			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-			bot.Arknights.Send(sendMessage)
-		} else {
-			mediaGroup.Media = media
-			bot.Arknights.SendMediaGroup(mediaGroup)
-		}
+		mediaGroup.Media = media
+		bot.Arknights.SendMediaGroup(mediaGroup)
 	}
+}
+
+func convert2Video(url string, i int) []byte {
+	outPut := fmt.Sprintf("./temp%d.mp4", i)
+	res, _ := http.Get(url)
+	tempFile, _ := os.CreateTemp("./", "temp-*.gif")
+	io.Copy(tempFile, res.Body)
+	tempFile.Close()
+	defer res.Body.Close()
+	ffmpeg.Input(tempFile.Name()).
+		Output(outPut).
+		OverWriteOutput().Run()
+	os.Remove(tempFile.Name())
+	f, _ := os.Open(outPut)
+	b, _ := io.ReadAll(f)
+	f.Close()
+	os.Remove(f.Name())
+	return b
 }
 
 func ParseBilibiliDynamic() (string, []Pic) {
