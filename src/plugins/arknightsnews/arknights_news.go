@@ -42,7 +42,7 @@ func BilibiliNews() {
 
 	if len(pics) == 1 {
 		for _, group := range groups {
-			if pics[0].Height > pics[0].Width*2 {
+			if pics[0].Height > pics[0].Width*3 {
 				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url), Name: pics[0].Url})
 				sendDocument.Caption = text
 				bot.Arknights.Send(sendDocument)
@@ -62,7 +62,7 @@ func BilibiliNews() {
 
 		d := false
 		for _, p := range pics {
-			if p.Height > p.Width*2 {
+			if p.Height > p.Width*3 {
 				d = true
 			}
 		}

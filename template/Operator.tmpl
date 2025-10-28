@@ -27,9 +27,7 @@
             z-index: 0;
         }
         #attr {
-            position: absolute;
-            top: 20px;
-            left: 10px;
+            margin-top: 20px;
             border-spacing: 0;
         }
         .b {
@@ -45,9 +43,7 @@
             opacity: 0.8;
         }
         #potential {
-            position: absolute;
-            top: 110px;
-            left: 10px;
+            margin-top: 20px;
             background-color: rgba(239,238,239,0.4);
         }
         .potential {
@@ -123,43 +119,45 @@
 <body>
 <div id="main">
     <img id="painting" src="{{.Painting}}"/>
-    <table id="attr">
-        <tr>
-            <td class="b">最大生命值</td>
-            <td class="w">{{html .OP.HP}}</td>
-            <td class="b">攻击力</td>
-            <td class="w">{{.OP.ATK}}</td>
-            <td class="b">防御力</td>
-            <td class="w">{{.OP.DEF}}</td>
-        </tr>
-        <tr>
-            <td class="b">法抗</td>
-            <td class="w">{{.OP.Res}}</td>
-            <td class="b">攻击间隔</td>
-            <td class="w">{{.OP.Interval}}</td>
-            <td class="b">再部署时间</td>
-            <td class="w">{{.OP.ReDeploy}}</td>
-        </tr>
-        <tr>
-            <td class="b">阻挡数</td>
-            <td class="w">{{.OP.Block}}</td>
-            <td class="b">部署费用</td>
-            <td class="w">{{.OP.Cost}}</td>
-            <td class="b">所属</td>
-            <td class="w">{{.OP.Logo}}</td>
-        </tr>
-    </table>
-    <table id="potential">
-        <tr>
-            <td colspan="2" style="background-color: black;color: white;opacity: 0.8;">潜能提升</td>
-        </tr>
-        {{range .Potentials}}
-        <tr>
-            <td><img class="potential" src="/assets/box/Potential_{{.Rank}}.png"/></td>
-            <td>{{.Desc}}</td>
-        </tr>
-        {{end}}
-    </table>
+    <div style="position: absolute;">
+        <table id="attr">
+            <tr>
+                <td class="b">最大生命值</td>
+                <td class="w">{{html .OP.HP}}</td>
+                <td class="b">攻击力</td>
+                <td class="w">{{.OP.ATK}}</td>
+                <td class="b">防御力</td>
+                <td class="w">{{.OP.DEF}}</td>
+            </tr>
+            <tr>
+                <td class="b">法抗</td>
+                <td class="w">{{.OP.Res}}</td>
+                <td class="b">攻击间隔</td>
+                <td class="w">{{.OP.Interval}}</td>
+                <td class="b">再部署时间</td>
+                <td class="w">{{.OP.ReDeploy}}</td>
+            </tr>
+            <tr>
+                <td class="b">阻挡数</td>
+                <td class="w">{{.OP.Block}}</td>
+                <td class="b">部署费用</td>
+                <td class="w">{{.OP.Cost}}</td>
+                <td class="b">所属</td>
+                <td class="w">{{.OP.Logo}}</td>
+            </tr>
+        </table>
+        <table id="potential">
+            <tr>
+                <td colspan="2" style="background-color: black;color: white;opacity: 0.8;">潜能提升</td>
+            </tr>
+            {{range .Potentials}}
+            <tr>
+                <td><img class="potential" src="/assets/box/Potential_{{.Rank}}.png"/></td>
+                <td>{{.Desc}}</td>
+            </tr>
+            {{end}}
+        </table>
+    </div>
     <div style="position: absolute;bottom: 5%;left: 10px;">
         <table id="pb">
             <tr>
@@ -232,7 +230,7 @@
                 <td style="white-space: nowrap">{{.Name}}</td>
                 <td>{{.Desc}}</td>
                 {{else}}
-                <td colspan="4" style="white-space: nowrap">{{.Evolve}}</td>
+                <td colspan="4">{{.Evolve}}</td>
                 {{end}}
             </tr>
             {{end}}

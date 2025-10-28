@@ -142,6 +142,9 @@ func ParseOperator(name string) Operator {
 							var talent Talent
 							talentName, _ := selection.Html()
 							talent.Evolve = strings.ReplaceAll(selection.Next().Text(), "\n", "")
+							if talent.Evolve == "" {
+								return
+							}
 							desc, _ := selection.Next().Next().Html()
 							talent.Name = template.HTML(talentName)
 							talent.Desc = template.HTML(desc)
@@ -187,7 +190,7 @@ func ParseOperator(name string) Operator {
 					var skill Skill
 					selection.Find("tr").Eq(0).Find("td").Each(func(k int, selection *goquery.Selection) {
 						if k == 0 {
-							icon, _ := selection.Children().Children().Children().Attr("data-src")
+							icon, _ := selection.Children().Children().Children().Children().Attr("src")
 							skill.Icon = icon
 						}
 						if k == 1 {
