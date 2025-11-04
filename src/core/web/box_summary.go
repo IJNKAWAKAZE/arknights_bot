@@ -179,11 +179,17 @@ func Summary(r *gin.Engine) {
 			myCharCnt--
 			star5Cnt--
 			myStar5Cnt--
+			if myOperators["阿米娅(近卫)"].EvolvePhase == 2 {
+				boxSummary.Star5EvolvePhase2Cnt--
+			}
 		}
 		if _, has := charMap["char_1037_amiya3"]; has {
 			myCharCnt--
 			star5Cnt--
 			myStar5Cnt--
+			if myOperators["阿米娅(医疗)"].EvolvePhase == 2 {
+				boxSummary.Star5EvolvePhase2Cnt--
+			}
 		}
 		for _, char := range playerCultivate.Characters {
 			rarity := charMap[char.ID].Rarity
