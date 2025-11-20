@@ -14,6 +14,9 @@ import (
 func VerifyRequestMember(update tgbotapi.Update) {
 	chatId := update.ChatJoinRequest.Chat.ID
 	userId := update.ChatJoinRequest.From.ID
+	if verifySet.checkExist(userId, chatId) {
+		return
+	}
 	// 抽取验证信息
 	operatorsPool := utils.GetOperators()
 	var randNumMap = make(map[int64]struct{})
@@ -48,8 +51,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for i := 0; i < len(options); i += 2 {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("request_verify,%d,%d,%s", userId, chatId, options[i].Name)),
-			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("request_verify,%d,%d,%s", userId, chatId, options[i+1].Name)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("request,%d,%d,%s", userId, chatId, options[i].Name)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("request,%d,%d,%s", userId, chatId, options[i+1].Name)),
 		))
 	}
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
@@ -61,6 +64,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
+		approveChatJoinRequest := tgbotapi.ApproveChatJoinRequestConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}, UserID: userId}
+		bot.Arknights.Request(approveChatJoinRequest)
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}

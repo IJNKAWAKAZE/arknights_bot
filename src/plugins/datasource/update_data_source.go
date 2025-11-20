@@ -109,25 +109,6 @@ func UpdateDataSourceRunner() {
 	var birthdayMap = make(map[string][]utils.Operator)
 	for i, operator := range operators {
 		name := operator.Name
-		// 新增干员
-		if _, has := oldOperators[name]; !has && config.IgnoreBirthday[name] == "" {
-			response, _ := http.Get(api + name)
-			doc, _ := goquery.NewDocumentFromReader(response.Body)
-			doc.Find(".poem").Each(func(j int, selection *goquery.Selection) {
-				text := selection.Text()
-				if strings.Contains(text, "【生日】") {
-					t := strings.Split(text, "\n")
-					birthday := t[5][strings.Index(t[5], "】")+3:]
-					reg := regexp.MustCompile("[0-9]+")
-					if reg.MatchString(birthday) {
-						birthdayMap[birthday] = append(birthdayMap[birthday], operators[i])
-					} else {
-						birthdayMap["未知"] = append(birthdayMap["未知"], operators[i])
-					}
-					return
-				}
-			})
-		}
 		if name == "阿米娅" {
 			// 立绘
 			for e := 0; e < 2; e++ {
@@ -158,7 +139,6 @@ func UpdateDataSourceRunner() {
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
-			continue
 		} else if name == "阿米娅(近卫)" || name == "阿米娅(医疗)" {
 			// 立绘
 			paintingName := fmt.Sprintf("立绘_%s_2.png", name)
@@ -179,7 +159,6 @@ func UpdateDataSourceRunner() {
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
-			continue
 		}
 		if operator.Rarity < 3 {
 			// 立绘
@@ -201,7 +180,7 @@ func UpdateDataSourceRunner() {
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
-		} else {
+		} else if operator.Rarity >= 3 && !strings.Contains(operator.Name, "阿米娅") {
 			// 立绘
 			for e := 0; e < 2; e++ {
 				paintingName := fmt.Sprintf("立绘_%s_%d.png", name, e+1)
@@ -223,6 +202,25 @@ func UpdateDataSourceRunner() {
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
+		}
+		// 新增干员
+		if _, has := oldOperators[name]; !has && config.IgnoreBirthday[name] == "" {
+			response, _ := http.Get(api + name)
+			doc, _ := goquery.NewDocumentFromReader(response.Body)
+			doc.Find(".poem").Each(func(j int, selection *goquery.Selection) {
+				text := selection.Text()
+				if strings.Contains(text, "【生日】") {
+					t := strings.Split(text, "\n")
+					birthday := t[5][strings.Index(t[5], "】")+3:]
+					reg := regexp.MustCompile("[0-9]+")
+					if reg.MatchString(birthday) {
+						birthdayMap[birthday] = append(birthdayMap[birthday], operators[i])
+					} else {
+						birthdayMap["未知"] = append(birthdayMap["未知"], operators[i])
+					}
+					return
+				}
+			})
 		}
 	}
 

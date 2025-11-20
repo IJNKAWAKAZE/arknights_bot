@@ -9,7 +9,7 @@ import (
 
 var sklandAddr = "https://zonai.skland.com"
 
-var did = "BdkL3Yma2k0SGhC9gqjAFI1JBHhirLCFy999II1w7jPuI+X4JWl4m7nVeHGA9E5GD8fU0UlpmZQJIZckyN6WBNA=="
+var did = "BxNSLqMsbCK3pOg7ozScnIy5FoewPt6dajvXcQFeJIeZ3C/6dFZowEU/MtQUsRniMmuTvcrv47raDYwTLJ1pa3w=="
 
 type SKBaseResp[T any] struct {
 	Code    *int   `json:"code"`

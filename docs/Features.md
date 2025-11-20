@@ -52,8 +52,8 @@ This document provides an overview of the features available in the Arknights Te
 ## Admin Commands
 ```
 /news - Enable/Disable sending news to the group.
-/quiz [start/stop] - Enable/Disable the quiz game.
-/headhunt [start/stop] - Enable/Disable the headhunt game.
+/quiz [on/off] - Enable/Disable the quiz game.
+/headhunt [on/off] - Enable/Disable the headhunt game.
 /reg - Set the message to be sent when a new user joins the group.
 ```
 ## Owner Commands

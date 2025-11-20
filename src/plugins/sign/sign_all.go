@@ -1,39 +1,30 @@
-package system
+package sign
 
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 )
 
-func ClearHandle(update tgbotapi.Update) error {
+// SignAllHandle 森空岛签到
+func SignAllHandle(update tgbotapi.Update) error {
 	owner := viper.GetInt64("bot.owner")
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
-	param := update.Message.CommandArguments()
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
-
-	if param == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "参数不能为空")
+	if owner == userId {
+		sendMessage := tgbotapi.NewMessage(chatId, "签到全部账号开始")
 		sendMessage.ReplyToMessageID = messageId
 		msg, err := bot.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return nil
-	}
-	if owner == userId {
-		res, ctx := utils.RedisScanKeys(param)
-		for res.Next(ctx) {
-			utils.RedisDel(res.Val())
-		}
-		sendMessage := tgbotapi.NewMessage(chatId, "清理成功")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		AutoSign()
+		sendMessage = tgbotapi.NewMessage(chatId, "签到全部账号结束")
+		msg, err = bot.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}

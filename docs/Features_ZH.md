@@ -53,8 +53,8 @@
 ## 管理员指令
 ```
 /news - 开启/关闭B站动态推送(默认关闭状态)
-/quiz [start/stop] - 开启/关闭猜干员小游戏
-/headhunt [start/stop] - 开启/关闭寻访模拟
+/quiz [on/off] - 开启/关闭猜干员小游戏
+/headhunt [on/off] - 开启/关闭寻访模拟
 /reg - 回复一条消息设置为群规
 ```
 ## 机器人拥有者的指令
