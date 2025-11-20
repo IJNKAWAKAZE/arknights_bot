@@ -58,7 +58,7 @@ func ParseEnemy(name string) Enemy {
 	// 基本属性
 	trs := doc.Find(".hlist").First().Find("tr")
 	enemy.Name = strings.ReplaceAll(trs.Eq(0).Text(), "\n", "")
-	pic, _ := trs.Eq(1).Find(".enemyicon a img").Attr("data-src")
+	pic, _ := trs.Eq(1).Find(".enemyicon a img").Attr("src")
 	enemy.Pic = pic
 	enemy.Desc = strings.ReplaceAll(trs.Eq(1).Find("td").Eq(1).Text(), "\n", "")
 	td3 := trs.Eq(3).Find("td")
