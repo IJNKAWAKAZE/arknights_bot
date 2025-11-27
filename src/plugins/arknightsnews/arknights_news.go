@@ -31,6 +31,9 @@ func BilibiliNews() {
 	if len(text) == 0 {
 		return
 	}
+	if strings.Contains(text, "详情请点击抽奖查看") {
+		return
+	}
 	groups := utils.GetNewsGroups()
 	if pics == nil {
 		for _, group := range groups {
