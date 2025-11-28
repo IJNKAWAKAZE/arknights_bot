@@ -6,6 +6,8 @@ import (
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
+	"strconv"
+	"strings"
 )
 
 func RegulationHandle(update tgbotapi.Update) error {
@@ -22,7 +24,12 @@ func RegulationHandle(update tgbotapi.Update) error {
 			utils.GetJoinedByChatId(chatId).Scan(&joined)
 			joined.Reg = replyMessageId
 			bot.DBEngine.Table("group_joined").Save(&joined)
-			sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("消息[%d](https://t.me/%s/%d)已设置为群规！", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
+			var sendMessage tgbotapi.MessageConfig
+			if replyToMessage.Chat.UserName != "" {
+				sendMessage = tgbotapi.NewMessage(chatId, fmt.Sprintf("消息[%d](https://t.me/%s/%d)已设置为群规！", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
+			} else {
+				sendMessage = tgbotapi.NewMessage(chatId, fmt.Sprintf("消息[%d](https://t.me/c/%s/%d)已设置为群规！", replyMessageId, strings.ReplaceAll(strconv.FormatInt(replyToMessage.Chat.ID, 10), "-100", ""), replyMessageId))
+			}
 			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 			msg, err := bot.Arknights.Send(sendMessage)
 			if err != nil {

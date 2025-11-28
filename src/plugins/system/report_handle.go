@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
+	"strconv"
+	"strings"
 )
 
 // ReportHandle 举报
@@ -42,7 +44,11 @@ func ReportHandle(update tgbotapi.Update) error {
 
 		var text bytes.Buffer
 		text.WriteString(fmt.Sprintf("被举报人：[%s](tg://user?id=%d)\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, name), target))
-		text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/%s/%d)", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
+		if replyToMessage.Chat.UserName != "" {
+			text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/%s/%d)", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
+		} else {
+			text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/c/%s/%d)", replyMessageId, strings.ReplaceAll(strconv.FormatInt(replyToMessage.Chat.ID, 10), "-100", ""), replyMessageId))
+		}
 		charAdmins, _ := bot.Arknights.GetChatAdministrators(getAdmins)
 		var admins []int64
 		for _, admin := range charAdmins {
