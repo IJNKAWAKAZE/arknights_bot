@@ -41,7 +41,11 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 			text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)%s\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, callbackQuery.From.FullName()), callbackQuery.From.ID, welcome)
 			if joined.Reg != -1 {
 				chat, _ := bot.Arknights.GetChat(tgbotapi.ChatInfoConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}})
-				text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%d)", chat.UserName, joined.Reg)
+				if chat.UserName != "" {
+					text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%d)", chat.UserName, joined.Reg)
+				} else {
+					text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/c/%s/%d)", strings.ReplaceAll(strconv.FormatInt(chat.ID, 10), "-100", ""), joined.Reg)
+				}
 			}
 			sendMessage := tgbotapi.NewMessage(chatId, text)
 			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
