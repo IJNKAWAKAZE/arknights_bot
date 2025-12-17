@@ -60,46 +60,44 @@ func BilibiliNews() {
 		}
 		return
 	}
+	var mediaGroup tgbotapi.MediaGroupConfig
+	var media []interface{}
+	d := false
+	for _, p := range pics {
+		if p.Height > p.Width*3 {
+			d = true
+		}
+	}
 
+	for i, pic := range pics {
+		if d {
+			var inputDocument tgbotapi.InputMediaDocument
+			inputDocument.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url), Name: pic.Url}
+			inputDocument.Type = "document"
+			if i == len(pics)-1 {
+				inputDocument.Caption = text
+			}
+			media = append(media, inputDocument)
+		} else {
+			if strings.HasSuffix(pic.Url, ".gif") {
+				var inputVideo tgbotapi.InputMediaVideo
+				inputVideo.Media = tgbotapi.FileBytes{Bytes: convert2Video(pic.Url, i)}
+				inputVideo.Type = "video"
+				media = append(media, inputVideo)
+				continue
+			}
+			var inputPhoto tgbotapi.InputMediaPhoto
+			inputPhoto.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url)}
+			inputPhoto.Type = "photo"
+			if i == 0 {
+				inputPhoto.Caption = text
+			}
+			media = append(media, inputPhoto)
+		}
+	}
+	mediaGroup.Media = media
 	for _, group := range groups {
-		var mediaGroup tgbotapi.MediaGroupConfig
-		var media []interface{}
 		mediaGroup.ChatID = group
-
-		d := false
-		for _, p := range pics {
-			if p.Height > p.Width*3 {
-				d = true
-			}
-		}
-
-		for i, pic := range pics {
-			if d {
-				var inputDocument tgbotapi.InputMediaDocument
-				inputDocument.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url), Name: pic.Url}
-				inputDocument.Type = "document"
-				if i == len(pics)-1 {
-					inputDocument.Caption = text
-				}
-				media = append(media, inputDocument)
-			} else {
-				if strings.HasSuffix(pic.Url, ".gif") {
-					var inputVideo tgbotapi.InputMediaVideo
-					inputVideo.Media = tgbotapi.FileBytes{Bytes: convert2Video(pic.Url, i)}
-					inputVideo.Type = "video"
-					media = append(media, inputVideo)
-					continue
-				}
-				var inputPhoto tgbotapi.InputMediaPhoto
-				inputPhoto.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url)}
-				inputPhoto.Type = "photo"
-				if i == 0 {
-					inputPhoto.Caption = text
-				}
-				media = append(media, inputPhoto)
-			}
-		}
-		mediaGroup.Media = media
 		bot.Arknights.SendMediaGroup(mediaGroup)
 	}
 }
@@ -112,7 +110,7 @@ func convert2Video(url string, i int) []byte {
 	tempFile.Close()
 	defer res.Body.Close()
 	ffmpeg.Input(tempFile.Name()).
-		Output(outPut).
+		Output(outPut, ffmpeg.KwArgs{"c:v": "libx264", "pix_fmt": "yuv420p", "vf": "scale=trunc(iw/2)*2:trunc(ih/2)*2"}).
 		OverWriteOutput().Run()
 	os.Remove(tempFile.Name())
 	f, _ := os.Open(outPut)
