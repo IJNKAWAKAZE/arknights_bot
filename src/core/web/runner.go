@@ -26,6 +26,7 @@ func Start() {
 	Depot(r)
 	BoxDetail(r)
 	Summary(r)
+	Lottery(r)
 	port := viper.GetString("http.port")
 	err := r.Run(":" + port)
 	if err != nil {

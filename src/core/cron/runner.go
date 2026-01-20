@@ -4,6 +4,7 @@ import (
 	"arknights_bot/plugins/arknightsnews"
 	"arknights_bot/plugins/birthday"
 	"arknights_bot/plugins/datasource"
+	"arknights_bot/plugins/lottery"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/sign"
 	"arknights_bot/plugins/system"
@@ -46,6 +47,12 @@ func StartCron() error {
 
 	//重置每日寻访次数 0 0 0 * * ?
 	_, err = crontab.AddFunc("0 0 0 * * ?", system.ResetHeadhuntTimes)
+	if err != nil {
+		return err
+	}
+
+	//每分钟检查抽奖是否结束 0 0/1 * * * ?
+	_, err = crontab.AddFunc("0 0/1 * * * ?", lottery.CheckEndLottery)
 	if err != nil {
 		return err
 	}
