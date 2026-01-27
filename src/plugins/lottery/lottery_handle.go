@@ -51,9 +51,9 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 		endTime = t
 	}
 
-	// 如果没有设置结束时间（参数为空）
+	// 如果没有设置报名截止时间（参数为空）
 	if endTime.IsZero() {
-		endTime = time.Now().Add(time.Hour * 24 * 7) // 默认 7 天后结束
+		endTime = time.Now().Add(time.Hour * 24 * 7) // 默认 7 天后截止报名
 	}
 	// 检查是否存在已开启的抽奖
 	var lottery utils.GroupLottery
@@ -80,14 +80,14 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 	}
 	res := bot.DBEngine.Table("group_lottery").Create(&groupLottery)
 	log.Println(res.Error)
-	sendMessage := tgbotapi.NewMessage(chatId, tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, fmt.Sprintf("🎉 *抽奖活动已开启*\n\n📅 *结束时间*：%s\n\n📝 *指令说明*：\n🔹 参与选号：`/join_lottery [1-100]`\n🔹 查看详情：`/lottery_detail`\n\n⚙️ *管理指令*：\n🔸 停止报名：`/stop_lottery`\n🔸 进行抽奖：`/lottery`\n🔸 结束抽奖：`/end_lottery`", endTime.Format("2006-01-02 15:04:05"))))
+	sendMessage := tgbotapi.NewMessage(chatId, tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, fmt.Sprintf("🎉 *抽奖活动已开启*\n\n📅 *报名截止时间*：%s\n\n📝 *指令说明*：\n🔹 参与选号：`/join_lottery [1-100]`\n🔹 查看详情：`/lottery_detail`\n\n⚙️ *管理指令*：\n🔸 停止报名：`/stop_lottery`\n🔸 进行抽奖：`/lottery`\n🔸 结束抽奖：`/end_lottery`", endTime.Format("2006-01-02 15:04:05"))))
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 	sendMessage.ReplyToMessageID = messageId
 	bot.Arknights.Send(sendMessage)
 	return nil
 }
 
-// StopLotteryHandle 停止抽奖活动
+// StopLotteryHandle 停止抽奖报名
 func StopLotteryHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
@@ -396,15 +396,15 @@ func LotteryHandle(update tgbotapi.Update) error {
 	return nil
 }
 
-// CheckEndLottery 检查抽奖是否结束
-func CheckEndLottery() {
+// CheckStopLottery 检查抽奖是否停止报名
+func CheckStopLottery() {
 	var lotteryList []utils.GroupLottery
 	utils.GetAllGroupLottery().Scan(&lotteryList)
 	for _, lottery := range lotteryList {
 		if lottery.EndTime.Before(time.Now()) {
-			lottery.Status = 0
+			lottery.Status = 2
 			bot.DBEngine.Table("group_lottery").Save(&lottery)
-			log.Println("抽奖结束时间到达，抽奖已结束")
+			log.Println("抽奖报名截止时间到达，报名已结束")
 		}
 	}
 }

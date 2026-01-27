@@ -64,8 +64,7 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
-		approveChatJoinRequest := tgbotapi.ApproveChatJoinRequestConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}, UserID: userId}
-		bot.Arknights.Request(approveChatJoinRequest)
+		bot.Arknights.ApproveChatJoinRequest(chatId, userId)
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
@@ -77,8 +76,7 @@ func requestVerify(chatId int64, userId int64, messageId int) {
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}
-	declineChatJoinRequest := tgbotapi.DeclineChatJoinRequest{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}, UserID: userId}
-	bot.Arknights.Request(declineChatJoinRequest)
+	bot.Arknights.DeclineChatJoinRequest(chatId, userId)
 	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(userId, messageId)
 	bot.Arknights.Send(delMsg)

@@ -47,7 +47,7 @@ CREATE TABLE `group_lottery`  (
   `group_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '群组名称',
   `group_number` bigint NULL DEFAULT NULL COMMENT '群组ID',
   `status` int NULL DEFAULT 1 COMMENT '抽奖状态0关闭1开启2暂停报名',
-  `end_time` timestamp(0) NULL DEFAULT NULL COMMENT '抽奖结束时间',
+  `end_time` timestamp(0) NULL DEFAULT NULL COMMENT '抽奖报名结束时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `create_time` timestamp(0) NULL DEFAULT NULL,
   `update_time` timestamp(0) NULL DEFAULT NULL,

@@ -51,8 +51,8 @@ func StartCron() error {
 		return err
 	}
 
-	//每分钟检查抽奖是否结束 0 0/1 * * * ?
-	_, err = crontab.AddFunc("0 0/1 * * * ?", lottery.CheckEndLottery)
+	//每分钟检查抽奖是否停止报名 0 0/1 * * * ?
+	_, err = crontab.AddFunc("0 0/1 * * * ?", lottery.CheckStopLottery)
 	if err != nil {
 		return err
 	}
