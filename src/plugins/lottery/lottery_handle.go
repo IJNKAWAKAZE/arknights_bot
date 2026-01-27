@@ -312,11 +312,11 @@ func LotteryDetailHandle(update tgbotapi.Update) error {
 
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
-	_, err = bot.Arknights.Send(sendPhoto)
+	msg, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
 		return err
 	}
-
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, 60)
 	return nil
 }
 
