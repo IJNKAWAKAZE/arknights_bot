@@ -42,7 +42,7 @@ func BilibiliNews() {
 		}
 		return
 	}
-	if len(text) > 1000 {
+	if len([]rune(text)) > 1000 {
 		text = string([]rune(text)[:1000]) + "......"
 	}
 

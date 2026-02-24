@@ -267,6 +267,9 @@ func RedisDelSetItem(key string, val string) {
 
 // Screenshot 屏幕截图
 func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
+	if browser != nil && !browser.IsConnected() {
+		browser = nil
+	}
 	if browser == nil {
 		pw, err := playwright.Run()
 		if err != nil {

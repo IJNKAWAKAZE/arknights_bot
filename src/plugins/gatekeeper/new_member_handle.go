@@ -20,7 +20,7 @@ func NewMemberHandle(update tgbotapi.Update) error {
 		userId := member.ID
 		if member.ID == message.From.ID { // 自己加入群组
 			verifySet.add(userId, chatId, "")
-			chat, err := bot.Arknights.GetChat(tgbotapi.ChatInfoConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: member.ID}})
+			chat, err := bot.Arknights.GetChatInfo(member.ID)
 			if err != nil {
 				return err
 			}

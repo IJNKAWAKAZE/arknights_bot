@@ -5,13 +5,6 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
-func JoinRequest(update tgbotapi.Update) bool {
-	if update.ChatJoinRequest != nil {
-		return true
-	}
-	return false
-}
-
 func JoinRequestHandle(update tgbotapi.Update) error {
 	var joined utils.GroupJoined
 	utils.GetJoinedByChatId(update.ChatJoinRequest.Chat.ID).Scan(&joined)

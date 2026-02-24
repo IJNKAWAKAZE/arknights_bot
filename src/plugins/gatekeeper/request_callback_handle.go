@@ -25,12 +25,10 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 	if has, correct := verifySet.checkExistAndRemove(userId, chatId); has {
 		if d[3] != correct {
 			callbackQuery.Answer(true, "验证未通过")
-			declineChatJoinRequest := tgbotapi.DeclineChatJoinRequest{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}, UserID: userId}
-			bot.Arknights.Request(declineChatJoinRequest)
+			bot.Arknights.DeclineChatJoinRequest(chatId, userId)
 		} else {
 			callbackQuery.Answer(true, "验证通过！")
-			approveChatJoinRequest := tgbotapi.ApproveChatJoinRequestConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}, UserID: userId}
-			bot.Arknights.Request(approveChatJoinRequest)
+			bot.Arknights.ApproveChatJoinRequest(chatId, userId)
 			// 新人入群提醒
 			var joined utils.GroupJoined
 			utils.GetJoinedByChatId(chatId).Scan(&joined)
@@ -40,7 +38,7 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 			}
 			text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)%s\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, callbackQuery.From.FullName()), callbackQuery.From.ID, welcome)
 			if joined.Reg != -1 {
-				chat, _ := bot.Arknights.GetChat(tgbotapi.ChatInfoConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatId}})
+				chat, _ := bot.Arknights.GetChatInfo(chatId)
 				if chat.UserName != "" {
 					text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%d)", chat.UserName, joined.Reg)
 				} else {

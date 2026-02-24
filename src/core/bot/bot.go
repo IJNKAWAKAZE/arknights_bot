@@ -5,6 +5,7 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
+	"arknights_bot/plugins/lottery"
 	"arknights_bot/plugins/material"
 	"arknights_bot/plugins/operator"
 	"arknights_bot/plugins/player"
@@ -20,7 +21,8 @@ func Serve() {
 	log.Println("机器人启动成功")
 	b := bot.Arknights.AddHandle()
 	bot.Arknights.Debug = viper.GetBool("bot.debug")
-	b.NewProcessor(gatekeeper.JoinRequest, gatekeeper.JoinRequestHandle)
+	bot.Arknights.IgnoreChannelCMD = true
+	b.JoinRequestProcessor(gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
 	//b.NewProcessor(gatekeeper.CheckMember, gatekeeper.KickMember) // 申请入群模式下管理员手动通过后可能导致用户被封禁
@@ -76,6 +78,8 @@ func Serve() {
 	b.NewCommandProcessor("headhunt", system.HeadhuntHandle)
 	b.NewCommandProcessor("calendar", system.CalendarHandle)
 	b.NewCommandProcessor("depot", player.PlayerHandle)
+	b.NewCommandProcessor("join_lottery", lottery.JoinLotteryHandle)
+	b.NewCommandProcessor("lottery_detail", lottery.LotteryDetailHandle)
 
 	// 图片
 	b.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)
@@ -89,6 +93,11 @@ func Serve() {
 	b.NewCommandProcessor("reg", system.RegulationHandle)
 	b.NewCommandProcessor("welcome", system.WelcomeHandle)
 	b.NewCommandProcessor("clear", system.ClearHandle)
+	b.NewCommandProcessor("start_lottery", lottery.StartLotteryHandle)
+	b.NewCommandProcessor("stop_lottery", lottery.StopLotteryHandle)
+	b.NewCommandProcessor("end_lottery", lottery.EndLotteryHandle)
+	b.NewCommandProcessor("lottery", lottery.LotteryHandle)
+
 	// 仅拥有者
 	b.NewCommandProcessor("update", system.UpdateHandle)
 	b.NewCommandProcessor("sign_all", sign.SignAllHandle)

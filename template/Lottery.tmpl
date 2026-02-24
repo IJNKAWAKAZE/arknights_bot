@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>抽奖选号详情</title>
+    <style>
+        :root {
+            --bg-color: #0f0f0f;
+            --container-bg: #1a1a1a;
+            --cell-bg: #222222;
+            --border-color: #333333;
+            --text-main: #ffffff;
+            --text-dim: #666666;
+            --accent-color: #00e5ff;
+            --win-color: #ff3d00;
+            --selected-bg: #1e3a3f;
+            --winner-bg: #4a1c1c;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: "Microsoft YaHei", -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #main {
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--border-color);
+            width: 900px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--accent-color);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .cell {
+            background-color: var(--cell-bg);
+            aspect-ratio: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell .num-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.03);
+            z-index: 1;
+        }
+
+        .cell .num-top {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-dim);
+            z-index: 2;
+        }
+
+        .cell .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 2;
+        }
+
+        .cell .user-name {
+            font-size: 12px;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .cell .user-id {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .cell.selected {
+            background-color: var(--selected-bg);
+            border-color: var(--accent-color);
+        }
+        .cell.selected .num-top {
+            color: var(--accent-color);
+        }
+        .cell.selected .num-bg {
+            color: rgba(0, 229, 255, 0.1);
+        }
+
+        .cell.winner {
+            background-color: var(--winner-bg);
+            border-color: var(--win-color);
+            animation: glow 2s infinite;
+        }
+        .cell.winner .num-top {
+            color: var(--win-color);
+        }
+        .cell.winner .num-bg {
+            color: rgba(255, 61, 0, 0.15);
+        }
+        .cell.winner .user-name {
+            color: var(--win-color);
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255, 61, 0, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 61, 0, 0.5); }
+            100% { box-shadow: 0 0 5px rgba(255, 61, 0, 0.2); }
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .box {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <div class="header">
+            <h1>选号详情</h1>
+        </div>
+        
+        <div class="grid" id="grid">
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="box" style="background-color: var(--cell-bg);"></div>
+                <span>未选择</span>
+            </div>
+            <div class="legend-item">
+                <div class="box" style="background-color: var(--selected-bg); border-color: var(--accent-color);"></div>
+                <span>已占位</span>
+            </div>
+            <div class="legend-item">
+                <div class="box" style="background-color: var(--winner-bg); border-color: var(--win-color);"></div>
+                <span>中奖</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const details = {{ . }};
+        const grid = document.getElementById('grid');
+
+        const dataMap = {};
+        if (details && details.length > 0) {
+            details.forEach(item => {
+                dataMap[item.lotteryNumber] = item;
+            });
+        }
+
+        for (let i = 1; i <= 100; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            
+            const numBg = document.createElement('div');
+            numBg.className = 'num-bg';
+            numBg.textContent = i;
+            
+            const numTop = document.createElement('div');
+            numTop.className = 'num-top';
+            numTop.textContent = i;
+
+            cell.appendChild(numBg);
+            cell.appendChild(numTop);
+
+            const data = dataMap[i];
+            if (data) {
+                cell.classList.add('selected');
+                if (data.status === 1) {
+                    cell.classList.add('winner');
+                }
+
+                const info = document.createElement('div');
+                info.className = 'user-info';
+                
+                const name = document.createElement('div');
+                name.className = 'user-name';
+                name.textContent = data.userName;
+                
+                const id = document.createElement('div');
+                id.className = 'user-id';
+                id.textContent = 'ID:' + data.userNumber;
+
+                info.appendChild(name);
+                info.appendChild(id);
+                cell.appendChild(info);
+            }
+
+            grid.appendChild(cell);
+        }
+    </script>
+</body>
+</html>
