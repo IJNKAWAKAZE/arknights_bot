@@ -37,6 +37,7 @@ func Help(r *gin.Engine) {
 		// 普通指令
 		publicCmds = append(publicCmds, Cmd{Cmd: "/help", Desc: "使用说明", Param: "", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/ping", Desc: "存活测试", Param: "", IsBind: false})
+		publicCmds = append(publicCmds, Cmd{Cmd: "/tag", Desc: "自定义群标签", Param: "标签", IsBind: false})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/sign", Desc: "签到", Param: "", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/sign", Desc: "开启自动签到", Param: "auto", IsBind: true})
 		publicCmds = append(publicCmds, Cmd{Cmd: "/sign", Desc: "关闭自动签到", Param: "stop", IsBind: true})
