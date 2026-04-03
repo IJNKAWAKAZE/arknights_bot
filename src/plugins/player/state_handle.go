@@ -16,6 +16,12 @@ type PlayerOperationState struct {
 
 func (_ PlayerOperationState) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
+	if userAccount.ServerName == "国际服" {
+		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
+		sendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendMessage)
+		return nil
+	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
 	bot.Arknights.Send(sendAction)
 

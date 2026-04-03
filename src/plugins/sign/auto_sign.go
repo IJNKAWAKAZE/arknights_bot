@@ -49,7 +49,7 @@ func sign(user UserSign) {
 				skAccount.Skland.Cred = userAccount.SklandCred
 
 				// 执行签到
-				award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
+				award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount, userAccount.ServerName)
 				if err != nil {
 					// 签到失败
 					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err.Error()))

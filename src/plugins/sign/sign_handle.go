@@ -98,7 +98,7 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)
 
-	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
+	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount, account.ServerName)
 	if err != nil {
 		log.Println(playerName, err)
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\n失败原因:%s", playerName, err.Error()))

@@ -65,13 +65,13 @@ func Summary(r *gin.Engine) {
 		skAccount.Hypergryph.Token = userAccount.HypergryphToken
 		skAccount.Skland.Token = userAccount.SklandToken
 		skAccount.Skland.Cred = userAccount.SklandCred
-		playerData, _, err := skland.GetPlayerInfo(uid, skAccount)
+		playerData, _, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
 		if err != nil {
 			log.Println(err)
 			utils.WebC <- err
 			return
 		}
-		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount)
+		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount, userAccount.ServerName)
 		if err != nil {
 			log.Println(err)
 			utils.WebC <- err

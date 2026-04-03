@@ -8,6 +8,7 @@ import (
 )
 
 var sklandAddr = "https://zonai.skland.com"
+var skportAddr = "https://zonai.skport.com"
 
 var did = "BxNSLqMsbCK3pOg7ozScnIy5FoewPt6dajvXcQFeJIeZ3C/6dFZowEU/MtQUsRniMmuTvcrv47raDYwTLJ1pa3w=="
 
@@ -59,6 +60,31 @@ func SklandRequest[T any](r *resty.Request, method, path string, vs ...any) (t T
 	return res.Data, nil
 }
 
+func SkportRequest[T any](r *resty.Request, method, path string, vs ...any) (t T, _ error) {
+	for i := 0; i < len(vs); i++ {
+		switch v := vs[i].(type) {
+		case AccountSkland:
+			addSign(r, method, path, v)
+		}
+	}
+	resp, respErr := r.SetError(&SKBaseResp[any]{}).SetResult(&SKBaseResp[T]{}).Execute(method, skportAddr+path)
+	if resp.StatusCode() == 405 {
+		log.Println(string(resp.Body()))
+		return t, fmt.Errorf("服务器被墙了！")
+	}
+	if resp.StatusCode() == 401 {
+		log.Println(string(resp.Body()))
+		return t, fmt.Errorf("cred无效！")
+	}
+	res, err := resty.ParseResp[*SKBaseResp[any], *SKBaseResp[T]](
+		resp, respErr,
+	)
+	if err != nil {
+		return t, fmt.Errorf("[skport] %w", err)
+	}
+	return res.Data, nil
+}
+
 func SklandRequestPlayerData(r *resty.Request, method, path string, vs ...any) (d string, _ error) {
 	for i := 0; i < len(vs); i++ {
 		switch v := vs[i].(type) {
@@ -70,6 +96,25 @@ func SklandRequestPlayerData(r *resty.Request, method, path string, vs ...any) (
 	res, err := r.Execute(method, sklandAddr+path)
 	if err != nil {
 		return d, fmt.Errorf("[skland] %w", err)
+	}
+	if res.StatusCode() == 405 {
+		log.Println(string(res.Body()))
+		return d, fmt.Errorf("服务器被墙了！")
+	}
+	return string(res.Body()), nil
+}
+
+func SkportRequestPlayerData(r *resty.Request, method, path string, vs ...any) (d string, _ error) {
+	for i := 0; i < len(vs); i++ {
+		switch v := vs[i].(type) {
+		case AccountSkland:
+			addSign(r, method, path, v)
+		}
+	}
+
+	res, err := r.Execute(method, skportAddr+path)
+	if err != nil {
+		return d, fmt.Errorf("[skport] %w", err)
 	}
 	if res.StatusCode() == 405 {
 		log.Println(string(res.Body()))

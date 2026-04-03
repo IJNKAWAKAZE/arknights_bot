@@ -37,6 +37,12 @@ type UserGacha struct {
 
 func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
+	if userAccount.ServerName == "国际服" {
+		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
+		sendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendMessage)
+		return nil
+	}
 	token := userAccount.HypergryphToken
 	// 获取角色抽卡记录
 	chars, err := skland.GetPlayerGacha(token, uid)

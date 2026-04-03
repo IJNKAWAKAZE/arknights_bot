@@ -29,14 +29,19 @@ type PlayerCultivate struct {
 	} `json:"items"`
 }
 
-func GetPlayerCultivate(uid string, account Account) (*PlayerCultivate, error) {
+func GetPlayerCultivate(uid string, account Account, serverName string) (*PlayerCultivate, error) {
 	var playerCultivate *PlayerCultivate
-	account, err := RefreshToken(account)
+	account, err := RefreshToken(account, serverName)
 	if err != nil {
 		log.Println(err.Error())
 		return playerCultivate, err
 	}
-	playerCultivateStr, err := getPlayerCultivateStr(uid, account.Skland)
+	var playerCultivateStr string
+	if serverName == "国服" {
+		playerCultivateStr, err = getPlayerCultivateStr(uid, account.Skland)
+	} else if serverName == "国际服" {
+		playerCultivateStr, err = iGetPlayerCultivateStr(uid, account.Skland)
+	}
 	if err != nil {
 		return playerCultivate, err
 	}
@@ -50,11 +55,7 @@ func getPlayerCultivateStr(uid string, skland AccountSkland) (string, error) {
 	return SklandRequestPlayerData(req, "GET", "/api/v1/game/cultivate/player", skland)
 }
 
-func getPlayerCultivateCharacterStr(characterId string, skland AccountSkland) (string, error) {
-	req := SKR().SetQueryParams(gh.MS{"characterId": characterId})
-	return SklandRequestPlayerData(req, "GET", "/api/v1/game/cultivate/character", skland)
-}
-
-func getPlayerCultivateInfoStr(skland AccountSkland) (string, error) {
-	return SklandRequestPlayerData(SKR(), "GET", "/api/v1/game/cultivate/info", skland)
+func iGetPlayerCultivateStr(uid string, skland AccountSkland) (string, error) {
+	req := SKR().SetQueryParams(gh.MS{"uid": uid})
+	return SkportRequestPlayerData(req, "GET", "/api/v1/game/cultivate/player", skland)
 }

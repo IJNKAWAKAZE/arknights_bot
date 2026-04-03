@@ -53,7 +53,7 @@ type User struct {
 }
 
 // Login 使用token登录
-func Login(token string) (Account, error) {
+func Login(token, serverName string) (Account, error) {
 	account := Account{}
 
 	if token == "" {
@@ -61,20 +61,37 @@ func Login(token string) (Account, error) {
 	}
 	account.Hypergryph.Token = token
 
-	res, err := grantApp(token, "4ca99fa6b56cc2ba")
-	if err != nil {
-		return account, fmt.Errorf("grant app error: %w", err)
-	}
-	account.Hypergryph.Code = res.Code
+	if serverName == "国服" {
+		res, err := grantApp(token, "4ca99fa6b56cc2ba")
+		if err != nil {
+			return account, fmt.Errorf("grant app error: %w", err)
+		}
+		account.Hypergryph.Code = res.Code
 
-	res1, err := authLoginByCode(res.Code)
-	if err != nil {
-		return account, fmt.Errorf("auth login by code error: %w", err)
+		res1, err := authLoginByCode(res.Code)
+		if err != nil {
+			return account, fmt.Errorf("auth login by code error: %w", err)
+		}
+		u, _ := CheckToken(token)
+		account.UserId = u.HgId
+		account.Skland.Cred = res1.Cred
+		account.Skland.Token = res1.Token
+	} else if serverName == "国际服" {
+		res, err := grantAppI(token, "6eb76d4e13aa36e6")
+		if err != nil {
+			return account, fmt.Errorf("grant app error: %w", err)
+		}
+		account.Hypergryph.Code = res.Code
+
+		res1, err := iAuthLoginByCode(res.Code)
+		if err != nil {
+			return account, fmt.Errorf("auth login by code error: %w", err)
+		}
+		u, _ := ICheckToken(token)
+		account.UserId = u.HgId
+		account.Skland.Cred = res1.Cred
+		account.Skland.Token = res1.Token
 	}
-	u, _ := CheckToken(token)
-	account.UserId = u.HgId
-	account.Skland.Cred = res1.Cred
-	account.Skland.Token = res1.Token
 	return account, nil
 }
 
@@ -84,33 +101,68 @@ func grantApp(token string, code string) (*GrantAppData, error) {
 	return HypergryphRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant")
 }
 
+// 国际服获取 OAuth2 授权代码
+func grantAppI(token string, code string) (*GrantAppData, error) {
+	req := HR().SetBody(gh.M{"type": 0, "token": token, "appCode": code})
+	return GryphlineRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant")
+}
+
 // 获取Cred
 func authLoginByCode(code string) (*GenCredByCodeData, error) {
 	req := SKR().SetHeader("did", did).SetBody(gh.M{"kind": 1, "code": code})
 	return SklandRequest[*GenCredByCodeData](req, "POST", "/web/v1/user/auth/generate_cred_by_code")
 }
 
+// 国际服获取Cred
+func iAuthLoginByCode(code string) (*GenCredByCodeData, error) {
+	req := SKR().SetBody(gh.M{"kind": 1, "code": code})
+	return SkportRequest[*GenCredByCodeData](req, "POST", "/web/v1/user/auth/generate_cred_by_code")
+}
+
 // RefreshToken 刷新 token
-func RefreshToken(account Account) (Account, error) {
-	res, err := authRefresh(account.Skland.Cred)
-	if err != nil {
-		return account, fmt.Errorf("auth refresh error: %w", err)
-	}
-	account.Skland.Token = res.Token
-	// 检查cred是否有效
-	_, err = listPlayer(account.Skland)
-	if err != nil {
-		log.Println("cred失效，尝试重新登录。")
-		_, err = CheckToken(account.Hypergryph.Token)
+func RefreshToken(account Account, serverName string) (Account, error) {
+	if serverName == "国服" {
+		res, err := authRefresh(account.Skland.Cred)
 		if err != nil {
-			return account, err
+			return account, fmt.Errorf("auth refresh error: %w", err)
 		}
-		account, err = Login(account.Hypergryph.Token)
+		account.Skland.Token = res.Token
+		// 检查cred是否有效
+		_, err = listPlayer(account.Skland)
 		if err != nil {
-			return account, err
+			log.Println("cred失效，尝试重新登录。")
+			_, err = CheckToken(account.Hypergryph.Token)
+			if err != nil {
+				return account, err
+			}
+			account, err = Login(account.Hypergryph.Token, serverName)
+			if err != nil {
+				return account, err
+			}
+			// 更新token
+			bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
 		}
-		// 更新token
-		bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
+	} else if serverName == "国际服" {
+		res, err := iAuthRefresh(account.Skland.Cred)
+		if err != nil {
+			return account, fmt.Errorf("auth refresh error: %w", err)
+		}
+		account.Skland.Token = res.Token
+		// 检查cred是否有效
+		_, err = iListPlayer(account.Skland)
+		if err != nil {
+			log.Println("cred失效，尝试重新登录。")
+			_, err = ICheckToken(account.Hypergryph.Token)
+			if err != nil {
+				return account, err
+			}
+			account, err = Login(account.Hypergryph.Token, serverName)
+			if err != nil {
+				return account, err
+			}
+			// 更新token
+			bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
+		}
 	}
 	return account, nil
 }
@@ -125,10 +177,26 @@ func CheckToken(token string) (*User, error) {
 	return user, err
 }
 
+// ICheckToken 国际服检查token有效性
+func ICheckToken(token string) (*User, error) {
+	req := HR().SetQueryParam("token", token)
+	user, err := GryphlineRequest[*User](req, "GET", "/user/info/v1/basic")
+	if err != nil {
+		return nil, fmt.Errorf("token已失效请重新登录！")
+	}
+	return user, err
+}
+
 // 刷新 auth
 func authRefresh(cred string) (*AuthRefreshData, error) {
 	req := SKR().SetHeader("cred", cred)
 	return SklandRequest[*AuthRefreshData](req, "GET", "/api/v1/auth/refresh")
+}
+
+// 国际服刷新 auth
+func iAuthRefresh(cred string) (*AuthRefreshData, error) {
+	req := SKR().SetHeader("cred", cred)
+	return SkportRequest[*AuthRefreshData](req, "GET", "/api/v1/auth/refresh")
 }
 
 // 获取绑定用户列表
@@ -136,10 +204,22 @@ func listPlayer(skland AccountSkland) (*ListPlayerData, error) {
 	return SklandRequest[*ListPlayerData](SKR(), "GET", "/api/v1/game/player/binding", skland)
 }
 
+// 国际服获取绑定用户列表
+func iListPlayer(skland AccountSkland) (*ListPlayerData, error) {
+	return SkportRequest[*ListPlayerData](SKR(), "GET", "/api/v1/game/player/binding", skland)
+}
+
 // ArknightsPlayers 获取明日方舟绑定角色
-func ArknightsPlayers(skland AccountSkland) ([]*Player, error) {
+func ArknightsPlayers(skland AccountSkland, serverName string) ([]*Player, error) {
 	var players []*Player
-	playerList, err := listPlayer(skland)
+	var playerList *ListPlayerData
+	var err error
+	if serverName == "国服" {
+		playerList, err = listPlayer(skland)
+	} else if serverName == "国际服" {
+		playerList, err = iListPlayer(skland)
+	}
+
 	if err != nil {
 		return players, err
 	}

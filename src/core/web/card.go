@@ -117,19 +117,19 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	skAccount.Hypergryph.Token = userAccount.HypergryphToken
 	skAccount.Skland.Token = userAccount.SklandToken
 	skAccount.Skland.Cred = userAccount.SklandCred
-	playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount)
+	playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
 	if err != nil {
 		log.Println(err)
 		utils.WebC <- err
 		return playerCard, err
 	}
-	playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount)
+	playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount, userAccount.ServerName)
 	if err != nil {
 		log.Println(err)
 		utils.WebC <- err
 		return playerCard, err
 	}
-	playerCards, err := skland.GetPlayerCards(skAccount)
+	playerCards, err := skland.GetPlayerCards(skAccount, userAccount.ServerName)
 	if err != nil {
 		log.Println(err)
 		utils.WebC <- err
