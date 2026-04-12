@@ -77,9 +77,9 @@ func SignHandle(update tgbotapi.Update) error {
 			// 关闭理智提醒
 			setApRemind(update, 0)
 		default:
-			// 尝试解析 ap_threshold 参数
-			if strings.HasPrefix(param, "ap_threshold ") {
-				thresholdStr := strings.TrimPrefix(param, "ap_threshold ")
+			// 尝试解析 apthr 参数
+			if strings.HasPrefix(param, "apthr ") {
+				thresholdStr := strings.TrimPrefix(param, "apthr ")
 				threshold, err := strconv.Atoi(thresholdStr)
 				if err != nil || threshold < 1 || threshold > 100 {
 					sendMessage := tgbotapi.NewMessage(chatId, "理智提醒阈值请输入1-100之间的整数！")
