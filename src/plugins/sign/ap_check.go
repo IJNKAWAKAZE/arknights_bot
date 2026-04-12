@@ -14,8 +14,8 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
-const apRecoverySeconds = 360   // 1 AP per 6 minutes
-const defaultApThreshold = 80   // default AP threshold percentage
+const apRecoverySeconds = 360 // 1 AP per 6 minutes
+const defaultApThreshold = 80 // default AP threshold percentage
 
 // calcCurrentAp returns the current AP accounting for the time elapsed since the
 // last AP recovery tick. It clamps the result to [0, maxAp] and silently skips
@@ -46,6 +46,7 @@ func calcCurrentAp(current, maxAp, lastApAddTime int, now int64) int {
 type apPlayerCache struct {
 	Uid             string
 	PlayerName      string
+	ServerName      string
 	HypergryphToken string
 	SklandToken     string
 	SklandCred      string
@@ -187,6 +188,7 @@ func (s *apScheduler) loadUserCache(userNumber int64) {
 			cached = append(cached, apPlayerCache{
 				Uid:             p.Uid,
 				PlayerName:      p.PlayerName,
+				ServerName:      ua.ServerName,
 				HypergryphToken: ua.HypergryphToken,
 				SklandToken:     ua.SklandToken,
 				SklandCred:      ua.SklandCred,
@@ -321,7 +323,7 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 		ska.Skland.Token = player.SklandToken
 		ska.Skland.Cred = player.SklandCred
 
-		pd, _, err := skland.GetPlayerInfo(player.Uid, ska)
+		pd, _, err := skland.GetPlayerInfo(player.Uid, ska, player.ServerName)
 		if err != nil {
 			log.Println("理智提醒：获取角色信息失败:", player.PlayerName, err)
 			continue // try next player
