@@ -1,4 +1,4 @@
-package sign
+package apremind
 
 import (
 	"container/heap"
@@ -109,7 +109,7 @@ func InitApRemind() {
 	heap.Init(&scheduler.queue)
 
 	// Pre-load all users with AP remind enabled into cache and queue.
-	var users []UserSign
+	var users []UserApRemind
 	res := utils.GetApRemindUsers().Scan(&users)
 	if res.RowsAffected > 0 {
 		log.Println("初始化理智提醒调度器...")
@@ -167,8 +167,8 @@ func DailyApCheck() {
 // ---------------------------------------------------------------------------
 
 func (s *apScheduler) loadUserCache(userNumber int64) {
-	var user UserSign
-	if r := utils.GetAutoSignByUserId(userNumber).Scan(&user); r.RowsAffected == 0 || user.ApRemind == 0 {
+	var user UserApRemind
+	if r := utils.GetApRemindByUserId(userNumber).Scan(&user); r.RowsAffected == 0 {
 		delete(s.cache, userNumber)
 		return
 	}
@@ -350,7 +350,7 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 				))
 				bot.Arknights.Send(msg)
 				uc.ApNotified = 1
-				bot.DBEngine.Exec("update user_sign set ap_notified = 1 where user_number = ?", uc.UserNumber)
+				bot.DBEngine.Exec("update user_ap_remind set ap_notified = 1 where user_number = ?", uc.UserNumber)
 				log.Printf("理智提醒：用户 %d 角色 %s 理智已达阈值，已通知", uc.UserNumber, player.PlayerName)
 			}
 			// Notified – remove from queue; daily check will re-add when AP drops.
@@ -360,7 +360,7 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 		// ── AP below threshold ──
 		if uc.ApNotified == 1 {
 			uc.ApNotified = 0
-			bot.DBEngine.Exec("update user_sign set ap_notified = 0 where user_number = ?", uc.UserNumber)
+			bot.DBEngine.Exec("update user_ap_remind set ap_notified = 0 where user_number = ?", uc.UserNumber)
 		}
 
 		// Edge case: ap.Current (from API, without elapsed-time adjustment) may already

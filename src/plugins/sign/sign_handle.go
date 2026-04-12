@@ -11,8 +11,6 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/spf13/viper"
 	"log"
-	"strconv"
-	"strings"
 )
 
 // SignHandle 森空岛签到
@@ -70,37 +68,14 @@ func SignHandle(update tgbotapi.Update) error {
 		case "notify_success":
 			// 设置通知模式为仅成功通知
 			setNotifyMode(update, 2)
-		case "ap_on":
-			// 开启理智提醒
-			setApRemind(update, 1)
-		case "ap_off":
-			// 关闭理智提醒
-			setApRemind(update, 0)
 		default:
-			// 尝试解析 apthr 参数
-			if strings.HasPrefix(param, "apthr ") {
-				thresholdStr := strings.TrimPrefix(param, "apthr ")
-				threshold, err := strconv.Atoi(thresholdStr)
-				if err != nil || threshold < 1 || threshold > 100 {
-					sendMessage := tgbotapi.NewMessage(chatId, "理智提醒阈值请输入1-100之间的整数！")
-					sendMessage.ReplyToMessageID = messageId
-					msg, err := bot.Arknights.Send(sendMessage)
-					if err != nil {
-						return err
-					}
-					messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-					return nil
-				}
-				setApThreshold(update, threshold)
-			} else {
-				sendMessage := tgbotapi.NewMessage(chatId, "未知的签到指令参数，请使用 /help 查看使用说明。")
-				sendMessage.ReplyToMessageID = messageId
-				msg, err := bot.Arknights.Send(sendMessage)
-				if err != nil {
-					return err
-				}
-				messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			sendMessage := tgbotapi.NewMessage(chatId, "未知的签到指令参数，请使用 /help 查看使用说明。")
+			sendMessage.ReplyToMessageID = messageId
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
 			}
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		}
 		return nil
 	}
@@ -184,13 +159,10 @@ func autoSign(update tgbotapi.Update) {
 	}
 	id, _ := gonanoid.New(32)
 	userSign = UserSign{
-		Id:          id,
-		UserName:    message.From.FullName(),
-		UserNumber:  userId,
-		NotifyMode:  0,
-		ApRemind:    0,
-		ApThreshold: defaultApThreshold,
-		ApNotified:  0,
+		Id:         id,
+		UserName:   message.From.FullName(),
+		UserNumber: userId,
+		NotifyMode: 0,
 	}
 
 	bot.DBEngine.Table("user_sign").Create(&userSign)
@@ -211,7 +183,6 @@ func stopSign(update tgbotapi.Update) {
 	chatId := message.Chat.ID
 	messageId := message.MessageID
 
-	CancelApCheck(userId)
 	bot.DBEngine.Exec("delete from user_sign where user_number = ?", userId)
 
 	sendMessage := tgbotapi.NewMessage(chatId, "已关闭自动签到！")
@@ -256,86 +227,6 @@ func setNotifyMode(update tgbotapi.Update, mode int) {
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("签到通知模式已设置为：%s", modeText))
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
-	if err != nil {
-		return
-	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-}
-
-// 设置理智提醒开关
-func setApRemind(update tgbotapi.Update, status int) {
-	message := update.Message
-	userId := message.From.ID
-	chatId := message.Chat.ID
-	messageId := message.MessageID
-
-	var userSign UserSign
-	res := utils.GetAutoSignByUserId(userId).Scan(&userSign)
-	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "请先开启自动签到！(/sign auto)")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
-		if err != nil {
-			return
-		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return
-	}
-
-	bot.DBEngine.Exec("update user_sign set ap_remind = ?, ap_notified = 0 where user_number = ?", status, userId)
-
-	var text string
-	if status == 1 {
-		displayThreshold := userSign.ApThreshold
-		if displayThreshold == 0 {
-			displayThreshold = defaultApThreshold
-		}
-		text = fmt.Sprintf("理智提醒已开启！当理智恢复到 %d%% 时将发送通知。", displayThreshold)
-		ScheduleNextApCheck(userId)
-	} else {
-		text = "理智提醒已关闭！"
-		CancelApCheck(userId)
-	}
-
-	sendMessage := tgbotapi.NewMessage(chatId, text)
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
-	if err != nil {
-		return
-	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-}
-
-// 设置理智提醒阈值
-func setApThreshold(update tgbotapi.Update, threshold int) {
-	message := update.Message
-	userId := message.From.ID
-	chatId := message.Chat.ID
-	messageId := message.MessageID
-
-	var userSign UserSign
-	res := utils.GetAutoSignByUserId(userId).Scan(&userSign)
-	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "请先开启自动签到！(/sign auto)")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
-		if err != nil {
-			return
-		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
-		return
-	}
-
-	bot.DBEngine.Exec("update user_sign set ap_threshold = ?, ap_notified = 0 where user_number = ?", threshold, userId)
-
-	// Reschedule so the new threshold is used for the next check.
-	if userSign.ApRemind == 1 {
-		ScheduleNextApCheck(userId)
-	}
-
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("理智提醒阈值已设置为 %d%%", threshold))
 	sendMessage.ReplyToMessageID = messageId
 	msg, err := bot.Arknights.Send(sendMessage)
 	if err != nil {

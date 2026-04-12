@@ -3,6 +3,7 @@ package bot
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/apremind"
 	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
 	"arknights_bot/plugins/lottery"
@@ -61,6 +62,7 @@ func Serve() {
 	b.NewCommandProcessor("ping", system.PingHandle)
 	b.NewCommandProcessor("tag", system.TagHandle)
 	b.NewCommandProcessor("sign", sign.SignHandle)
+	b.NewCommandProcessor("ap", apremind.ApHandle)
 	b.NewCommandProcessor("state", player.PlayerHandle)
 	b.NewCommandProcessor("box", player.PlayerHandle)
 	b.NewCommandProcessor("box_detail", player.PlayerHandle)

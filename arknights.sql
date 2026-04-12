@@ -138,13 +138,26 @@ CREATE TABLE `user_sign`  (
   `user_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '用户名称',
   `user_number` bigint NULL DEFAULT NULL COMMENT '用户ID',
   `notify_mode` int NULL DEFAULT 0 COMMENT '签到通知模式 0-全部通知 1-仅失败通知 2-仅成功通知',
-  `ap_remind` int NULL DEFAULT 0 COMMENT '理智提醒开关 0-关闭 1-开启',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `create_time` timestamp(0) NULL DEFAULT NULL,
+  `update_time` timestamp(0) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '自动签到用户' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for user_ap_remind
+-- ----------------------------
+DROP TABLE IF EXISTS `user_ap_remind`;
+CREATE TABLE `user_ap_remind`  (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `user_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '用户名称',
+  `user_number` bigint NULL DEFAULT NULL COMMENT '用户ID',
   `ap_threshold` int NULL DEFAULT 80 COMMENT '理智提醒阈值百分比',
   `ap_notified` int NULL DEFAULT 0 COMMENT '理智提醒是否已通知 0-未通知 1-已通知',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `create_time` timestamp(0) NULL DEFAULT NULL,
   `update_time` timestamp(0) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '自动签到用户' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '理智提醒用户' ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;

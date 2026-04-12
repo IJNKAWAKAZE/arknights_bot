@@ -1,4 +1,4 @@
-package sign
+package apremind
 
 import (
 	"math"

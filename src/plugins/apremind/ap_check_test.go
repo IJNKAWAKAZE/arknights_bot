@@ -1,4 +1,4 @@
-package sign
+package apremind
 
 import (
 	"container/heap"
@@ -330,7 +330,8 @@ func TestHandleCommand_DailyCheck_RequeuesNotifiedUsers(t *testing.T) {
 
 // TestTargetUnixCalculation verifies the formula used to predict when AP will
 // reach the threshold:
-//   targetUnix = lastApAddTime + apNeeded * apRecoverySeconds
+//
+//	targetUnix = lastApAddTime + apNeeded * apRecoverySeconds
 func TestTargetUnixCalculation(t *testing.T) {
 	const apNeeded = 10
 	const lastApAddTime = 1_000_000

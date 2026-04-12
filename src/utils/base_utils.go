@@ -148,7 +148,12 @@ func GetAutoSignByUserId(userId int64) *gorm.DB {
 
 // GetApRemindUsers 获取开启理智提醒的用户
 func GetApRemindUsers() *gorm.DB {
-	return bot.DBEngine.Raw("select * from user_sign where ap_remind = 1")
+	return bot.DBEngine.Raw("select * from user_ap_remind")
+}
+
+// GetApRemindByUserId 查询用户理智提醒设置
+func GetApRemindByUserId(userId int64) *gorm.DB {
+	return bot.DBEngine.Raw("select * from user_ap_remind where user_number = ?", userId)
 }
 
 // GetNewsGroups 获取开启消息推送的群组

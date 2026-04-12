@@ -29,8 +29,6 @@ func AutoSign() {
 				sign(user)
 			}
 			log.Println("自动签到执行完毕...")
-			// 每日签到后检查理智状态，将理智已用完的用户重新加入提醒队列
-			DailyApCheck()
 		}()
 	}
 }
