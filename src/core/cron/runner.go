@@ -60,5 +60,9 @@ func StartCron() error {
 	//启动定时任务
 	crontab.Start()
 	log.Println("定时任务已启动")
+
+	//初始化理智提醒定时器（动态调度，不使用固定间隔轮询）
+	sign.InitApRemind()
+
 	return nil
 }
