@@ -30,8 +30,16 @@ type ItemTable struct {
 var itemMap = make(map[string]ItemTable)
 
 func init() {
-	resp, _ := http.Get(viper.GetString("api.item_table"))
-	r, _ := io.ReadAll(resp.Body)
+	resp, err := http.Get(viper.GetString("api.item_table"))
+	if err != nil || resp == nil {
+		log.Println("Failed to fetch item_table:", err)
+		return
+	}
+	r, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("Failed to read item_table response:", err)
+		return
+	}
 	gjson.ParseBytes(r).Get("items").ForEach(func(key, value gjson.Result) bool {
 		itemMap[key.String()] = ItemTable{
 			Name:   value.Get("name").String(),
