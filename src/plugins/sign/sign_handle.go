@@ -52,12 +52,30 @@ func SignHandle(update tgbotapi.Update) error {
 	}
 
 	if param != "" {
-		if param == "auto" {
+		switch param {
+		case "auto":
 			// 开启自动签到
 			autoSign(update)
-		} else if param == "stop" {
+		case "stop":
 			// 关闭自动签到
 			stopSign(update)
+		case "notify_all":
+			// 设置通知模式为全部通知
+			setNotifyMode(update, 0)
+		case "notify_fail":
+			// 设置通知模式为仅失败通知
+			setNotifyMode(update, 1)
+		case "notify_success":
+			// 设置通知模式为仅成功通知
+			setNotifyMode(update, 2)
+		default:
+			sendMessage := tgbotapi.NewMessage(chatId, "未知的签到指令参数，请使用 /help 查看使用说明。")
+			sendMessage.ReplyToMessageID = messageId
+			msg, err := bot.Arknights.Send(sendMessage)
+			if err != nil {
+				return err
+			}
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		}
 		return nil
 	}
@@ -98,7 +116,7 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
 	bot.Arknights.Send(sendAction)
 
-	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
+	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount, account.ServerName)
 	if err != nil {
 		log.Println(playerName, err)
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\n失败原因:%s", playerName, err.Error()))
@@ -144,6 +162,7 @@ func autoSign(update tgbotapi.Update) {
 		Id:         id,
 		UserName:   message.From.FullName(),
 		UserNumber: userId,
+		NotifyMode: 0,
 	}
 
 	bot.DBEngine.Table("user_sign").Create(&userSign)
@@ -167,6 +186,47 @@ func stopSign(update tgbotapi.Update) {
 	bot.DBEngine.Exec("delete from user_sign where user_number = ?", userId)
 
 	sendMessage := tgbotapi.NewMessage(chatId, "已关闭自动签到！")
+	sendMessage.ReplyToMessageID = messageId
+	msg, err := bot.Arknights.Send(sendMessage)
+	if err != nil {
+		return
+	}
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+}
+
+// 设置签到通知模式
+func setNotifyMode(update tgbotapi.Update, mode int) {
+	message := update.Message
+	userId := message.From.ID
+	chatId := message.Chat.ID
+	messageId := message.MessageID
+
+	var userSign UserSign
+	res := utils.GetAutoSignByUserId(userId).Scan(&userSign)
+	if res.RowsAffected == 0 {
+		sendMessage := tgbotapi.NewMessage(chatId, "请先开启自动签到！(/sign auto)")
+		sendMessage.ReplyToMessageID = messageId
+		msg, err := bot.Arknights.Send(sendMessage)
+		if err != nil {
+			return
+		}
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		return
+	}
+
+	bot.DBEngine.Exec("update user_sign set notify_mode = ? where user_number = ?", mode, userId)
+
+	var modeText string
+	switch mode {
+	case 0:
+		modeText = "全部通知"
+	case 1:
+		modeText = "仅失败时通知"
+	case 2:
+		modeText = "仅成功时通知"
+	}
+
+	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("签到通知模式已设置为：%s", modeText))
 	sendMessage.ReplyToMessageID = messageId
 	msg, err := bot.Arknights.Send(sendMessage)
 	if err != nil {

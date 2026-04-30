@@ -3,6 +3,7 @@ package bot
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/apremind"
 	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
 	"arknights_bot/plugins/lottery"
@@ -25,11 +26,11 @@ func Serve() {
 	b.JoinRequestProcessor(gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
-	//b.NewProcessor(gatekeeper.CheckMember, gatekeeper.KickMember) // 申请入群模式下管理员手动通过后可能导致用户被封禁
 
 	// callback
 	b.NewCallBackProcessor("verify", gatekeeper.CallBackData)
 	b.NewCallBackProcessor("request", gatekeeper.RequestCallBackData)
+	b.NewCallBackProcessor("chooseServer", account.ChooseServer)
 	b.NewCallBackProcessor("bind", account.ChoosePlayer)
 	b.NewCallBackProcessor("unbind", account.UnbindPlayer)
 	b.NewCallBackProcessor("sign", sign.SignPlayer)
@@ -59,7 +60,9 @@ func Serve() {
 	// 普通
 	b.NewCommandProcessor("help", system.HelpHandle)
 	b.NewCommandProcessor("ping", system.PingHandle)
+	b.NewCommandProcessor("tag", system.TagHandle)
 	b.NewCommandProcessor("sign", sign.SignHandle)
+	b.NewCommandProcessor("ap", apremind.ApHandle)
 	b.NewCommandProcessor("state", player.PlayerHandle)
 	b.NewCommandProcessor("box", player.PlayerHandle)
 	b.NewCommandProcessor("box_detail", player.PlayerHandle)

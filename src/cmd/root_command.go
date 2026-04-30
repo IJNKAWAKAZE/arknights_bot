@@ -17,6 +17,11 @@ func Launch() {
 	if err != nil {
 		panic(err)
 	}
+	//数据库迁移
+	// err = config.MigrateDB()
+	// if err != nil {
+	// 	panic(err)
+	// }
 	//初始化redis连接
 	config.Redis()
 	//初始化机器人

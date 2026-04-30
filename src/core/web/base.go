@@ -155,7 +155,7 @@ func Base(r *gin.Engine) {
 		skAccount.Hypergryph.Token = userAccount.HypergryphToken
 		skAccount.Skland.Token = userAccount.SklandToken
 		skAccount.Skland.Cred = userAccount.SklandCred
-		playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount)
+		playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
 		if err != nil {
 			log.Println(err)
 			utils.WebC <- err

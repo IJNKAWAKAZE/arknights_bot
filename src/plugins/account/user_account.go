@@ -18,6 +18,7 @@ type UserAccount struct {
 	SklandToken     string    `json:"sklandToken"`
 	SklandCred      string    `json:"sklandCred"`
 	SklandId        string    `json:"sklandId"`
+	ServerName      string    `json:"serverName"`
 	CreateTime      time.Time `json:"createTime" gorm:"autoCreateTime"`
 	UpdateTime      time.Time `json:"updateTime" gorm:"autoUpdateTime"`
 	Remark          string    `json:"remark"`

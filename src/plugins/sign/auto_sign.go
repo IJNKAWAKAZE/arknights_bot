@@ -49,23 +49,29 @@ func sign(user UserSign) {
 				skAccount.Skland.Cred = userAccount.SklandCred
 
 				// 执行签到
-				award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount)
+				award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount, userAccount.ServerName)
 				if err != nil {
-					// 签到失败
-					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err.Error()))
-					bot.Arknights.Send(sendMessage)
+					// 签到失败 - notify_mode: 0(全部通知) 或 1(仅失败通知) 时发送
+					if user.NotifyMode == 0 || user.NotifyMode == 1 {
+						sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err.Error()))
+						bot.Arknights.Send(sendMessage)
+					}
 					log.Println(player.PlayerName, err)
 					return
 				}
-				// 今日已完成签到
+				// 今日已完成签到 - notify_mode: 0(全部通知) 时发送
 				if hasSigned {
-					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
-					bot.Arknights.Send(sendMessage)
+					if user.NotifyMode == 0 {
+						sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
+						bot.Arknights.Send(sendMessage)
+					}
 					return
 				}
-				// 签到成功
-				sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, award))
-				bot.Arknights.Send(sendMessage)
+				// 签到成功 - notify_mode: 0(全部通知) 或 2(仅成功通知) 时发送
+				if user.NotifyMode == 0 || user.NotifyMode == 2 {
+					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, award))
+					bot.Arknights.Send(sendMessage)
+				}
 			}
 		}
 	}

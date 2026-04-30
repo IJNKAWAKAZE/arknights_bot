@@ -8,6 +8,7 @@ import (
 
 var HypergryphAddr = "https://as.hypergryph.com"
 var HypergryphAKAddr = "https://ak.hypergryph.com"
+var GryphlineAddr = "https://as.gryphline.com"
 
 type HBaseResp[T any] struct {
 	StatusCode *int   `json:"statusCode"`
@@ -69,4 +70,14 @@ func HypergryphAKRequest(r *resty.Request, method, path string) (d string, _ err
 		return d, fmt.Errorf("[hypergryph] %w", err)
 	}
 	return string(res.Body()), nil
+}
+
+func GryphlineRequest[T any](r *resty.Request, method, path string) (t T, _ error) {
+	res, err := resty.ParseResp[*HBaseResp[any], *HBaseResp[T]](
+		r.SetError(&HBaseResp[any]{}).SetResult(&HBaseResp[T]{}).Execute(method, GryphlineAddr+path),
+	)
+	if err != nil {
+		return t, fmt.Errorf("[gryphline] %w", err)
+	}
+	return res.Data, nil
 }

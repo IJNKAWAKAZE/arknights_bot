@@ -5,11 +5,11 @@ import (
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils"
 	"encoding/json"
+	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 // SetTokenHandle 重设token
-
 func SetTokenHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
@@ -23,14 +23,17 @@ func SetTokenHandle(update tgbotapi.Update) error {
 		bot.Arknights.Send(sendMessage)
 		return nil
 	}
-	sendMessage := tgbotapi.NewMessage(chatId, "请输入新token或使用 /cancel 指令取消操作。")
+	var buttons [][]tgbotapi.InlineKeyboardButton
+	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("国服", fmt.Sprintf("%s,%s,%s", "chooseServer", "国服", "resetToken")),
+		tgbotapi.NewInlineKeyboardButtonData("国际服", fmt.Sprintf("%s,%s, %s", "chooseServer", "国际服", "resetToken")),
+	))
+	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
+		buttons...,
+	)
+	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的服务器")
+	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
-	sendMessage.Text = "如何获取token\n\n" +
-		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
-		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)"
-	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	bot.Arknights.Send(sendMessage)
-	tgbotapi.WaitMessage[chatId] = "resetToken"
 	return nil
 }
 
@@ -49,7 +52,7 @@ func ResetToken(update tgbotapi.Update) error {
 	if err == nil {
 		token = userToken.Data.Content
 	}
-	account, err := skland.Login(token)
+	account, err := skland.Login(token, serverNameMap[chatId])
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
 		bot.Arknights.Send(sendMessage)

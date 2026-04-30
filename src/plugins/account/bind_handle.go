@@ -13,14 +13,17 @@ import (
 // BindHandle 绑定角色
 func BindHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
-	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
+	var buttons [][]tgbotapi.InlineKeyboardButton
+	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("国服", fmt.Sprintf("%s,%s,%s", "chooseServer", "国服", "setToken")),
+		tgbotapi.NewInlineKeyboardButtonData("国际服", fmt.Sprintf("%s,%s,%s", "chooseServer", "国际服", "setToken")),
+	))
+	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
+		buttons...,
+	)
+	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的服务器")
+	sendMessage.ReplyMarkup = inlineKeyboardMarkup
 	bot.Arknights.Send(sendMessage)
-	sendMessage.Text = "如何获取token\n\n" +
-		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
-		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)"
-	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	bot.Arknights.Send(sendMessage)
-	tgbotapi.WaitMessage[chatId] = "setToken"
 	return nil
 }
 
@@ -39,7 +42,7 @@ func SetToken(update tgbotapi.Update) error {
 	if err == nil {
 		token = userToken.Data.Content
 	}
-	account, err := skland.Login(token)
+	account, err := skland.Login(token, serverNameMap[chatId])
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
 		bot.Arknights.Send(sendMessage)
@@ -65,12 +68,13 @@ func SetToken(update tgbotapi.Update) error {
 			SklandToken:     account.Skland.Token,
 			SklandCred:      account.Skland.Cred,
 			SklandId:        account.UserId,
+			ServerName:      serverNameMap[chatId],
 		}
 		bot.DBEngine.Table("user_account").Create(&userAccount)
 	}
 	delete(tgbotapi.WaitMessage, chatId)
 	// 获取角色列表
-	players, err := skland.ArknightsPlayers(account.Skland)
+	players, err := skland.ArknightsPlayers(account.Skland, userAccount.ServerName)
 	if err != nil || len(players) == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定角色！")
 		bot.Arknights.Send(sendMessage)

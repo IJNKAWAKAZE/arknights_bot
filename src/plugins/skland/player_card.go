@@ -64,14 +64,19 @@ type PlayerCards struct {
 	} `json:"list"`
 }
 
-func GetPlayerCards(account Account) (*PlayerCards, error) {
+func GetPlayerCards(account Account, serverName string) (*PlayerCards, error) {
 	var playerCards *PlayerCards
-	account, err := RefreshToken(account)
+	account, err := RefreshToken(account, serverName)
 	if err != nil {
 		log.Println(err.Error())
 		return playerCards, err
 	}
-	playerCardsStr, err := getPlayerCardsStr(account.Skland)
+	var playerCardsStr string
+	if serverName == "国服" {
+		playerCardsStr, err = getPlayerCardsStr(account.Skland)
+	} else if serverName == "国际服" {
+		playerCardsStr, err = iGetPlayerCardsStr(account.Skland)
+	}
 	if err != nil {
 		return playerCards, err
 	}
@@ -82,4 +87,8 @@ func GetPlayerCards(account Account) (*PlayerCards, error) {
 
 func getPlayerCardsStr(skland AccountSkland) (string, error) {
 	return SklandRequestPlayerData(SKR(), "GET", "/api/v1/game/cards", skland)
+}
+
+func iGetPlayerCardsStr(skland AccountSkland) (string, error) {
+	return SkportRequestPlayerData(SKR(), "GET", "/api/v1/game/cards", skland)
 }

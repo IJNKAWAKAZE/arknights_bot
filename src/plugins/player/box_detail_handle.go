@@ -19,6 +19,13 @@ type PlayerOperationBoxDetail struct {
 
 func (_ PlayerOperationBoxDetail) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
+	if userAccount.ServerName == "国际服" {
+		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
+		sendMessage.ReplyToMessageID = messageId
+		bot.Arknights.Send(sendMessage)
+		return nil
+	}
+
 	param := message.CommandArguments()
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
 	bot.Arknights.Send(sendAction)

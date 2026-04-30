@@ -28,12 +28,17 @@ type SignGameRes struct {
 
 type SignGameAwards []*SignGameAward
 
-func SignGamePlayer(uid string, account Account) (award string, hasSigned bool, err error) {
-	account, err = RefreshToken(account)
+func SignGamePlayer(uid string, account Account, serverName string) (award string, hasSigned bool, err error) {
+	account, err = RefreshToken(account, serverName)
 	if err != nil {
 		return
 	}
-	signGameData, err := signGame("1", uid, account.Skland)
+	var signGameData *SignGameData
+	if serverName == "国服" {
+		signGameData, err = signGame("1", uid, account.Skland)
+	} else if serverName == "国际服" {
+		signGameData, err = iSignGame("1", uid, account.Skland)
+	}
 	if err != nil {
 		e, ok1 := resty.AsRespErr(err)
 		if ok1 {
@@ -56,6 +61,12 @@ func SignGamePlayer(uid string, account Account) (award string, hasSigned bool, 
 func signGame(gid, uid string, skland AccountSkland) (*SignGameData, error) {
 	req := SKR().SetBody(gh.M{"gameId": gid, "uid": uid})
 	return SklandRequest[*SignGameData](req, "POST", "/api/v1/game/attendance", skland)
+}
+
+// 估国际服签到
+func iSignGame(gid, uid string, skland AccountSkland) (*SignGameData, error) {
+	req := SKR().SetHeader("sk-language", "zh_Hans").SetBody(gh.M{"gameId": gid, "uid": uid})
+	return SkportRequest[*SignGameData](req, "POST", "/api/v1/game/attendance", skland)
 }
 
 func (t SignGameAwards) shortString() string {
