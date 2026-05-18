@@ -22,6 +22,8 @@ var IgnoreBirthday map[string]string
 
 var ADWords []string
 
+var GuestBotSpamEnabled = true
+
 func init() {
 	// 设置配置文件的名字
 	viper.SetConfigName("arknights")
@@ -64,6 +66,7 @@ func initData() {
 		IgnoreBirthday[ignore] = ignore
 	}
 	ADWords = viper.GetStringSlice("ad")
+	GuestBotSpamEnabled = configBoolDefault("anti_spam.guest_bot_spam.enabled", true)
 	for _, missing := range strings.Split(jpMissing, "/") {
 		RecruitMissing[missing] = missing
 	}
@@ -79,4 +82,11 @@ func initData() {
 			EnemyName[t[0]] = t[1]
 		}
 	}
+}
+
+func configBoolDefault(key string, defaultValue bool) bool {
+	if !viper.IsSet(key) {
+		return defaultValue
+	}
+	return viper.GetBool(key)
 }

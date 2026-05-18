@@ -93,3 +93,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/ijnkawakaze/telegram-bot-api => github.com/ModerRAS/telegram-bot-api v0.0.0-20260518091145-15cde03191a0

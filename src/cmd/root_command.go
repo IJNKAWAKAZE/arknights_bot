@@ -5,6 +5,7 @@ import (
 	"arknights_bot/core/bot"
 	"arknights_bot/core/cron"
 	"arknights_bot/core/web"
+	"arknights_bot/plugins/antispam"
 )
 
 func Execute() {
@@ -18,12 +19,13 @@ func Launch() {
 		panic(err)
 	}
 	//数据库迁移
-	// err = config.MigrateDB()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err = config.MigrateDB()
+	if err != nil {
+		panic(err)
+	}
 	//初始化redis连接
 	config.Redis()
+	antispam.Init()
 	//初始化机器人
 	err = config.Bot()
 	if err != nil {

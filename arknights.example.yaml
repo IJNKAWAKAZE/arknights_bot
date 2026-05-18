@@ -70,5 +70,9 @@ ignore_birthday: ["百炼嘉维尔", "承曦格雷伊", "纯烬艾雅法拉", "�
 # 过滤bio关键词
 ad: []
 
+anti_spam:
+  guest_bot_spam:
+    enabled: true
+
 # 森空岛请求代理 不填就不使用代理
 proxy: http://localhost:1234
