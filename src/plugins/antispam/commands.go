@@ -2,7 +2,6 @@ package antispam
 
 import (
 	bot "arknights_bot/config"
-	"arknights_bot/plugins/messagecleaner"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -17,7 +16,7 @@ func GuestSpamHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	chatID := message.Chat.ID
-	messagecleaner.AddDelQueue(chatID, message.MessageID, 5)
+	guestSpamTelegram.QueueDelete(chatID, message.MessageID, 5)
 
 	args := strings.TrimSpace(message.CommandArguments())
 	if args == "" {
@@ -27,7 +26,8 @@ func GuestSpamHandle(update tgbotapi.Update) error {
 	if !ok {
 		return sendRecentGuestCandidates(message)
 	}
-	return startSpamVote(message, selected)
+	_, err := startSpamVote(message, selected)
+	return err
 }
 
 func GuestSpamLogHandle(update tgbotapi.Update) error {
@@ -37,13 +37,13 @@ func GuestSpamLogHandle(update tgbotapi.Update) error {
 	}
 	chatID := message.Chat.ID
 	userID := message.From.ID
-	messagecleaner.AddDelQueue(chatID, message.MessageID, 5)
-	if !bot.Arknights.IsAdmin(chatID, userID) {
+	guestSpamTelegram.QueueDelete(chatID, message.MessageID, 5)
+	if !guestSpamTelegram.IsAdmin(chatID, userID) {
 		send := tgbotapi.NewMessage(chatID, "无使用权限！")
 		send.ReplyToMessageID = message.MessageID
-		msg, err := bot.Arknights.Send(send)
+		msg, err := guestSpamTelegram.Send(send)
 		if err == nil {
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			guestSpamTelegram.QueueDelete(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 		}
 		return err
 	}
@@ -71,24 +71,24 @@ func SpamVoteCallback(update tgbotapi.Update) error {
 	voteID := data[2]
 	if action == "cancel" {
 		DeleteVote(voteID)
-		callback.Answer(false, "已取消")
-		callback.Delete()
+		guestSpamTelegram.AnswerCallback(callback.ID, false, "已取消")
+		guestSpamTelegram.DeleteCallbackMessage(callback)
 		return nil
 	}
 	vote, ok := GetVote(voteID)
 	if !ok {
-		callback.Answer(true, "投票已过期")
+		guestSpamTelegram.AnswerCallback(callback.ID, true, "投票已过期")
 		return nil
 	}
 	if action != "vote" {
 		return nil
 	}
 	if callback.From == nil || callback.From.IsBot {
-		callback.Answer(true, "机器人不能参与投票")
+		guestSpamTelegram.AnswerCallback(callback.ID, true, "机器人不能参与投票")
 		return nil
 	}
 	if containsUser(vote.Voters, callback.From.ID) {
-		callback.Answer(true, "你已经投过票了")
+		guestSpamTelegram.AnswerCallback(callback.ID, true, "你已经投过票了")
 		return nil
 	}
 	vote.Voters = append(vote.Voters, callback.From.ID)
@@ -97,7 +97,7 @@ func SpamVoteCallback(update tgbotapi.Update) error {
 		applyVotePassed(vote, callback)
 		return nil
 	}
-	callback.Answer(false, fmt.Sprintf("已投票 %d/%d", len(vote.Voters), vote.RequiredVoteCount))
+	guestSpamTelegram.AnswerCallback(callback.ID, false, fmt.Sprintf("已投票 %d/%d", len(vote.Voters), vote.RequiredVoteCount))
 	return nil
 }
 
@@ -120,9 +120,9 @@ func sendRecentGuestCandidates(message *tgbotapi.Message) error {
 	send := tgbotapi.NewMessage(message.Chat.ID, text)
 	send.ReplyToMessageID = message.MessageID
 	send.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows...)
-	msg, err := bot.Arknights.Send(send)
+	msg, err := guestSpamTelegram.Send(send)
 	if err == nil {
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		guestSpamTelegram.QueueDelete(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	}
 	return err
 }
@@ -145,7 +145,7 @@ func SelectRecentGuestCallback(update tgbotapi.Update) error {
 		}
 	}
 	if selected.MessageID == 0 {
-		callback.Answer(true, "候选消息已过期")
+		guestSpamTelegram.AnswerCallback(callback.ID, true, "候选消息已过期")
 		return nil
 	}
 	msg := &tgbotapi.Message{
@@ -153,20 +153,23 @@ func SelectRecentGuestCallback(update tgbotapi.Update) error {
 		Chat:      callback.Message.Chat,
 		From:      callback.From,
 	}
-	err := startSpamVote(msg, selected)
-	if err == nil {
-		callback.Delete()
-		callback.Answer(false, "已发起投票")
+	started, err := startSpamVote(msg, selected)
+	if err == nil && started {
+		guestSpamTelegram.DeleteCallbackMessage(callback)
+		guestSpamTelegram.AnswerCallback(callback.ID, false, "已发起投票")
 	}
 	return err
 }
 
-func startSpamVote(message *tgbotapi.Message, selected RecentGuestMessage) error {
+func startSpamVote(message *tgbotapi.Message, selected RecentGuestMessage) (bool, error) {
+	if message == nil || message.Chat == nil || message.From == nil {
+		return false, nil
+	}
 	activeCount := ActiveUserCount(message.Chat.ID)
 	required, ok := requiredVoteCount(activeCount)
 	if !ok {
 		AddLog(logFromRecent(selected, ActionVoteInvalid, ReasonInsufficientAct, fmt.Sprintf("active users: %d", activeCount)))
-		return sendTempMessage(message.Chat.ID, message.MessageID, "最近 10 分钟活跃人数少于 3，投票无效，请管理员检查。")
+		return false, sendTempMessage(message.Chat.ID, message.MessageID, "最近 10 分钟活跃人数少于 3，投票无效，请管理员检查。")
 	}
 	voteID, _ := gonanoid.New(16)
 	vote := SpamVote{
@@ -195,22 +198,21 @@ func startSpamVote(message *tgbotapi.Message, selected RecentGuestMessage) error
 	send := tgbotapi.NewMessage(message.Chat.ID, text)
 	send.ReplyToMessageID = message.MessageID
 	send.ReplyMarkup = keyboard
-	msg, err := bot.Arknights.Send(send)
+	msg, err := guestSpamTelegram.Send(send)
 	if err != nil {
-		return err
+		return false, err
 	}
 	vote.VoteMessageID = msg.MessageID
 	SaveVote(vote)
 	AddLog(logFromRecent(selected, ActionVoteStarted, ReasonVote, fmt.Sprintf("required votes: %d", required)))
-	return nil
+	return true, nil
 }
 
 func applyVotePassed(vote SpamVote, callback *tgbotapi.CallbackQuery) {
 	ApplyVotePassedState(vote)
-	del := tgbotapi.NewDeleteMessage(vote.ChatID, vote.MessageID)
-	bot.Arknights.Send(del)
-	callback.Answer(false, "投票通过，已拉黑并删除消息")
-	callback.Delete()
+	guestSpamTelegram.DeleteMessage(vote.ChatID, vote.MessageID)
+	guestSpamTelegram.AnswerCallback(callback.ID, false, "投票通过，已拉黑并删除消息")
+	guestSpamTelegram.DeleteCallbackMessage(callback)
 }
 
 func ApplyVotePassedState(vote SpamVote) {
@@ -238,7 +240,20 @@ func ApplyVotePassedState(vote SpamVote) {
 }
 
 func restoreCaller(chatID, userID int64, message *tgbotapi.Message) error {
-	bot.Arknights.RestrictChatMember(chatID, userID, tgbotapi.AllPermissions)
+	if _, err := guestSpamTelegram.RestrictChatMember(chatID, userID, tgbotapi.AllPermissions); err != nil {
+		item := SpamLog{
+			ChatID:       chatID,
+			CallerUserID: userID,
+			Action:       ActionRestoreCaller,
+			Reason:       ReasonAdminRestore,
+			Detail:       err.Error(),
+		}
+		if message != nil && message.Chat != nil {
+			item.ChatName = message.Chat.Title
+		}
+		AddLog(item)
+		return err
+	}
 	RestoreCallerState(chatID, userID, message)
 	return sendTempMessage(chatID, message.MessageID, "已恢复该用户并清除 guest spam 警告。")
 }
@@ -285,9 +300,9 @@ func sendLogs(chatID int64, replyTo int) error {
 func sendTempMessage(chatID int64, replyTo int, text string) error {
 	send := tgbotapi.NewMessage(chatID, text)
 	send.ReplyToMessageID = replyTo
-	msg, err := bot.Arknights.Send(send)
+	msg, err := guestSpamTelegram.Send(send)
 	if err == nil {
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		guestSpamTelegram.QueueDelete(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
 	}
 	return err
 }

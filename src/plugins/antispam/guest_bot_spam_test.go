@@ -56,6 +56,34 @@ func TestCheckGuestBotSpamIgnoresNormalMessage(t *testing.T) {
 	}
 }
 
+func TestCheckGuestBotSpamDisabled(t *testing.T) {
+	old := bot.GuestBotSpamEnabled
+	bot.GuestBotSpamEnabled = false
+	t.Cleanup(func() {
+		bot.GuestBotSpamEnabled = old
+	})
+
+	update := tgbotapi.Update{GuestMessage: guestMessage(2001, 1001)}
+	if CheckGuestBotSpam(update) {
+		t.Fatal("disabled guest bot spam should not match")
+	}
+}
+
+func TestIsGuestBotMessageShapes(t *testing.T) {
+	if !isGuestBotMessage(&tgbotapi.Message{GuestBotCallerUser: &tgbotapi.User{ID: 1}}) {
+		t.Fatal("caller user should mark guest bot message")
+	}
+	if !isGuestBotMessage(&tgbotapi.Message{GuestBotCallerChat: &tgbotapi.Chat{ID: -1}}) {
+		t.Fatal("caller chat should mark guest bot message")
+	}
+	if !isGuestBotMessage(&tgbotapi.Message{GuestQueryID: "guest-query"}) {
+		t.Fatal("guest query id should mark guest bot message")
+	}
+	if isGuestBotMessage(&tgbotapi.Message{}) {
+		t.Fatal("plain message should not mark guest bot message")
+	}
+}
+
 func TestIsTrackableMessage(t *testing.T) {
 	if !isTrackableMessage(&tgbotapi.Message{
 		Chat: &tgbotapi.Chat{ID: -1001, Type: "supergroup"},
@@ -88,6 +116,61 @@ func TestIsTrackableMessage(t *testing.T) {
 	}
 }
 
+func TestEvaluateGuestMessageGuardAndCallerShapes(t *testing.T) {
+	useFakeTelegram(t)
+
+	if decision := EvaluateGuestMessage(nil); decision.DeleteMessage || decision.Reason != "" {
+		t.Fatalf("nil decision = %+v, want empty", decision)
+	}
+	if decision := EvaluateGuestMessage(&tgbotapi.Message{From: &tgbotapi.User{ID: 1}}); decision.DeleteMessage || decision.Reason != "" {
+		t.Fatalf("missing chat decision = %+v, want empty", decision)
+	}
+	if decision := EvaluateGuestMessage(&tgbotapi.Message{Chat: &tgbotapi.Chat{ID: -1}}); decision.DeleteMessage || decision.Reason != "" {
+		t.Fatalf("missing from decision = %+v, want empty", decision)
+	}
+	if decision := EvaluateGuestMessage(guestQueryOnlyMessage(2001)); decision.DeleteMessage || decision.Reason != ReasonTrusted || len(decision.Logs) != 1 {
+		t.Fatalf("guest query only decision = %+v, want allow log", decision)
+	}
+	if decision := EvaluateGuestMessage(guestChatMessage(2002, -2002)); decision.DeleteMessage || decision.Reason != ReasonTrusted || len(decision.Logs) != 1 {
+		t.Fatalf("caller chat unknown decision = %+v, want allow log", decision)
+	}
+}
+
+func TestCommandAndCallbackGuards(t *testing.T) {
+	useFakeTelegram(t)
+
+	if err := GuestSpamHandle(tgbotapi.Update{}); err != nil {
+		t.Fatalf("nil guest spam command: %v", err)
+	}
+	if err := GuestSpamHandle(tgbotapi.Update{Message: &tgbotapi.Message{From: &tgbotapi.User{ID: 1}}}); err != nil {
+		t.Fatalf("missing chat guest spam command: %v", err)
+	}
+	if err := GuestSpamHandle(tgbotapi.Update{Message: &tgbotapi.Message{Chat: &tgbotapi.Chat{ID: -1}}}); err != nil {
+		t.Fatalf("missing from guest spam command: %v", err)
+	}
+	if err := GuestSpamLogHandle(tgbotapi.Update{}); err != nil {
+		t.Fatalf("nil log command: %v", err)
+	}
+	if err := SelectRecentGuestCallback(tgbotapi.Update{}); err != nil {
+		t.Fatalf("nil select callback: %v", err)
+	}
+	if err := SelectRecentGuestCallback(tgbotapi.Update{CallbackQuery: &tgbotapi.CallbackQuery{Data: "guestspam_select,1"}}); err != nil {
+		t.Fatalf("select callback without message: %v", err)
+	}
+	if err := SelectRecentGuestCallback(tgbotapi.Update{CallbackQuery: &tgbotapi.CallbackQuery{Data: "bad", Message: &tgbotapi.Message{Chat: &tgbotapi.Chat{ID: -1}}}}); err != nil {
+		t.Fatalf("bad select callback data: %v", err)
+	}
+	if err := SpamVoteCallback(tgbotapi.Update{}); err != nil {
+		t.Fatalf("nil vote callback: %v", err)
+	}
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: &tgbotapi.CallbackQuery{Data: "bad"}}); err != nil {
+		t.Fatalf("bad vote callback data: %v", err)
+	}
+	if started, err := startSpamVote(nil, RecentGuestMessage{}); err != nil || started {
+		t.Fatalf("nil start vote = (%v,%v), want (false,nil)", started, err)
+	}
+}
+
 func TestTrustedRisk(t *testing.T) {
 	now := time.Now()
 	risk := MemberRisk{
@@ -106,6 +189,83 @@ func TestTrustedRisk(t *testing.T) {
 	if isTrustedRiskAt(risk, now) {
 		t.Fatal("user with insufficient recent messages should stay low trust")
 	}
+}
+
+func guestMessage(guestBotID, callerID int64) *tgbotapi.Message {
+	return &tgbotapi.Message{
+		MessageID: int(guestBotID % 100000),
+		Chat: &tgbotapi.Chat{
+			ID:    -100100,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        guestBotID,
+			IsBot:     true,
+			FirstName: "Guest",
+			UserName:  "guest_bot",
+		},
+		GuestBotCallerUser: &tgbotapi.User{
+			ID:        callerID,
+			FirstName: "Caller",
+			UserName:  "caller",
+		},
+	}
+}
+
+func botCallerMessage(guestBotID, callerID int64) *tgbotapi.Message {
+	message := guestMessage(guestBotID, callerID)
+	message.GuestBotCallerUser.IsBot = true
+	return message
+}
+
+func guestChatMessage(guestBotID, callerChatID int64) *tgbotapi.Message {
+	return &tgbotapi.Message{
+		MessageID: int(guestBotID % 100000),
+		Chat: &tgbotapi.Chat{
+			ID:    -100100,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        guestBotID,
+			IsBot:     true,
+			FirstName: "Guest",
+			UserName:  "guest_bot",
+		},
+		GuestBotCallerChat: &tgbotapi.Chat{
+			ID:    callerChatID,
+			Type:  "channel",
+			Title: "Caller Channel",
+		},
+	}
+}
+
+func guestQueryOnlyMessage(guestBotID int64) *tgbotapi.Message {
+	return &tgbotapi.Message{
+		MessageID: int(guestBotID % 100000),
+		Chat: &tgbotapi.Chat{
+			ID:    -100100,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        guestBotID,
+			IsBot:     true,
+			FirstName: "Guest",
+			UserName:  "guest_bot",
+		},
+		GuestQueryID: "guest-query",
+	}
+}
+
+func hasLogAction(logs []SpamLog, action string) bool {
+	for _, item := range logs {
+		if item.Action == action {
+			return true
+		}
+	}
+	return false
 }
 
 func TestWarningMuteDuration(t *testing.T) {

@@ -1,16 +1,21 @@
 package antispam
 
 import (
-	bot "arknights_bot/config"
 	"fmt"
+
+	bot "arknights_bot/config"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"strings"
 	"time"
 )
 
+func configGuestBotSpamEnabled() bool {
+	return bot.GuestBotSpamEnabled
+}
+
 func CheckGuestBotSpam(update tgbotapi.Update) bool {
-	if !bot.GuestBotSpamEnabled {
+	if !configGuestBotSpamEnabled() {
 		return false
 	}
 	message := update.GuestMessage
@@ -126,7 +131,7 @@ func isTrackableMessage(message *tgbotapi.Message) bool {
 }
 
 func deleteGuestMessageWithLog(message *tgbotapi.Message, reason string) {
-	if _, err := message.Delete(); err != nil {
+	if _, err := guestSpamTelegram.DeleteMessage(message.Chat.ID, message.MessageID); err != nil {
 		AddLog(logFromMessage(message, ActionDeleteFailed, reason, err.Error()))
 		log.Printf("guest spam: delete message failed: %v", err)
 		return
@@ -137,7 +142,7 @@ func deleteGuestMessageWithLog(message *tgbotapi.Message, reason string) {
 func penalizeBlacklistCaller(message *tgbotapi.Message) {
 	chatID := message.Chat.ID
 	if caller := message.GuestBotCallerUser; caller != nil && !caller.IsBot {
-		if _, err := bot.Arknights.BanChatMember(chatID, caller.ID); err != nil {
+		if _, err := guestSpamTelegram.BanChatMember(chatID, caller.ID); err != nil {
 			AddLog(logFromMessage(message, ActionBanCaller, ReasonBlacklist, err.Error()))
 			log.Printf("guest spam: ban caller %s failed: %v", userLogName(caller), err)
 			return
@@ -150,7 +155,7 @@ func penalizeBlacklistCaller(message *tgbotapi.Message) {
 			ChatID:       chatID,
 			SenderChatID: callerChat.ID,
 		}
-		if _, err := bot.Arknights.Request(config); err != nil {
+		if _, err := guestSpamTelegram.Request(config); err != nil {
 			AddLog(logFromMessage(message, ActionBanCallerChat, ReasonBlacklist, err.Error()))
 			log.Printf("guest spam: ban caller chat %d failed: %v", callerChat.ID, err)
 			return
@@ -192,7 +197,7 @@ func muteCaller(message *tgbotapi.Message, caller *tgbotapi.User, duration time.
 			CanSendMessages: false,
 		},
 	}
-	if _, err := bot.Arknights.Request(config); err != nil {
+	if _, err := guestSpamTelegram.Request(config); err != nil {
 		AddLog(logFromMessage(message, ActionMuteCaller, ReasonLowTrust, err.Error()))
 		log.Printf("guest spam: mute caller %s failed: %v", userLogName(caller), err)
 		return

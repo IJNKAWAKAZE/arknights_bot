@@ -5,8 +5,10 @@ package antispam
 import (
 	bot "arknights_bot/config"
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -63,6 +65,27 @@ func TestGuestSpamIntegrationLowTrustSyncAndReload(t *testing.T) {
 	}
 }
 
+func TestGuestSpamIntegrationHandleLowTrustDeleteFailureStillBlacklists(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	fake.deleteErr = errTelegram()
+
+	err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(integrationGuestBotID, integrationCallerID)})
+	if err != nil {
+		t.Fatalf("handle low trust: %v", err)
+	}
+	if len(fake.deletes) != 1 {
+		t.Fatalf("delete calls = %d, want 1", len(fake.deletes))
+	}
+	if !IsBlacklisted(integrationGuestBotID) {
+		t.Fatal("low trust guest bot should be blacklisted even if delete fails")
+	}
+	logs := RecentLogs(integrationChatID, 10)
+	if !hasLogAction(logs, ActionDeleteFailed) || !hasLogAction(logs, ActionAutoBlacklist) || !hasLogAction(logs, ActionWarnCaller) {
+		t.Fatalf("logs = %+v, want delete_failed, auto_blacklist, warn_caller", logs)
+	}
+}
+
 func TestGuestSpamIntegrationTrustedCallerAllowsUnknownBot(t *testing.T) {
 	setupGuestSpamIntegration(t)
 
@@ -93,6 +116,23 @@ func TestGuestSpamIntegrationTrustedCallerAllowsUnknownBot(t *testing.T) {
 	}
 }
 
+func TestGuestSpamIntegrationHandleTrustedCallerNoTelegramAction(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	seedTrustedCaller(integrationCallerID)
+
+	err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(integrationGuestBot2ID, integrationCallerID)})
+	if err != nil {
+		t.Fatalf("handle trusted guest message: %v", err)
+	}
+	if len(fake.deletes) != 0 || len(fake.bans) != 0 || len(fake.requests) != 0 {
+		t.Fatalf("trusted caller should not call telegram actions, deletes=%d bans=%d requests=%d", len(fake.deletes), len(fake.bans), len(fake.requests))
+	}
+	if IsBlacklisted(integrationGuestBot2ID) {
+		t.Fatal("trusted caller should not blacklist unknown guest bot")
+	}
+}
+
 func TestGuestSpamIntegrationWarningEscalatesToMute(t *testing.T) {
 	setupGuestSpamIntegration(t)
 
@@ -103,6 +143,42 @@ func TestGuestSpamIntegrationWarningEscalatesToMute(t *testing.T) {
 	second := EvaluateGuestMessage(testGuestMessage(991002, integrationCallerID))
 	if !second.MuteCaller || second.MuteDuration != 24*time.Hour {
 		t.Fatalf("second warning decision = %+v, want 24h mute", second)
+	}
+}
+
+func TestGuestSpamIntegrationHandleMuteSuccessLogged(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+
+	if err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991201, integrationCallerID)}); err != nil {
+		t.Fatalf("first warning: %v", err)
+	}
+	if err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991202, integrationCallerID)}); err != nil {
+		t.Fatalf("second warning: %v", err)
+	}
+	if len(fake.requests) != 1 {
+		t.Fatalf("mute request calls = %d, want 1", len(fake.requests))
+	}
+	if !hasLogAction(RecentLogs(integrationChatID, 20), ActionMuteCaller) {
+		t.Fatalf("logs = %+v, want mute success log", RecentLogs(integrationChatID, 20))
+	}
+}
+
+func TestGuestSpamIntegrationHandleMuteFailureLogged(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	fake.requestErr = errors.New("mute failed")
+
+	first := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991101, integrationCallerID)})
+	second := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991102, integrationCallerID)})
+	if first != nil || second != nil {
+		t.Fatalf("handle warning sequence errors = %v %v", first, second)
+	}
+	if len(fake.requests) != 1 {
+		t.Fatalf("mute request calls = %d, want 1", len(fake.requests))
+	}
+	if !hasLogAction(RecentLogs(integrationChatID, 20), ActionMuteCaller) {
+		t.Fatalf("logs = %+v, want mute failure log", RecentLogs(integrationChatID, 20))
 	}
 }
 
@@ -121,6 +197,76 @@ func TestGuestSpamIntegrationBlacklistedCallerChat(t *testing.T) {
 	decision := EvaluateGuestMessage(testGuestChatMessage(guestBotID, -100200))
 	if !decision.DeleteMessage || !decision.BanCallerChat || decision.BanCallerUser || decision.BlacklistBot {
 		t.Fatalf("caller chat decision = %+v, want delete+ban caller chat only", decision)
+	}
+}
+
+func TestGuestSpamIntegrationHandleBlacklistedCallerActionsAndFailures(t *testing.T) {
+	tests := []struct {
+		name      string
+		message   *tgbotapi.Message
+		banErr    error
+		reqErr    error
+		wantBan   int
+		wantReq   int
+		wantLog   string
+		wantNoBan bool
+	}{
+		{
+			name:    "caller user banned",
+			message: testGuestMessage(992101, integrationCallerID),
+			wantBan: 1,
+			wantLog: ActionBanCaller,
+		},
+		{
+			name:    "caller user ban failure logged",
+			message: testGuestMessage(992102, integrationCallerID),
+			banErr:  errTelegram(),
+			wantBan: 1,
+			wantLog: ActionBanCaller,
+		},
+		{
+			name:    "caller chat banned",
+			message: testGuestChatMessage(992103, -100201),
+			wantReq: 1,
+			wantLog: ActionBanCallerChat,
+		},
+		{
+			name:    "caller chat ban failure logged",
+			message: testGuestChatMessage(992104, -100202),
+			reqErr:  errTelegram(),
+			wantReq: 1,
+			wantLog: ActionBanCallerChat,
+		},
+		{
+			name:      "bot caller not banned",
+			message:   testBotCallerMessage(992105, integrationCallerID),
+			wantNoBan: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupGuestSpamIntegration(t)
+			fake := useFakeTelegram(t)
+			fake.banErr = tt.banErr
+			fake.requestErr = tt.reqErr
+			AddBlacklist(GuestBotBlacklist{BotID: tt.message.From.ID, BotName: "Known Bot"}, true)
+
+			if err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: tt.message}); err != nil {
+				t.Fatalf("handle blacklist: %v", err)
+			}
+			if len(fake.bans) != tt.wantBan {
+				t.Fatalf("ban calls = %d, want %d", len(fake.bans), tt.wantBan)
+			}
+			if len(fake.requests) != tt.wantReq {
+				t.Fatalf("request calls = %d, want %d", len(fake.requests), tt.wantReq)
+			}
+			if tt.wantNoBan && (len(fake.bans) != 0 || len(fake.requests) != 0) {
+				t.Fatalf("bot caller should not be punished, bans=%d requests=%d", len(fake.bans), len(fake.requests))
+			}
+			if tt.wantLog != "" && !hasLogAction(RecentLogs(integrationChatID, 10), tt.wantLog) {
+				t.Fatalf("logs = %+v, want action %s", RecentLogs(integrationChatID, 10), tt.wantLog)
+			}
+		})
 	}
 }
 
@@ -162,6 +308,21 @@ func TestGuestSpamIntegrationActivityDateSyncAndReload(t *testing.T) {
 	}
 }
 
+func TestGuestSpamIntegrationTrackActivityHandle(t *testing.T) {
+	setupGuestSpamIntegration(t)
+
+	if err := TrackActivityHandle(tgbotapi.Update{Message: trackableMessage(integrationCallerID, "hello")}); err != nil {
+		t.Fatalf("track activity: %v", err)
+	}
+	trust := TrustFor(integrationChatID, integrationCallerID)
+	if trust.RecentMessageCount != 1 {
+		t.Fatalf("recent count = %d, want 1", trust.RecentMessageCount)
+	}
+	if ActiveUserCount(integrationChatID) != 1 {
+		t.Fatalf("active users = %d, want 1", ActiveUserCount(integrationChatID))
+	}
+}
+
 func TestGuestSpamIntegrationVotePassedBlacklistsAndClearsVote(t *testing.T) {
 	setupGuestSpamIntegration(t)
 
@@ -198,6 +359,329 @@ func TestGuestSpamIntegrationVotePassedBlacklistsAndClearsVote(t *testing.T) {
 	}
 	if !IsBlacklisted(vote.GuestBotID) {
 		t.Fatal("voted guest bot should reload as blacklisted")
+	}
+}
+
+func TestGuestSpamIntegrationGuestSpamHandleCandidatesAndStartVote(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	message := commandMessage("/guest_spam", 7001)
+
+	if err := GuestSpamHandle(tgbotapi.Update{Message: message}); err != nil {
+		t.Fatalf("empty candidates command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "最近没有可判定") {
+		t.Fatalf("sends = %+v, want no candidates message", fake.sends)
+	}
+
+	recent := RecentGuestMessage{
+		ChatID:           integrationChatID,
+		ChatName:         "Guest Spam Test",
+		MessageID:        501,
+		GuestBotID:       993101,
+		GuestBotName:     "Candidate Bot",
+		GuestBotUserName: "candidate_bot",
+		SeenAt:           time.Now(),
+	}
+	RecordRecentGuestMessage(recent)
+	fake.sends = nil
+	if err := GuestSpamHandle(tgbotapi.Update{Message: commandMessage("/guest_spam", 7001)}); err != nil {
+		t.Fatalf("candidate list command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "请选择") {
+		t.Fatalf("sends = %+v, want candidate list", fake.sends)
+	}
+
+	for _, userID := range []int64{1, 2, 3} {
+		bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), userID)
+	}
+	fake.sends = nil
+	if err := GuestSpamHandle(tgbotapi.Update{Message: commandMessage("/guest_spam @candidate_bot", 7001)}); err != nil {
+		t.Fatalf("start vote command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "是否将 guest bot") {
+		t.Fatalf("sends = %+v, want vote message", fake.sends)
+	}
+	if len(voteIDs(t)) != 1 {
+		t.Fatalf("vote dirty ids = %v, want one vote", voteIDs(t))
+	}
+}
+
+func TestGuestSpamIntegrationGuestSpamHandleSendFailures(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	fake.sendErr = errTelegram()
+
+	err := GuestSpamHandle(tgbotapi.Update{Message: commandMessage("/guest_spam", 7001)})
+	if err == nil {
+		t.Fatal("empty candidates send failure should return error")
+	}
+	if len(fake.queuedDeletes) != 1 {
+		t.Fatalf("queued deletes = %d, want command cleanup queued", len(fake.queuedDeletes))
+	}
+
+	RecordRecentGuestMessage(RecentGuestMessage{
+		ChatID:           integrationChatID,
+		ChatName:         "Guest Spam Test",
+		MessageID:        505,
+		GuestBotID:       993105,
+		GuestBotName:     "Send Fail Bot",
+		GuestBotUserName: "send_fail_bot",
+		SeenAt:           time.Now(),
+	})
+	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), 1, 2, 3)
+	err = GuestSpamHandle(tgbotapi.Update{Message: commandMessage("/guest_spam 505", 7001)})
+	if err == nil {
+		t.Fatal("start vote send failure should return error")
+	}
+	if len(voteIDs(t)) != 0 {
+		t.Fatalf("vote dirty ids = %v, want no vote saved on send failure", voteIDs(t))
+	}
+	if hasLogAction(RecentLogs(integrationChatID, 10), ActionVoteStarted) {
+		t.Fatalf("logs = %+v, want no vote started log on send failure", RecentLogs(integrationChatID, 10))
+	}
+}
+
+func TestGuestSpamIntegrationGuestSpamHandleInsufficientActiveUsers(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	RecordRecentGuestMessage(RecentGuestMessage{
+		ChatID:           integrationChatID,
+		ChatName:         "Guest Spam Test",
+		MessageID:        502,
+		GuestBotID:       993102,
+		GuestBotName:     "Quiet Bot",
+		GuestBotUserName: "quiet_bot",
+		SeenAt:           time.Now(),
+	})
+
+	if err := GuestSpamHandle(tgbotapi.Update{Message: commandMessage("/guest_spam 502", 7001)}); err != nil {
+		t.Fatalf("insufficient active command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "活跃人数少于 3") {
+		t.Fatalf("sends = %+v, want invalid vote message", fake.sends)
+	}
+	if !hasLogAction(RecentLogs(integrationChatID, 10), ActionVoteInvalid) {
+		t.Fatalf("logs = %+v, want vote invalid", RecentLogs(integrationChatID, 10))
+	}
+	if len(voteIDs(t)) != 0 {
+		t.Fatalf("vote dirty ids = %v, want none", voteIDs(t))
+	}
+}
+
+func TestGuestSpamIntegrationSelectRecentGuestCallbackPaths(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	callback := selectCallback("select-expired", 503, 7001)
+
+	if err := SelectRecentGuestCallback(tgbotapi.Update{CallbackQuery: callback}); err != nil {
+		t.Fatalf("expired select callback: %v", err)
+	}
+	if len(fake.callbacks) != 1 || !fake.callbacks[0].showAlert || fake.callbacks[0].text != "候选消息已过期" {
+		t.Fatalf("callbacks = %+v, want expired alert", fake.callbacks)
+	}
+
+	RecordRecentGuestMessage(RecentGuestMessage{
+		ChatID:           integrationChatID,
+		ChatName:         "Guest Spam Test",
+		MessageID:        504,
+		GuestBotID:       993104,
+		GuestBotName:     "Selected Bot",
+		GuestBotUserName: "selected_bot",
+		SeenAt:           time.Now(),
+	})
+	fake.callbacks = nil
+	fake.callbackDelete = nil
+	fake.sends = nil
+	if err := SelectRecentGuestCallback(tgbotapi.Update{CallbackQuery: selectCallback("select-low-active", 504, 7001)}); err != nil {
+		t.Fatalf("low active select callback: %v", err)
+	}
+	if len(fake.callbacks) != 0 || len(fake.callbackDelete) != 0 {
+		t.Fatalf("low active should not answer started/delete callback, callbacks=%+v deletes=%+v", fake.callbacks, fake.callbackDelete)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "活跃人数少于 3") {
+		t.Fatalf("low active sends=%+v, want invalid vote message", fake.sends)
+	}
+
+	for _, userID := range []int64{1, 2, 3} {
+		bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), userID)
+	}
+	fake.callbacks = nil
+	fake.callbackDelete = nil
+	if err := SelectRecentGuestCallback(tgbotapi.Update{CallbackQuery: selectCallback("select-ok", 504, 7001)}); err != nil {
+		t.Fatalf("valid select callback: %v", err)
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已发起投票" || len(fake.callbackDelete) != 1 {
+		t.Fatalf("callbacks=%+v deletes=%+v, want start answer and callback delete", fake.callbacks, fake.callbackDelete)
+	}
+}
+
+func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+
+	if err := SpamVoteCallback(tgbotapi.Update{}); err != nil {
+		t.Fatalf("nil callback: %v", err)
+	}
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: &tgbotapi.CallbackQuery{Data: "bad"}}); err != nil {
+		t.Fatalf("bad callback data: %v", err)
+	}
+
+	SaveVote(SpamVote{ID: "unknown-action", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 1})
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("unknown-cb", "guestspam_vote,wat,unknown-action", 7001)}); err != nil {
+		t.Fatalf("unknown action callback: %v", err)
+	}
+	vote, ok := GetVote("unknown-action")
+	if !ok || len(vote.Voters) != 0 {
+		t.Fatalf("unknown action vote = %+v ok=%v, want unchanged", vote, ok)
+	}
+
+	SaveVote(SpamVote{ID: "cancel-vote", ExpiresAt: time.Now().Add(time.Hour)})
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("cancel-cb", "guestspam_vote,cancel,cancel-vote", 7001)}); err != nil {
+		t.Fatalf("cancel callback: %v", err)
+	}
+	if _, ok := GetVote("cancel-vote"); ok {
+		t.Fatal("cancel should delete vote")
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已取消" || len(fake.callbackDelete) != 1 {
+		t.Fatalf("cancel callbacks=%+v deletes=%+v", fake.callbacks, fake.callbackDelete)
+	}
+
+	fake.callbacks = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("expired-cb", "guestspam_vote,vote,missing-vote", 7001)}); err != nil {
+		t.Fatalf("expired callback: %v", err)
+	}
+	if len(fake.callbacks) != 1 || !fake.callbacks[0].showAlert || fake.callbacks[0].text != "投票已过期" {
+		t.Fatalf("expired callbacks=%+v", fake.callbacks)
+	}
+
+	SaveVote(SpamVote{ID: "bot-vote", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2})
+	fake.callbacks = nil
+	botVoteCallback := voteCallback("bot-cb", "guestspam_vote,vote,bot-vote", 0)
+	botVoteCallback.From.IsBot = true
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: botVoteCallback}); err != nil {
+		t.Fatalf("bot vote callback: %v", err)
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "机器人不能参与投票" {
+		t.Fatalf("bot callbacks=%+v", fake.callbacks)
+	}
+
+	SaveVote(SpamVote{ID: "dup-vote", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2, Voters: []int64{7001}})
+	fake.callbacks = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("dup-cb", "guestspam_vote,vote,dup-vote", 7001)}); err != nil {
+		t.Fatalf("duplicate vote callback: %v", err)
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "你已经投过票了" {
+		t.Fatalf("duplicate callbacks=%+v", fake.callbacks)
+	}
+
+	SaveVote(SpamVote{ID: "partial-vote", ChatID: integrationChatID, ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2})
+	fake.callbacks = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("partial-cb", "guestspam_vote,vote,partial-vote", 7001)}); err != nil {
+		t.Fatalf("partial vote callback: %v", err)
+	}
+	vote, ok = GetVote("partial-vote")
+	if !ok || len(vote.Voters) != 1 || vote.Voters[0] != 7001 {
+		t.Fatalf("partial vote = %+v ok=%v, want one voter", vote, ok)
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已投票 1/2" {
+		t.Fatalf("partial callbacks=%+v", fake.callbacks)
+	}
+
+	SaveVote(SpamVote{
+		ID:                "pass-vote",
+		ChatID:            integrationChatID,
+		ChatName:          "Guest Spam Test",
+		MessageID:         601,
+		GuestBotID:        993201,
+		GuestBotName:      "Pass Bot",
+		GuestBotUserName:  "pass_bot",
+		ExpiresAt:         time.Now().Add(time.Hour),
+		RequiredVoteCount: 2,
+		Voters:            []int64{7001},
+	})
+	fake.callbacks = nil
+	fake.callbackDelete = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("pass-cb", "guestspam_vote,vote,pass-vote", 7002)}); err != nil {
+		t.Fatalf("pass vote callback: %v", err)
+	}
+	if _, ok := GetVote("pass-vote"); ok {
+		t.Fatal("passing vote should delete vote")
+	}
+	if !IsBlacklisted(993201) {
+		t.Fatal("passing vote should blacklist guest bot")
+	}
+	if len(fake.deletes) != 1 || len(fake.callbacks) != 1 || fake.callbacks[0].text != "投票通过，已拉黑并删除消息" || len(fake.callbackDelete) != 1 {
+		t.Fatalf("pass deletes=%+v callbacks=%+v callbackDeletes=%+v", fake.deletes, fake.callbacks, fake.callbackDelete)
+	}
+}
+
+func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+	nonAdmin := commandMessage("/guest_spam_log", 8001)
+	if err := GuestSpamLogHandle(tgbotapi.Update{Message: nonAdmin}); err != nil {
+		t.Fatalf("non-admin log command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "无使用权限") {
+		t.Fatalf("non-admin sends=%+v", fake.sends)
+	}
+
+	fake.admins[8001] = true
+	fake.sends = nil
+	if err := GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log", 8001)}); err != nil {
+		t.Fatalf("empty log command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "暂无 guest spam 日志") {
+		t.Fatalf("empty log sends=%+v", fake.sends)
+	}
+
+	fake.sends = nil
+	if err := GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log restore bad", 8001)}); err != nil {
+		t.Fatalf("bad restore command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "用户 ID 格式错误") {
+		t.Fatalf("bad restore sends=%+v", fake.sends)
+	}
+
+	AddWarning(integrationChatID, integrationCallerID, "Caller")
+	fake.sends = nil
+	if err := GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log restore 880001", 8001)}); err != nil {
+		t.Fatalf("restore command: %v", err)
+	}
+	risk, ok := getMemberRisk(integrationChatID, integrationCallerID)
+	if !ok || risk.WarningCount != 0 || risk.MuteLevel != 0 {
+		t.Fatalf("risk after restore = %+v ok=%v, want cleared", risk, ok)
+	}
+	if len(fake.restricts) != 1 || len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "已恢复") {
+		t.Fatalf("restore restricts=%+v sends=%+v", fake.restricts, fake.sends)
+	}
+
+	AddWarning(integrationChatID, integrationCallerID, "Caller")
+	risk, _ = getMemberRisk(integrationChatID, integrationCallerID)
+	risk.MuteLevel = 2
+	setMemberRisk(risk, true)
+	fake.restrictErr = errTelegram()
+	fake.sends = nil
+	err := GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log restore 880001", 8001)})
+	if err == nil {
+		t.Fatal("restore should return telegram error when unrestrict fails")
+	}
+	risk, ok = getMemberRisk(integrationChatID, integrationCallerID)
+	if !ok || risk.WarningCount == 0 || risk.MuteLevel == 0 {
+		t.Fatalf("failed restore risk = %+v ok=%v, want warnings kept", risk, ok)
+	}
+	if len(fake.sends) != 0 {
+		t.Fatalf("failed restore should not send success message, sends=%+v", fake.sends)
+	}
+
+	fake.sends = nil
+	fake.restrictErr = nil
+	if err := GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log", 8001)}); err != nil {
+		t.Fatalf("log command: %v", err)
+	}
+	if len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "最近 guest spam 日志") {
+		t.Fatalf("log sends=%+v", fake.sends)
 	}
 }
 
@@ -330,6 +814,12 @@ func testGuestMessage(guestBotID, callerID int64) *tgbotapi.Message {
 	}
 }
 
+func testBotCallerMessage(guestBotID, callerID int64) *tgbotapi.Message {
+	message := testGuestMessage(guestBotID, callerID)
+	message.GuestBotCallerUser.IsBot = true
+	return message
+}
+
 func testGuestChatMessage(guestBotID, callerChatID int64) *tgbotapi.Message {
 	return &tgbotapi.Message{
 		MessageID: int(guestBotID % 100000),
@@ -350,4 +840,110 @@ func testGuestChatMessage(guestBotID, callerChatID int64) *tgbotapi.Message {
 			Title: "Caller Channel",
 		},
 	}
+}
+
+func seedTrustedCaller(userID int64) {
+	firstSeen := startOfDay(time.Now().Add(-4 * 24 * time.Hour))
+	risk := MemberRisk{
+		ID:                 riskID(integrationChatID, userID),
+		ChatID:             integrationChatID,
+		UserID:             userID,
+		UserName:           "Trusted Caller",
+		FirstSeenAt:        firstSeen,
+		LastMessageAt:      time.Now(),
+		RecentMessageCount: trustMessageCount,
+	}
+	setMemberRisk(risk, true)
+	for i := int64(0); i < trustMessageCount; i++ {
+		key := memberActivityDayKey(integrationChatID, userID, dayKey(time.Now()))
+		bot.GoRedis.Incr(redisCtx, key)
+		bot.GoRedis.Expire(redisCtx, key, activityDayTTL)
+	}
+}
+
+func trackableMessage(userID int64, text string) *tgbotapi.Message {
+	return &tgbotapi.Message{
+		MessageID: int(userID % 100000),
+		Chat: &tgbotapi.Chat{
+			ID:    integrationChatID,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        userID,
+			FirstName: "User",
+			UserName:  fmt.Sprintf("user_%d", userID),
+		},
+		Text: text,
+	}
+}
+
+func commandMessage(text string, userID int64) *tgbotapi.Message {
+	return &tgbotapi.Message{
+		MessageID: int(userID % 100000),
+		Chat: &tgbotapi.Chat{
+			ID:    integrationChatID,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        userID,
+			FirstName: "Admin",
+			UserName:  fmt.Sprintf("admin_%d", userID),
+		},
+		Text:     text,
+		Entities: []tgbotapi.MessageEntity{{Type: "bot_command", Offset: 0, Length: len(strings.Fields(text)[0])}},
+	}
+}
+
+func selectCallback(id string, messageID int, userID int64) *tgbotapi.CallbackQuery {
+	return &tgbotapi.CallbackQuery{
+		ID:   id,
+		Data: fmt.Sprintf("guestspam_select,%d", messageID),
+		From: &tgbotapi.User{
+			ID:        userID,
+			FirstName: "Voter",
+		},
+		Message: &tgbotapi.Message{
+			MessageID: 9001,
+			Chat: &tgbotapi.Chat{
+				ID:    integrationChatID,
+				Type:  "supergroup",
+				Title: "Guest Spam Test",
+			},
+		},
+	}
+}
+
+func voteCallback(id string, data string, userID int64) *tgbotapi.CallbackQuery {
+	return &tgbotapi.CallbackQuery{
+		ID:   id,
+		Data: data,
+		From: &tgbotapi.User{
+			ID:        userID,
+			FirstName: "Voter",
+		},
+		Message: &tgbotapi.Message{
+			MessageID: 9002,
+			Chat: &tgbotapi.Chat{
+				ID:    integrationChatID,
+				Type:  "supergroup",
+				Title: "Guest Spam Test",
+			},
+		},
+	}
+}
+
+func sentMessageContains(config tgbotapi.Chattable, text string) bool {
+	message, ok := config.(tgbotapi.MessageConfig)
+	return ok && strings.Contains(message.Text, text)
+}
+
+func voteIDs(t *testing.T) []string {
+	t.Helper()
+	ids, err := bot.GoRedis.SMembers(redisCtx, voteDirtySetKey()).Result()
+	if err != nil {
+		t.Fatalf("read vote dirty set: %v", err)
+	}
+	return ids
 }
