@@ -136,9 +136,10 @@ func syncRisksToDB() error {
 		if !ok {
 			continue
 		}
-		if err := bot.DBEngine.Clauses(clause.OnConflict{
+		db := bot.DBEngine.Omit(zeroRiskTimeFields(risk)...)
+		if err := db.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},
-			UpdateAll: true,
+			DoUpdates: clause.Assignments(memberRiskUpdates(risk)),
 		}).Create(&risk).Error; err != nil {
 			return err
 		}
@@ -190,6 +191,42 @@ func syncActivitiesToDB() error {
 		bot.GoRedis.SRem(redisCtx, memberActivityDirtySetKey(), id)
 	}
 	return nil
+}
+
+func zeroRiskTimeFields(risk MemberRisk) []string {
+	fields := make([]string, 0, 3)
+	if risk.FirstSeenAt.IsZero() {
+		fields = append(fields, "FirstSeenAt")
+	}
+	if risk.LastMessageAt.IsZero() {
+		fields = append(fields, "LastMessageAt")
+	}
+	if risk.LastPenaltyAt.IsZero() {
+		fields = append(fields, "LastPenaltyAt")
+	}
+	return fields
+}
+
+func memberRiskUpdates(risk MemberRisk) map[string]any {
+	updates := map[string]any{
+		"chat_id":              risk.ChatID,
+		"user_id":              risk.UserID,
+		"user_name":            risk.UserName,
+		"recent_message_count": risk.RecentMessageCount,
+		"warning_count":        risk.WarningCount,
+		"mute_level":           risk.MuteLevel,
+		"update_time":          time.Now(),
+	}
+	if !risk.FirstSeenAt.IsZero() {
+		updates["first_seen_at"] = risk.FirstSeenAt
+	}
+	if !risk.LastMessageAt.IsZero() {
+		updates["last_message_at"] = risk.LastMessageAt
+	}
+	if !risk.LastPenaltyAt.IsZero() {
+		updates["last_penalty_at"] = risk.LastPenaltyAt
+	}
+	return updates
 }
 
 func syncBlacklistsToDB() error {
