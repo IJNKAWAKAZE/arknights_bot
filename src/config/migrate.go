@@ -200,14 +200,14 @@ func migrateGuestSpamTables() error {
 			id varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
 			chat_id bigint NULL DEFAULT NULL,
 			user_id bigint NULL DEFAULT NULL,
-			day varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			activity_day date NOT NULL,
 			message_count bigint NULL DEFAULT 0,
 			remark varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
 			create_time timestamp(0) NULL DEFAULT NULL,
 			update_time timestamp(0) NULL DEFAULT NULL,
 			PRIMARY KEY (id) USING BTREE,
-			INDEX idx_guest_spam_activity_chat_user_day (chat_id, user_id, day),
-			INDEX idx_guest_spam_activity_day (day)
+			INDEX idx_guest_spam_activity_chat_user_day (chat_id, user_id, activity_day),
+			INDEX idx_guest_spam_activity_day (activity_day)
 		) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'guest spam成员日活跃' ROW_FORMAT = Dynamic`,
 		"guest_spam_bot_blacklist": `CREATE TABLE guest_spam_bot_blacklist (
 			id varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,

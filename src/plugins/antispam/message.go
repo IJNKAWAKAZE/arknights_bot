@@ -35,36 +35,77 @@ func GuestBotSpamHandle(update tgbotapi.Update) error {
 	if message == nil || message.Chat == nil || message.From == nil {
 		return nil
 	}
-	recent := recentFromMessage(message)
-	RecordRecentGuestMessage(recent)
+	decision := EvaluateGuestMessage(message)
+	ApplyGuestSpamState(decision)
+	if decision.DeleteMessage {
+		deleteGuestMessageWithLog(message, decision.Reason)
+	}
+	if decision.BanCallerUser || decision.BanCallerChat {
+		penalizeBlacklistCaller(message)
+	}
+	if decision.MuteCaller {
+		muteCaller(message, message.GuestBotCallerUser, decision.MuteDuration)
+	}
+	return nil
+}
+
+func ApplyGuestSpamState(decision GuestSpamDecision) {
+	for _, item := range decision.Logs {
+		AddLog(item)
+	}
+	if decision.BlacklistBot {
+		AddBlacklist(decision.GuestBot, true)
+	}
+}
+
+func EvaluateGuestMessage(message *tgbotapi.Message) GuestSpamDecision {
+	decision := GuestSpamDecision{}
+	if message == nil || message.Chat == nil || message.From == nil {
+		return decision
+	}
+	RecordRecentGuestMessage(recentFromMessage(message))
 
 	guestBotID := message.From.ID
 	if IsBlacklisted(guestBotID) {
-		AddLog(logFromMessage(message, ActionBlacklistHit, ReasonBlacklist, "global blacklist hit"))
-		deleteGuestMessageWithLog(message, ReasonBlacklist)
-		penalizeBlacklistCaller(message)
-		return nil
+		decision.Reason = ReasonBlacklist
+		decision.DeleteMessage = true
+		decision.BanCallerUser = message.GuestBotCallerUser != nil && !message.GuestBotCallerUser.IsBot
+		decision.BanCallerChat = message.GuestBotCallerChat != nil
+		decision.Logs = append(decision.Logs, logFromMessage(message, ActionBlacklistHit, ReasonBlacklist, "global blacklist hit"))
+		return decision
 	}
 
 	if caller := message.GuestBotCallerUser; caller != nil {
 		trust := TrustFor(message.Chat.ID, caller.ID)
+		decision.Trusted = trust.Trusted
 		if trust.LowTrust {
-			deleteGuestMessageWithLog(message, ReasonLowTrust)
-			addGuestBotToBlacklist(message, "low_trust")
-			warnCaller(message, caller)
-			return nil
+			decision.Reason = ReasonLowTrust
+			decision.DeleteMessage = true
+			decision.BlacklistBot = true
+			decision.WarnCaller = true
+			decision.GuestBot = blacklistFromMessage(message, "low_trust")
+			risk, shouldMute := AddWarning(message.Chat.ID, caller.ID, caller.FullName())
+			decision.CallerRisk = risk
+			decision.MuteCaller = shouldMute
+			if shouldMute {
+				decision.MuteDuration = MuteDuration(risk.MuteLevel)
+			}
+			decision.Logs = append(decision.Logs, logFromMessage(message, ActionAutoBlacklist, ReasonLowTrust, "blacklisted guest bot"))
+			decision.Logs = append(decision.Logs, logFromMessage(message, ActionWarnCaller, ReasonLowTrust, fmt.Sprintf("warning count %d", risk.WarningCount)))
+			return decision
 		}
-		AddLog(logFromMessage(message, ActionGuestSeen, ReasonTrusted, "trusted caller; message allowed"))
-		return nil
+		decision.Reason = ReasonTrusted
+		decision.Logs = append(decision.Logs, logFromMessage(message, ActionGuestSeen, ReasonTrusted, "trusted caller; message allowed"))
+		return decision
 	}
 
+	decision.Reason = ReasonTrusted
 	if message.GuestBotCallerChat != nil {
-		AddLog(logFromMessage(message, ActionGuestSeen, ReasonTrusted, "caller chat; message allowed"))
-		return nil
+		decision.Logs = append(decision.Logs, logFromMessage(message, ActionGuestSeen, ReasonTrusted, "caller chat; message allowed"))
+		return decision
 	}
-
-	AddLog(logFromMessage(message, ActionGuestSeen, ReasonTrusted, "guest message without caller; message allowed"))
-	return nil
+	decision.Logs = append(decision.Logs, logFromMessage(message, ActionGuestSeen, ReasonTrusted, "guest message without caller; message allowed"))
+	return decision
 }
 
 func isGuestBotMessage(message *tgbotapi.Message) bool {
@@ -118,10 +159,7 @@ func penalizeBlacklistCaller(message *tgbotapi.Message) {
 	}
 }
 
-func addGuestBotToBlacklist(message *tgbotapi.Message, source string) {
-	if message.From == nil {
-		return
-	}
+func blacklistFromMessage(message *tgbotapi.Message, source string) GuestBotBlacklist {
 	item := GuestBotBlacklist{
 		BotID:          message.From.ID,
 		BotName:        message.From.FullName(),
@@ -136,17 +174,13 @@ func addGuestBotToBlacklist(message *tgbotapi.Message, source string) {
 	if message.GuestBotCallerChat != nil {
 		item.FirstCallerChatID = message.GuestBotCallerChat.ID
 	}
-	AddBlacklist(item, true)
-	AddLog(logFromMessage(message, ActionAutoBlacklist, ReasonLowTrust, "blacklisted guest bot"))
+	return item
 }
 
-func warnCaller(message *tgbotapi.Message, caller *tgbotapi.User) {
-	risk, shouldMute := AddWarning(message.Chat.ID, caller.ID, caller.FullName())
-	AddLog(logFromMessage(message, ActionWarnCaller, ReasonLowTrust, fmt.Sprintf("warning count %d", risk.WarningCount)))
-	if !shouldMute {
+func muteCaller(message *tgbotapi.Message, caller *tgbotapi.User, duration time.Duration) {
+	if caller == nil || duration <= 0 {
 		return
 	}
-	duration := MuteDuration(risk.MuteLevel)
 	until := time.Now().Add(duration)
 	config := tgbotapi.RestrictChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{

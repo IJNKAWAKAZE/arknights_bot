@@ -206,6 +206,14 @@ func startSpamVote(message *tgbotapi.Message, selected RecentGuestMessage) error
 }
 
 func applyVotePassed(vote SpamVote, callback *tgbotapi.CallbackQuery) {
+	ApplyVotePassedState(vote)
+	del := tgbotapi.NewDeleteMessage(vote.ChatID, vote.MessageID)
+	bot.Arknights.Send(del)
+	callback.Answer(false, "投票通过，已拉黑并删除消息")
+	callback.Delete()
+}
+
+func ApplyVotePassedState(vote SpamVote) {
 	item := GuestBotBlacklist{
 		BotID:          vote.GuestBotID,
 		BotName:        vote.GuestBotName,
@@ -215,8 +223,6 @@ func applyVotePassed(vote SpamVote, callback *tgbotapi.CallbackQuery) {
 		FirstMessageID: vote.MessageID,
 	}
 	AddBlacklist(item, true)
-	del := tgbotapi.NewDeleteMessage(vote.ChatID, vote.MessageID)
-	bot.Arknights.Send(del)
 	AddLog(SpamLog{
 		ChatID:       vote.ChatID,
 		ChatName:     vote.ChatName,
@@ -229,22 +235,32 @@ func applyVotePassed(vote SpamVote, callback *tgbotapi.CallbackQuery) {
 		Detail:       fmt.Sprintf("votes: %d/%d", len(vote.Voters), vote.RequiredVoteCount),
 	})
 	DeleteVote(vote.ID)
-	callback.Answer(false, "投票通过，已拉黑并删除消息")
-	callback.Delete()
 }
 
 func restoreCaller(chatID, userID int64, message *tgbotapi.Message) error {
 	bot.Arknights.RestrictChatMember(chatID, userID, tgbotapi.AllPermissions)
+	RestoreCallerState(chatID, userID, message)
+	return sendTempMessage(chatID, message.MessageID, "已恢复该用户并清除 guest spam 警告。")
+}
+
+func RestoreCallerState(chatID, userID int64, message *tgbotapi.Message) {
 	ClearWarnings(chatID, userID)
-	AddLog(SpamLog{
+	item := SpamLog{
 		ChatID:       chatID,
-		ChatName:     message.Chat.Title,
 		CallerUserID: userID,
 		Action:       ActionRestoreCaller,
 		Reason:       ReasonAdminRestore,
-		Detail:       fmt.Sprintf("restored by %s", message.From.FullName()),
-	})
-	return sendTempMessage(chatID, message.MessageID, "已恢复该用户并清除 guest spam 警告。")
+		Detail:       "restored",
+	}
+	if message != nil {
+		if message.Chat != nil {
+			item.ChatName = message.Chat.Title
+		}
+		if message.From != nil {
+			item.Detail = fmt.Sprintf("restored by %s", message.From.FullName())
+		}
+	}
+	AddLog(item)
 }
 
 func sendLogs(chatID int64, replyTo int) error {

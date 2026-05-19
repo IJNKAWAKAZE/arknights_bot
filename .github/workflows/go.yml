@@ -17,6 +17,28 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: arknights_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     steps:
     - uses: actions/checkout@v3
 
@@ -28,6 +50,15 @@ jobs:
 
     - name: Build
       run: cd src/ && go build -v ./
+
+    - name: Test
+      run: cd src/ && go test ./...
+
+    - name: Guest spam integration test
+      env:
+        GUEST_SPAM_TEST_MYSQL_DSN: "root:root@tcp(127.0.0.1:3306)/arknights_test?charset=utf8mb4&parseTime=True&loc=Local"
+        GUEST_SPAM_TEST_REDIS_ADDR: 127.0.0.1:6379
+      run: cd src/ && go test -tags=integration ./plugins/antispam
 
     - name: Upload executable to artifacts
       uses: actions/upload-artifact@v4

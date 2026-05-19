@@ -50,12 +50,12 @@ func LoadCacheFromDB() error {
 	}
 
 	var activities []MemberActivity
-	cutoffDay := time.Now().AddDate(0, 0, -29).Format("20060102")
-	if err := bot.DBEngine.Where("day >= ?", cutoffDay).Find(&activities).Error; err != nil {
+	cutoffDay := startOfDay(time.Now().AddDate(0, 0, -29))
+	if err := bot.DBEngine.Where("activity_day >= ?", cutoffDay).Find(&activities).Error; err != nil {
 		return err
 	}
 	for _, activity := range activities {
-		key := memberActivityDayKey(activity.ChatID, activity.UserID, activity.Day)
+		key := memberActivityDayKey(activity.ChatID, activity.UserID, dayKey(activity.ActivityDay))
 		bot.GoRedis.Set(redisCtx, key, activity.MessageCount, activityDayTTL)
 	}
 
@@ -160,6 +160,12 @@ func syncActivitiesToDB() error {
 		chatID, _ := strconv.ParseInt(parts[0], 10, 64)
 		userID, _ := strconv.ParseInt(parts[1], 10, 64)
 		day := parts[2]
+		activityDay, err := parseDayKey(day)
+		if err != nil {
+			log.Printf("guest spam: parse activity day failed: %v", err)
+			bot.GoRedis.SRem(redisCtx, memberActivityDirtySetKey(), id)
+			continue
+		}
 		count, err := bot.GoRedis.Get(redisCtx, memberActivityDayKey(chatID, userID, day)).Int64()
 		if errors.Is(err, redis.Nil) {
 			bot.GoRedis.SRem(redisCtx, memberActivityDirtySetKey(), id)
@@ -172,7 +178,7 @@ func syncActivitiesToDB() error {
 			ID:           activityID(chatID, userID, day),
 			ChatID:       chatID,
 			UserID:       userID,
-			Day:          day,
+			ActivityDay:  activityDay,
 			MessageCount: count,
 		}
 		if err := bot.DBEngine.Clauses(clause.OnConflict{
@@ -254,10 +260,11 @@ func RecordMessageActivity(chatID int64, userID int64, userName string) {
 	}
 	risk.UserName = userName
 	risk.LastMessageAt = now
-	activityKey := memberActivityDayKey(chatID, userID, now.Format("20060102"))
+	currentDay := dayKey(now)
+	activityKey := memberActivityDayKey(chatID, userID, currentDay)
 	bot.GoRedis.Incr(redisCtx, activityKey)
 	bot.GoRedis.Expire(redisCtx, activityKey, activityDayTTL)
-	bot.GoRedis.SAdd(redisCtx, memberActivityDirtySetKey(), fmt.Sprintf("%d:%d:%s", chatID, userID, now.Format("20060102")))
+	bot.GoRedis.SAdd(redisCtx, memberActivityDirtySetKey(), fmt.Sprintf("%d:%d:%s", chatID, userID, currentDay))
 	risk.RecentMessageCount = recentActivityCount(chatID, userID, now)
 	setMemberRisk(risk, true)
 	bot.GoRedis.SAdd(redisCtx, activeUsersKey(chatID), userID)
@@ -570,7 +577,7 @@ func recentActivityCount(chatID, userID int64, now time.Time) int64 {
 	}
 	var total int64
 	for i := 0; i < 30; i++ {
-		day := now.AddDate(0, 0, -i).Format("20060102")
+		day := dayKey(now.AddDate(0, 0, -i))
 		count, err := bot.GoRedis.Get(redisCtx, memberActivityDayKey(chatID, userID, day)).Int64()
 		if err != nil && err != redis.Nil {
 			log.Printf("guest spam: read activity bucket failed: %v", err)
@@ -621,6 +628,23 @@ func blacklistID(botID int64) string {
 
 func activityID(chatID, userID int64, day string) string {
 	return fmt.Sprintf("%d:%d:%s", chatID, userID, day)
+}
+
+func dayKey(t time.Time) string {
+	return startOfDay(t).Format("20060102")
+}
+
+func parseDayKey(day string) (time.Time, error) {
+	parsed, err := time.ParseInLocation("20060102", day, time.Local)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return startOfDay(parsed), nil
+}
+
+func startOfDay(t time.Time) time.Time {
+	y, m, d := t.Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
 }
 
 func splitDirtyID(id string) []string {

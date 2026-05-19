@@ -50,7 +50,7 @@ type MemberActivity struct {
 	ID           string    `json:"id" gorm:"primaryKey;size:80"`
 	ChatID       int64     `json:"chatId" gorm:"column:chat_id;index"`
 	UserID       int64     `json:"userId" gorm:"column:user_id;index"`
-	Day          string    `json:"day" gorm:"column:day;size:8;index"`
+	ActivityDay  time.Time `json:"activityDay" gorm:"column:activity_day;type:date;index"`
 	MessageCount int64     `json:"messageCount" gorm:"column:message_count"`
 	CreateTime   time.Time `json:"createTime" gorm:"column:create_time;autoCreateTime"`
 	UpdateTime   time.Time `json:"updateTime" gorm:"column:update_time;autoUpdateTime"`
@@ -139,6 +139,21 @@ type MemberTrust struct {
 	FirstSeenAt        time.Time
 	LastMessageAt      time.Time
 	RecentMessageCount int64
+}
+
+type GuestSpamDecision struct {
+	Reason        string
+	Trusted       bool
+	DeleteMessage bool
+	BlacklistBot  bool
+	WarnCaller    bool
+	MuteCaller    bool
+	BanCallerUser bool
+	BanCallerChat bool
+	MuteDuration  time.Duration
+	GuestBot      GuestBotBlacklist
+	CallerRisk    MemberRisk
+	Logs          []SpamLog
 }
 
 func isTrustedRiskAt(risk MemberRisk, now time.Time) bool {
