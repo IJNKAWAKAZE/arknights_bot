@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/ijnkawakaze/telegram-bot-api v1.0.11
+	github.com/ijnkawakaze/telegram-bot-api v1.0.12
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/mozillazg/go-pinyin v0.20.0
 	github.com/playwright-community/playwright-go v0.2000.1
@@ -93,5 +93,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/ijnkawakaze/telegram-bot-api => github.com/ModerRAS/telegram-bot-api v0.0.0-20260518091145-15cde03191a0
