@@ -453,12 +453,39 @@ func ActiveUserCount(chatID int64) int {
 	return int(count)
 }
 
+func IsActiveUser(chatID, userID int64) bool {
+	if bot.GoRedis == nil || userID == 0 {
+		return false
+	}
+	ok, err := bot.GoRedis.SIsMember(redisCtx, activeUsersKey(chatID), userID).Result()
+	return err == nil && ok
+}
+
+func IsTrustedMember(chatID, userID int64) bool {
+	if userID == 0 {
+		return false
+	}
+	risk, ok := getMemberRisk(chatID, userID)
+	if !ok {
+		return false
+	}
+	recentCount := risk.RecentMessageCount
+	if bot.GoRedis != nil {
+		recentCount = recentActivityCount(chatID, userID, time.Now())
+	}
+	risk.RecentMessageCount = recentCount
+	return isTrustedRisk(risk)
+}
+
 func SaveVote(vote SpamVote) {
 	if bot.GoRedis == nil {
 		return
 	}
 	if vote.ID == "" {
 		vote.ID, _ = gonanoid.New(16)
+	}
+	if vote.VoteScore == 0 && len(vote.Voters) > 0 {
+		vote.VoteScore = len(vote.Voters)
 	}
 	setJSON(voteKey(vote.ID), vote, voteTTL)
 	bot.GoRedis.SAdd(redisCtx, voteDirtySetKey(), vote.ID)

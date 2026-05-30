@@ -536,7 +536,7 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("unknown action vote = %+v ok=%v, want unchanged", vote, ok)
 	}
 
-	SaveVote(SpamVote{ID: "cancel-vote", ExpiresAt: time.Now().Add(time.Hour)})
+	SaveVote(SpamVote{ID: "cancel-vote", ChatID: integrationChatID, StarterUserID: 7001, ExpiresAt: time.Now().Add(time.Hour)})
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("cancel-cb", "guestspam_vote,cancel,cancel-vote", 7001)}); err != nil {
 		t.Fatalf("cancel callback: %v", err)
 	}
@@ -546,6 +546,32 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已取消" || len(fake.callbackDelete) != 1 {
 		t.Fatalf("cancel callbacks=%+v deletes=%+v", fake.callbacks, fake.callbackDelete)
 	}
+
+	SaveVote(SpamVote{ID: "cancel-denied", ChatID: integrationChatID, StarterUserID: 7001, ExpiresAt: time.Now().Add(time.Hour)})
+	fake.callbacks = nil
+	fake.callbackDelete = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("cancel-denied-cb", "guestspam_vote,cancel,cancel-denied", 7002)}); err != nil {
+		t.Fatalf("cancel denied callback: %v", err)
+	}
+	if _, ok := GetVote("cancel-denied"); !ok {
+		t.Fatal("unauthorized cancel should keep vote")
+	}
+	if len(fake.callbacks) != 1 || !fake.callbacks[0].showAlert || fake.callbacks[0].text != "只有发起者或管理员可以取消投票" || len(fake.callbackDelete) != 0 {
+		t.Fatalf("cancel denied callbacks=%+v deletes=%+v", fake.callbacks, fake.callbackDelete)
+	}
+
+	fake.admins[7002] = true
+	fake.callbacks = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("cancel-admin-cb", "guestspam_vote,cancel,cancel-denied", 7002)}); err != nil {
+		t.Fatalf("admin cancel callback: %v", err)
+	}
+	if _, ok := GetVote("cancel-denied"); ok {
+		t.Fatal("admin cancel should delete vote")
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已取消" || len(fake.callbackDelete) != 1 {
+		t.Fatalf("admin cancel callbacks=%+v deletes=%+v", fake.callbacks, fake.callbackDelete)
+	}
+	delete(fake.admins, 7002)
 
 	fake.callbacks = nil
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("expired-cb", "guestspam_vote,vote,missing-vote", 7001)}); err != nil {
@@ -575,19 +601,21 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("duplicate callbacks=%+v", fake.callbacks)
 	}
 
+	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), int64(7001))
 	SaveVote(SpamVote{ID: "partial-vote", ChatID: integrationChatID, ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2})
 	fake.callbacks = nil
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("partial-cb", "guestspam_vote,vote,partial-vote", 7001)}); err != nil {
 		t.Fatalf("partial vote callback: %v", err)
 	}
 	vote, ok = GetVote("partial-vote")
-	if !ok || len(vote.Voters) != 1 || vote.Voters[0] != 7001 {
+	if !ok || len(vote.Voters) != 1 || vote.Voters[0] != 7001 || vote.VoteScore != activeVoteWeight {
 		t.Fatalf("partial vote = %+v ok=%v, want one voter", vote, ok)
 	}
-	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已投票 1/2" {
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已投票 1/2（活跃成员 +1）" {
 		t.Fatalf("partial callbacks=%+v", fake.callbacks)
 	}
 
+	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), int64(7002))
 	SaveVote(SpamVote{
 		ID:                "pass-vote",
 		ChatID:            integrationChatID,
@@ -613,6 +641,82 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 	}
 	if len(fake.deletes) != 1 || len(fake.callbacks) != 1 || fake.callbacks[0].text != "投票通过，已拉黑并删除消息" || len(fake.callbackDelete) != 1 {
 		t.Fatalf("pass deletes=%+v callbacks=%+v callbackDeletes=%+v", fake.deletes, fake.callbacks, fake.callbackDelete)
+	}
+}
+
+func TestGuestSpamIntegrationSpamVoteWeightTiers(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+
+	SaveVote(SpamVote{
+		ID:                "inactive-vote",
+		ChatID:            integrationChatID,
+		ExpiresAt:         time.Now().Add(time.Hour),
+		RequiredVoteCount: 1,
+	})
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("inactive-cb", "guestspam_vote,vote,inactive-vote", 7101)}); err != nil {
+		t.Fatalf("inactive vote callback: %v", err)
+	}
+	vote, ok := GetVote("inactive-vote")
+	if !ok || len(vote.Voters) != 0 || vote.VoteScore != 0 {
+		t.Fatalf("inactive vote = %+v ok=%v, want no voter and zero score", vote, ok)
+	}
+	if len(fake.callbacks) != 1 || !fake.callbacks[0].showAlert || fake.callbacks[0].text != "最近不够活跃，不能参与投票" {
+		t.Fatalf("inactive callbacks=%+v", fake.callbacks)
+	}
+
+	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), int64(7102))
+	seedTrustedCaller(7103)
+	fake.admins[7104] = true
+	fake.callbacks = nil
+
+	SaveVote(SpamVote{
+		ID:                "weighted-vote",
+		ChatID:            integrationChatID,
+		ChatName:          "Guest Spam Test",
+		MessageID:         701,
+		GuestBotID:        993301,
+		GuestBotName:      "Weighted Bot",
+		GuestBotUserName:  "weighted_bot",
+		ExpiresAt:         time.Now().Add(time.Hour),
+		RequiredVoteCount: activeVoteWeight + trustedVoteWeight + adminVoteWeight,
+	})
+
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("active-cb", "guestspam_vote,vote,weighted-vote", 7102)}); err != nil {
+		t.Fatalf("active vote callback: %v", err)
+	}
+	vote, ok = GetVote("weighted-vote")
+	if !ok || vote.VoteScore != activeVoteWeight {
+		t.Fatalf("after active vote = %+v ok=%v, want score %d", vote, ok, activeVoteWeight)
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已投票 1/6（活跃成员 +1）" {
+		t.Fatalf("active callbacks=%+v", fake.callbacks)
+	}
+
+	fake.callbacks = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("trusted-cb", "guestspam_vote,vote,weighted-vote", 7103)}); err != nil {
+		t.Fatalf("trusted vote callback: %v", err)
+	}
+	vote, ok = GetVote("weighted-vote")
+	if !ok || vote.VoteScore != activeVoteWeight+trustedVoteWeight {
+		t.Fatalf("after trusted vote = %+v ok=%v, want score %d", vote, ok, activeVoteWeight+trustedVoteWeight)
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "已投票 3/6（可信成员 +2）" {
+		t.Fatalf("trusted callbacks=%+v", fake.callbacks)
+	}
+
+	fake.callbacks = nil
+	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("admin-cb", "guestspam_vote,vote,weighted-vote", 7104)}); err != nil {
+		t.Fatalf("admin vote callback: %v", err)
+	}
+	if _, ok := GetVote("weighted-vote"); ok {
+		t.Fatal("admin weighted vote should pass and delete vote")
+	}
+	if !IsBlacklisted(993301) {
+		t.Fatal("weighted vote should blacklist guest bot")
+	}
+	if len(fake.deletes) != 1 || len(fake.callbacks) != 1 || fake.callbacks[0].text != "投票通过，已拉黑并删除消息" {
+		t.Fatalf("admin pass deletes=%+v callbacks=%+v", fake.deletes, fake.callbacks)
 	}
 }
 

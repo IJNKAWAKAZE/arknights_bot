@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+const (
+	activeVoteWeight  = 1
+	trustedVoteWeight = 2
+	adminVoteWeight   = 3
+)
+
 func GuestSpamHandle(update tgbotapi.Update) error {
 	message := update.Message
 	if message == nil || message.Chat == nil || message.From == nil {
@@ -69,8 +75,7 @@ func SpamVoteCallback(update tgbotapi.Update) error {
 	}
 	action := data[1]
 	voteID := data[2]
-	if action == "cancel" {
-		DeleteVote(voteID)
+	if action == "cancel" && voteID == "none" {
 		guestSpamTelegram.AnswerCallback(callback.ID, false, "已取消")
 		guestSpamTelegram.DeleteCallbackMessage(callback)
 		return nil
@@ -78,6 +83,16 @@ func SpamVoteCallback(update tgbotapi.Update) error {
 	vote, ok := GetVote(voteID)
 	if !ok {
 		guestSpamTelegram.AnswerCallback(callback.ID, true, "投票已过期")
+		return nil
+	}
+	if action == "cancel" {
+		if !canCancelVote(vote, callback.From) {
+			guestSpamTelegram.AnswerCallback(callback.ID, true, "只有发起者或管理员可以取消投票")
+			return nil
+		}
+		DeleteVote(voteID)
+		guestSpamTelegram.AnswerCallback(callback.ID, false, "已取消")
+		guestSpamTelegram.DeleteCallbackMessage(callback)
 		return nil
 	}
 	if action != "vote" {
@@ -91,13 +106,20 @@ func SpamVoteCallback(update tgbotapi.Update) error {
 		guestSpamTelegram.AnswerCallback(callback.ID, true, "你已经投过票了")
 		return nil
 	}
+	weight, voterTier := voteWeight(vote.ChatID, callback.From.ID)
+	if weight == 0 {
+		guestSpamTelegram.AnswerCallback(callback.ID, true, "最近不够活跃，不能参与投票")
+		return nil
+	}
+	score := currentVoteScore(vote)
 	vote.Voters = append(vote.Voters, callback.From.ID)
+	vote.VoteScore = score + weight
 	SaveVote(vote)
-	if len(vote.Voters) >= vote.RequiredVoteCount {
+	if vote.VoteScore >= vote.RequiredVoteCount {
 		applyVotePassed(vote, callback)
 		return nil
 	}
-	guestSpamTelegram.AnswerCallback(callback.ID, false, fmt.Sprintf("已投票 %d/%d", len(vote.Voters), vote.RequiredVoteCount))
+	guestSpamTelegram.AnswerCallback(callback.ID, false, fmt.Sprintf("已投票 %d/%d（%s +%d）", vote.VoteScore, vote.RequiredVoteCount, voterTier, weight))
 	return nil
 }
 
@@ -234,7 +256,7 @@ func ApplyVotePassedState(vote SpamVote) {
 		GuestBotUser: vote.GuestBotUserName,
 		Action:       ActionVotePassed,
 		Reason:       ReasonVote,
-		Detail:       fmt.Sprintf("votes: %d/%d", len(vote.Voters), vote.RequiredVoteCount),
+		Detail:       fmt.Sprintf("votes: %d/%d", currentVoteScore(vote), vote.RequiredVoteCount),
 	})
 	DeleteVote(vote.ID)
 }
@@ -314,6 +336,36 @@ func containsUser(users []int64, userID int64) bool {
 		}
 	}
 	return false
+}
+
+func canCancelVote(vote SpamVote, user *tgbotapi.User) bool {
+	if user == nil || user.IsBot {
+		return false
+	}
+	if vote.StarterUserID != 0 && vote.StarterUserID == user.ID {
+		return true
+	}
+	return guestSpamTelegram.IsAdmin(vote.ChatID, user.ID)
+}
+
+func voteWeight(chatID, userID int64) (int, string) {
+	if guestSpamTelegram.IsAdmin(chatID, userID) {
+		return adminVoteWeight, "管理员"
+	}
+	if IsTrustedMember(chatID, userID) {
+		return trustedVoteWeight, "可信成员"
+	}
+	if IsActiveUser(chatID, userID) {
+		return activeVoteWeight, "活跃成员"
+	}
+	return 0, ""
+}
+
+func currentVoteScore(vote SpamVote) int {
+	if vote.VoteScore > 0 {
+		return vote.VoteScore
+	}
+	return len(vote.Voters)
 }
 
 func requiredVoteCount(activeCount int) (int, bool) {

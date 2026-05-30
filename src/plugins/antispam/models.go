@@ -129,6 +129,7 @@ type SpamVote struct {
 	ActiveUserCount   int       `json:"activeUserCount"`
 	RequiredVoteCount int       `json:"requiredVoteCount"`
 	Voters            []int64   `json:"voters"`
+	VoteScore         int       `json:"voteScore"`
 	CreatedAt         time.Time `json:"createdAt"`
 	ExpiresAt         time.Time `json:"expiresAt"`
 }
