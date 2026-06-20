@@ -715,6 +715,42 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 	if len(fake.deletes) != 1 || len(fake.callbacks) != 1 || fake.callbacks[0].text != "投票通过，已拉黑并删除消息" || len(fake.callbackDelete) != 1 {
 		t.Fatalf("pass deletes=%+v callbacks=%+v callbackDeletes=%+v", fake.deletes, fake.callbacks, fake.callbackDelete)
 	}
+
+	SaveVote(SpamVote{
+		ID:                "pass-vote-delete-failed",
+		ChatID:            integrationChatID,
+		ChatName:          "Guest Spam Test",
+		MessageID:         602,
+		GuestBotID:        993202,
+		GuestBotName:      "Pass Bot Failed Delete",
+		GuestBotUserName:  "pass_bot_failed_delete",
+		ExpiresAt:         time.Now().Add(time.Hour),
+		RequiredVoteCount: 2,
+		Voters:            []int64{7001},
+	})
+	fake.deleteErr = errTelegram()
+	fake.deletes = nil
+	fake.callbacks = nil
+	fake.callbackDelete = nil
+	err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("pass-fail-cb", "guestspam_vote,vote,pass-vote-delete-failed", 7002)})
+	if err == nil {
+		t.Fatal("pass vote delete failure should return error")
+	}
+	if _, ok := GetVote("pass-vote-delete-failed"); ok {
+		t.Fatal("passing vote with delete failure should still delete vote")
+	}
+	if !IsBlacklisted(993202) {
+		t.Fatal("delete failure should still blacklist guest bot")
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "投票通过，已拉黑，但删除消息失败，请管理员检查权限" {
+		t.Fatalf("callbacks=%+v, want delete failure callback", fake.callbacks)
+	}
+	if len(fake.callbackDelete) != 1 {
+		t.Fatalf("callbackDeletes=%+v, want callback delete", fake.callbackDelete)
+	}
+	if !hasLogAction(RecentLogs(integrationChatID, 20), ActionDeleteFailed) {
+		t.Fatalf("logs = %+v, want delete failure log", RecentLogs(integrationChatID, 20))
+	}
 }
 
 func TestGuestSpamIntegrationSpamVoteWeightTiers(t *testing.T) {

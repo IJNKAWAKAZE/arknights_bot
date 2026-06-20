@@ -43,7 +43,9 @@ func GuestBotSpamHandle(update tgbotapi.Update) error {
 	decision := EvaluateGuestMessage(message)
 	ApplyGuestSpamState(decision)
 	if decision.DeleteMessage {
-		deleteGuestMessageWithLog(message, decision.Reason)
+		if err := deleteGuestMessageWithLog(message, decision.Reason); err != nil {
+			log.Printf("guest spam: delete low trust message failed: %v", err)
+		}
 	}
 	if decision.BanCallerUser || decision.BanCallerChat {
 		penalizeBlacklistCaller(message)
@@ -130,13 +132,13 @@ func isTrackableMessage(message *tgbotapi.Message) bool {
 	return true
 }
 
-func deleteGuestMessageWithLog(message *tgbotapi.Message, reason string) {
+func deleteGuestMessageWithLog(message *tgbotapi.Message, reason string) error {
 	if _, err := guestSpamTelegram.DeleteMessage(message.Chat.ID, message.MessageID); err != nil {
 		AddLog(logFromMessage(message, ActionDeleteFailed, reason, err.Error()))
-		log.Printf("guest spam: delete message failed: %v", err)
-		return
+		return err
 	}
 	AddLog(logFromMessage(message, ActionDeleteMessage, reason, "deleted guest bot message"))
+	return nil
 }
 
 func penalizeBlacklistCaller(message *tgbotapi.Message) {

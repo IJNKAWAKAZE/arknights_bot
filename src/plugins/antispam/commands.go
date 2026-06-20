@@ -116,8 +116,7 @@ func SpamVoteCallback(update tgbotapi.Update) error {
 	vote.VoteScore = score + weight
 	SaveVote(vote)
 	if vote.VoteScore >= vote.RequiredVoteCount {
-		applyVotePassed(vote, callback)
-		return nil
+		return applyVotePassed(vote, callback)
 	}
 	guestSpamTelegram.AnswerCallback(callback.ID, false, fmt.Sprintf("已投票 %d/%d（%s +%d）", vote.VoteScore, vote.RequiredVoteCount, voterTier, weight))
 	return nil
@@ -230,11 +229,35 @@ func startSpamVote(message *tgbotapi.Message, selected RecentGuestMessage) (bool
 	return true, nil
 }
 
-func applyVotePassed(vote SpamVote, callback *tgbotapi.CallbackQuery) {
+func applyVotePassed(vote SpamVote, callback *tgbotapi.CallbackQuery) error {
 	ApplyVotePassedState(vote)
-	guestSpamTelegram.DeleteMessage(vote.ChatID, vote.MessageID)
+	if err := deleteVoteGuestMessageWithLog(vote); err != nil {
+		guestSpamTelegram.AnswerCallback(callback.ID, false, "投票通过，已拉黑，但删除消息失败，请管理员检查权限")
+		guestSpamTelegram.DeleteCallbackMessage(callback)
+		return err
+	}
 	guestSpamTelegram.AnswerCallback(callback.ID, false, "投票通过，已拉黑并删除消息")
 	guestSpamTelegram.DeleteCallbackMessage(callback)
+	return nil
+}
+
+func deleteVoteGuestMessageWithLog(vote SpamVote) error {
+	message := &tgbotapi.Message{
+		MessageID: vote.MessageID,
+		Chat: &tgbotapi.Chat{
+			ID:    vote.ChatID,
+			Title: vote.ChatName,
+		},
+		From: &tgbotapi.User{
+			ID:       vote.GuestBotID,
+			IsBot:    true,
+			UserName: vote.GuestBotUserName,
+		},
+	}
+	if vote.GuestBotName != "" {
+		message.From.FirstName = vote.GuestBotName
+	}
+	return deleteGuestMessageWithLog(message, ReasonVote)
 }
 
 func ApplyVotePassedState(vote SpamVote) {

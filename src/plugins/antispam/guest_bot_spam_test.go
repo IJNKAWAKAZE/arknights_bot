@@ -362,6 +362,60 @@ func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
 	}
 }
 
+func TestDeleteGuestMessageWithLogReturnsErrorAndWritesDeleteFailed(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+	fake.deleteErr = errors.New("delete failed")
+
+	err := deleteGuestMessageWithLog(guestMessage(2001, 1001), ReasonLowTrust)
+	if err == nil || err.Error() != "delete failed" {
+		t.Fatalf("delete error = %v, want delete failed", err)
+	}
+	logs := RecentLogs(-100100, 10)
+	if len(logs) == 0 {
+		t.Fatal("expected delete failure log")
+	}
+	if logs[0].Action != ActionDeleteFailed {
+		t.Fatalf("latest action = %s, want %s", logs[0].Action, ActionDeleteFailed)
+	}
+}
+
+func TestApplyVotePassedReturnsErrorAndWarnsWhenDeleteFails(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+	fake.deleteErr = errors.New("delete failed")
+
+	vote := SpamVote{
+		ID:                "vote-delete-failed",
+		ChatID:            testIntegrationChatID,
+		ChatName:          "Guest Spam Test",
+		MessageID:         401,
+		GuestBotID:        993001,
+		GuestBotName:      "Voted Spam Bot",
+		GuestBotUserName:  "voted_spam_bot",
+		RequiredVoteCount: 2,
+		Voters:            []int64{1, 2},
+	}
+	callback := &tgbotapi.CallbackQuery{
+		ID: "vote-callback",
+		Message: &tgbotapi.Message{
+			Chat: &tgbotapi.Chat{ID: testIntegrationChatID, Type: "supergroup", Title: "Guest Spam Test"},
+		},
+	}
+
+	err := applyVotePassed(vote, callback)
+	if err == nil || err.Error() != "delete failed" {
+		t.Fatalf("apply vote error = %v, want delete failed", err)
+	}
+	if len(fake.callbacks) != 1 || fake.callbacks[0].text != "投票通过，已拉黑，但删除消息失败，请管理员检查权限" {
+		t.Fatalf("callbacks = %+v, want delete failure callback", fake.callbacks)
+	}
+	logs := RecentLogs(testIntegrationChatID, 10)
+	if len(logs) == 0 || logs[0].Action != ActionDeleteFailed {
+		t.Fatalf("logs = %+v, want latest delete_failed", logs)
+	}
+}
+
 func TestRestoreCallerSuccessUnbansBeforeUnrestrictAndClearsWarnings(t *testing.T) {
 	setupGuestSpamRedisOnlyForUnitTest(t)
 	fake := useFakeTelegram(t)
