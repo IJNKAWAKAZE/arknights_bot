@@ -133,11 +133,19 @@ func isTrackableMessage(message *tgbotapi.Message) bool {
 }
 
 func deleteGuestMessageWithLog(message *tgbotapi.Message, reason string) error {
-	if _, err := guestSpamTelegram.DeleteMessage(message.Chat.ID, message.MessageID); err != nil {
-		AddLog(logFromMessage(message, ActionDeleteFailed, reason, err.Error()))
+	return deleteGuestMessageByLog(logFromMessage(message, "", reason, ""))
+}
+
+func deleteGuestMessageByLog(item SpamLog) error {
+	if _, err := guestSpamTelegram.DeleteMessage(item.ChatID, item.MessageID); err != nil {
+		item.Action = ActionDeleteFailed
+		item.Detail = err.Error()
+		AddLog(item)
 		return err
 	}
-	AddLog(logFromMessage(message, ActionDeleteMessage, reason, "deleted guest bot message"))
+	item.Action = ActionDeleteMessage
+	item.Detail = "deleted guest bot message"
+	AddLog(item)
 	return nil
 }
 

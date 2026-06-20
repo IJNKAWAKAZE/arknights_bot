@@ -242,22 +242,15 @@ func applyVotePassed(vote SpamVote, callback *tgbotapi.CallbackQuery) error {
 }
 
 func deleteVoteGuestMessageWithLog(vote SpamVote) error {
-	message := &tgbotapi.Message{
-		MessageID: vote.MessageID,
-		Chat: &tgbotapi.Chat{
-			ID:    vote.ChatID,
-			Title: vote.ChatName,
-		},
-		From: &tgbotapi.User{
-			ID:       vote.GuestBotID,
-			IsBot:    true,
-			UserName: vote.GuestBotUserName,
-		},
-	}
-	if vote.GuestBotName != "" {
-		message.From.FirstName = vote.GuestBotName
-	}
-	return deleteGuestMessageWithLog(message, ReasonVote)
+	return deleteGuestMessageByLog(SpamLog{
+		ChatID:       vote.ChatID,
+		ChatName:     vote.ChatName,
+		MessageID:    vote.MessageID,
+		GuestBotID:   vote.GuestBotID,
+		GuestBotName: vote.GuestBotName,
+		GuestBotUser: vote.GuestBotUserName,
+		Reason:       ReasonVote,
+	})
 }
 
 func ApplyVotePassedState(vote SpamVote) {

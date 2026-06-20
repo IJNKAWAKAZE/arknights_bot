@@ -416,6 +416,40 @@ func TestApplyVotePassedReturnsErrorAndWarnsWhenDeleteFails(t *testing.T) {
 	}
 }
 
+func TestApplyVotePassedWritesDeleteMessageLogOnSuccess(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+
+	vote := SpamVote{
+		ID:                "vote-delete-success",
+		ChatID:            testIntegrationChatID,
+		ChatName:          "Guest Spam Test",
+		MessageID:         402,
+		GuestBotID:        993002,
+		GuestBotName:      "Voted Spam Bot Success",
+		GuestBotUserName:  "voted_spam_bot_success",
+		RequiredVoteCount: 2,
+		Voters:            []int64{1, 2},
+	}
+	callback := &tgbotapi.CallbackQuery{
+		ID: "vote-callback-success",
+		Message: &tgbotapi.Message{
+			Chat: &tgbotapi.Chat{ID: testIntegrationChatID, Type: "supergroup", Title: "Guest Spam Test"},
+		},
+	}
+
+	if err := applyVotePassed(vote, callback); err != nil {
+		t.Fatalf("apply vote success error = %v", err)
+	}
+	if len(fake.deletes) != 1 {
+		t.Fatalf("delete calls = %d, want 1", len(fake.deletes))
+	}
+	logs := RecentLogs(testIntegrationChatID, 10)
+	if len(logs) == 0 || logs[0].Action != ActionDeleteMessage {
+		t.Fatalf("logs = %+v, want latest delete_message", logs)
+	}
+}
+
 func TestRestoreCallerSuccessUnbansBeforeUnrestrictAndClearsWarnings(t *testing.T) {
 	setupGuestSpamRedisOnlyForUnitTest(t)
 	fake := useFakeTelegram(t)
