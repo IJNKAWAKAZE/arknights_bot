@@ -328,26 +328,22 @@ func TestGuestSpamIntegrationLoadCacheOnlyRestoresFreshActiveUsers(t *testing.T)
 
 	fresh := time.Now().Add(-2 * time.Minute)
 	stale := time.Now().Add(-20 * time.Minute)
-	if err := db.Create(&MemberRisk{
+	seedMemberRisk(t, db, MemberRisk{
 		ID:            riskID(integrationChatID, 9001),
 		ChatID:        integrationChatID,
 		UserID:        9001,
 		UserName:      "Fresh",
 		FirstSeenAt:   startOfDay(time.Now().AddDate(0, 0, -5)),
 		LastMessageAt: fresh,
-	}).Error; err != nil {
-		t.Fatalf("create fresh risk: %v", err)
-	}
-	if err := db.Create(&MemberRisk{
+	})
+	seedMemberRisk(t, db, MemberRisk{
 		ID:            riskID(integrationChatID, 9002),
 		ChatID:        integrationChatID,
 		UserID:        9002,
 		UserName:      "Stale",
 		FirstSeenAt:   startOfDay(time.Now().AddDate(0, 0, -5)),
 		LastMessageAt: stale,
-	}).Error; err != nil {
-		t.Fatalf("create stale risk: %v", err)
-	}
+	})
 
 	clearGuestSpamRedis(t)
 	if err := LoadCacheFromDB(); err != nil {
@@ -371,18 +367,16 @@ func TestGuestSpamIntegrationLoadCacheOnlyRestoresFreshActiveUsers(t *testing.T)
 func TestGuestSpamIntegrationLoadCacheRestoresActiveUserAtCutoffBoundary(t *testing.T) {
 	db := setupGuestSpamIntegration(t)
 
-	now := time.Now()
+	now := time.Now().Truncate(time.Second)
 	cutoffAt := time.Unix(int64(activeWindowCutoff(now)), 0)
-	if err := db.Create(&MemberRisk{
+	seedMemberRisk(t, db, MemberRisk{
 		ID:            riskID(integrationChatID, 9003),
 		ChatID:        integrationChatID,
 		UserID:        9003,
 		UserName:      "Boundary",
 		FirstSeenAt:   startOfDay(now.AddDate(0, 0, -5)),
 		LastMessageAt: cutoffAt,
-	}).Error; err != nil {
-		t.Fatalf("create cutoff risk: %v", err)
-	}
+	})
 
 	clearGuestSpamRedis(t)
 	if err := LoadCacheFromDB(); err != nil {
@@ -875,8 +869,10 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 
 	AddWarning(integrationChatID, integrationCallerID, "Caller")
 	risk, _ = getMemberRisk(integrationChatID, integrationCallerID)
+	risk.WarningCount = 1
 	risk.MuteLevel = 2
 	setMemberRisk(risk, true)
+	beforeFailedRestrict := risk
 	fake.unbans = nil
 	fake.restricts = nil
 	fake.restrictErr = errTelegram()
@@ -886,8 +882,8 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 		t.Fatal("restore should return telegram error when unrestrict fails")
 	}
 	risk, ok = getMemberRisk(integrationChatID, integrationCallerID)
-	if !ok || risk.WarningCount == 0 || risk.MuteLevel == 0 {
-		t.Fatalf("failed restore risk = %+v ok=%v, want warnings kept", risk, ok)
+	if !ok || risk.WarningCount != beforeFailedRestrict.WarningCount || risk.MuteLevel != beforeFailedRestrict.MuteLevel {
+		t.Fatalf("failed restore risk = %+v ok=%v, want unchanged from %+v", risk, ok, beforeFailedRestrict)
 	}
 	if len(fake.sends) != 0 {
 		t.Fatalf("failed restore should not send success message, sends=%+v", fake.sends)
@@ -902,8 +898,10 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 
 	AddWarning(integrationChatID, integrationCallerID, "Caller")
 	risk, _ = getMemberRisk(integrationChatID, integrationCallerID)
+	risk.WarningCount = 1
 	risk.MuteLevel = 2
 	setMemberRisk(risk, true)
+	beforeFailedUnban := risk
 	fake.unbanErr = errTelegram()
 	fake.restrictErr = nil
 	fake.unbans = nil
@@ -914,8 +912,8 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 		t.Fatal("restore should return telegram error when unban fails")
 	}
 	risk, ok = getMemberRisk(integrationChatID, integrationCallerID)
-	if !ok || risk.WarningCount == 0 || risk.MuteLevel == 0 {
-		t.Fatalf("failed unban risk = %+v ok=%v, want warnings kept", risk, ok)
+	if !ok || risk.WarningCount != beforeFailedUnban.WarningCount || risk.MuteLevel != beforeFailedUnban.MuteLevel {
+		t.Fatalf("failed unban risk = %+v ok=%v, want unchanged from %+v", risk, ok, beforeFailedUnban)
 	}
 	if len(fake.unbans) != 1 || len(fake.restricts) != 0 {
 		t.Fatalf("failed unban should stop before restrict, unbans=%+v restricts=%+v", fake.unbans, fake.restricts)
@@ -1043,6 +1041,13 @@ func clearGuestSpamRedis(t *testing.T) {
 	}
 	if err := iter.Err(); err != nil {
 		t.Fatalf("scan redis: %v", err)
+	}
+}
+
+func seedMemberRisk(t *testing.T, db *gorm.DB, risk MemberRisk) {
+	t.Helper()
+	if err := db.Omit(zeroRiskTimeFields(risk)...).Create(&risk).Error; err != nil {
+		t.Fatalf("create member risk %s: %v", risk.ID, err)
 	}
 }
 
