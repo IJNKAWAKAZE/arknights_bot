@@ -833,6 +833,9 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 	if len(fake.unbans) != 1 || len(fake.restricts) != 1 || len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "已恢复") {
 		t.Fatalf("restore unbans=%+v restricts=%+v sends=%+v", fake.unbans, fake.restricts, fake.sends)
 	}
+	if fake.restricts[0].permissions != tgbotapi.AllPermissions {
+		t.Fatalf("restore permissions = %q, want %q", fake.restricts[0].permissions, tgbotapi.AllPermissions)
+	}
 
 	AddWarning(integrationChatID, integrationCallerID, "Caller")
 	risk, _ = getMemberRisk(integrationChatID, integrationCallerID)
@@ -855,6 +858,10 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 	}
 	if len(fake.unbans) != 1 || len(fake.restricts) != 1 {
 		t.Fatalf("failed unrestrict should still attempt unban+restrict once, unbans=%+v restricts=%+v", fake.unbans, fake.restricts)
+	}
+	logs := RecentLogs(integrationChatID, 10)
+	if len(logs) == 0 || !strings.Contains(logs[0].Detail, "unrestrict failed:") {
+		t.Fatalf("logs = %+v, want latest detail to contain unrestrict failed:", logs)
 	}
 
 	AddWarning(integrationChatID, integrationCallerID, "Caller")
@@ -879,6 +886,10 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 	}
 	if len(fake.sends) != 0 {
 		t.Fatalf("failed unban should not send success message, sends=%+v", fake.sends)
+	}
+	logs = RecentLogs(integrationChatID, 10)
+	if len(logs) == 0 || !strings.Contains(logs[0].Detail, "unban failed:") {
+		t.Fatalf("logs = %+v, want latest detail to contain unban failed:", logs)
 	}
 
 	fake.sends = nil
