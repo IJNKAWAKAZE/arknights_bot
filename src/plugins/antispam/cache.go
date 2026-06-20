@@ -679,7 +679,7 @@ func pruneActiveUsers(chatID int64, now time.Time) {
 		return
 	}
 	key := activeUsersKey(chatID)
-	if err := bot.GoRedis.ZRemRangeByScore(redisCtx, key, "-inf", fmt.Sprintf("%f", activeWindowCutoff(now))).Err(); err != nil {
+	if err := bot.GoRedis.ZRemRangeByScore(redisCtx, key, "-inf", fmt.Sprintf("(%f", activeWindowCutoff(now))).Err(); err != nil {
 		log.Printf("guest spam: prune active users failed: %v", err)
 	}
 }

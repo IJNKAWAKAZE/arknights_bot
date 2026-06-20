@@ -318,6 +318,21 @@ func TestActiveUsersExpireIndividually(t *testing.T) {
 	}
 }
 
+func TestActiveUserAtExpiryCutoffRemainsActive(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+
+	now := time.Now().Truncate(time.Second)
+	writeActiveUserScore(-100100, 1001, now.Add(-activeWindowTTL))
+	pruneActiveUsers(-100100, now)
+
+	if got := ActiveUserCount(-100100); got != 1 {
+		t.Fatalf("active users at cutoff = %d, want 1", got)
+	}
+	if !IsActiveUser(-100100, 1001) {
+		t.Fatal("user at exact cutoff should stay active")
+	}
+}
+
 func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
 	setupGuestSpamRedisOnlyForUnitTest(t)
 
