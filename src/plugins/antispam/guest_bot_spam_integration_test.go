@@ -830,14 +830,16 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 	if !ok || risk.WarningCount != 0 || risk.MuteLevel != 0 {
 		t.Fatalf("risk after restore = %+v ok=%v, want cleared", risk, ok)
 	}
-	if len(fake.restricts) != 1 || len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "已恢复") {
-		t.Fatalf("restore restricts=%+v sends=%+v", fake.restricts, fake.sends)
+	if len(fake.unbans) != 1 || len(fake.restricts) != 1 || len(fake.sends) != 1 || !sentMessageContains(fake.sends[0], "已恢复") {
+		t.Fatalf("restore unbans=%+v restricts=%+v sends=%+v", fake.unbans, fake.restricts, fake.sends)
 	}
 
 	AddWarning(integrationChatID, integrationCallerID, "Caller")
 	risk, _ = getMemberRisk(integrationChatID, integrationCallerID)
 	risk.MuteLevel = 2
 	setMemberRisk(risk, true)
+	fake.unbans = nil
+	fake.restricts = nil
 	fake.restrictErr = errTelegram()
 	fake.sends = nil
 	err := GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log restore 880001", 8001)})
@@ -851,8 +853,36 @@ func TestGuestSpamIntegrationGuestSpamLogHandlePaths(t *testing.T) {
 	if len(fake.sends) != 0 {
 		t.Fatalf("failed restore should not send success message, sends=%+v", fake.sends)
 	}
+	if len(fake.unbans) != 1 || len(fake.restricts) != 1 {
+		t.Fatalf("failed unrestrict should still attempt unban+restrict once, unbans=%+v restricts=%+v", fake.unbans, fake.restricts)
+	}
+
+	AddWarning(integrationChatID, integrationCallerID, "Caller")
+	risk, _ = getMemberRisk(integrationChatID, integrationCallerID)
+	risk.MuteLevel = 2
+	setMemberRisk(risk, true)
+	fake.unbanErr = errTelegram()
+	fake.restrictErr = nil
+	fake.unbans = nil
+	fake.restricts = nil
+	fake.sends = nil
+	err = GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log restore 880001", 8001)})
+	if err == nil {
+		t.Fatal("restore should return telegram error when unban fails")
+	}
+	risk, ok = getMemberRisk(integrationChatID, integrationCallerID)
+	if !ok || risk.WarningCount == 0 || risk.MuteLevel == 0 {
+		t.Fatalf("failed unban risk = %+v ok=%v, want warnings kept", risk, ok)
+	}
+	if len(fake.unbans) != 1 || len(fake.restricts) != 0 {
+		t.Fatalf("failed unban should stop before restrict, unbans=%+v restricts=%+v", fake.unbans, fake.restricts)
+	}
+	if len(fake.sends) != 0 {
+		t.Fatalf("failed unban should not send success message, sends=%+v", fake.sends)
+	}
 
 	fake.sends = nil
+	fake.unbanErr = nil
 	fake.restrictErr = nil
 	if err := GuestSpamLogHandle(tgbotapi.Update{Message: commandMessage("/guest_spam_log", 8001)}); err != nil {
 		t.Fatalf("log command: %v", err)

@@ -1,8 +1,11 @@
 package antispam
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -356,6 +359,95 @@ func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
 	}
 	if score <= float64(staleAt.Unix()) {
 		t.Fatalf("refreshed score = %f, want > %d", score, staleAt.Unix())
+	}
+}
+
+func TestRestoreCallerSuccessUnbansBeforeUnrestrictAndClearsWarnings(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+
+	risk, _ := AddWarning(testIntegrationChatID, 880001, "Caller")
+	risk.WarningCount = 2
+	risk.MuteLevel = 1
+	setMemberRisk(risk, true)
+
+	message := &tgbotapi.Message{
+		MessageID: 123,
+		Chat: &tgbotapi.Chat{
+			ID:    testIntegrationChatID,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        9001,
+			FirstName: "Admin",
+		},
+	}
+
+	if err := restoreCaller(testIntegrationChatID, 880001, message); err != nil {
+		t.Fatalf("restore caller: %v", err)
+	}
+	if len(fake.unbans) != 1 {
+		t.Fatalf("unban calls = %d, want 1", len(fake.unbans))
+	}
+	if len(fake.restricts) != 1 {
+		t.Fatalf("restrict calls = %d, want 1", len(fake.restricts))
+	}
+	if !reflect.DeepEqual(fake.calls, []string{"unban", "restrict"}) {
+		t.Fatalf("call order = %v, want [unban restrict]", fake.calls)
+	}
+	if len(fake.sends) != 1 {
+		t.Fatalf("sends = %+v, want success message", fake.sends)
+	}
+	messageConfig, ok := fake.sends[0].(tgbotapi.MessageConfig)
+	if !ok || messageConfig.Text == "" || !strings.Contains(messageConfig.Text, "已恢复") {
+		t.Fatalf("sends = %+v, want success message", fake.sends)
+	}
+	restored, ok := getMemberRisk(testIntegrationChatID, 880001)
+	if !ok || restored.WarningCount != 0 || restored.MuteLevel != 0 {
+		t.Fatalf("risk after restore = %+v ok=%v, want cleared", restored, ok)
+	}
+}
+
+func TestRestoreCallerStopsWhenUnbanFails(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+	fake.unbanErr = errors.New("unban failed")
+
+	risk, _ := AddWarning(testIntegrationChatID, 880001, "Caller")
+	risk.WarningCount = 2
+	risk.MuteLevel = 1
+	setMemberRisk(risk, true)
+
+	message := &tgbotapi.Message{
+		MessageID: 123,
+		Chat: &tgbotapi.Chat{
+			ID:    testIntegrationChatID,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        9001,
+			FirstName: "Admin",
+		},
+	}
+
+	err := restoreCaller(testIntegrationChatID, 880001, message)
+	if err == nil || err.Error() != "unban failed" {
+		t.Fatalf("restore error = %v, want unban failed", err)
+	}
+	if len(fake.unbans) != 1 {
+		t.Fatalf("unban calls = %d, want 1", len(fake.unbans))
+	}
+	if len(fake.restricts) != 0 {
+		t.Fatalf("restrict calls = %d, want 0 after unban failure", len(fake.restricts))
+	}
+	if len(fake.sends) != 0 {
+		t.Fatalf("sends = %+v, want no success message", fake.sends)
+	}
+	restored, ok := getMemberRisk(testIntegrationChatID, 880001)
+	if !ok || restored.WarningCount == 0 || restored.MuteLevel == 0 {
+		t.Fatalf("risk after failed restore = %+v ok=%v, want warnings kept", restored, ok)
 	}
 }
 

@@ -14,13 +14,16 @@ type fakeTelegramGateway struct {
 	callbacks      []callbackCall
 	callbackDelete []deleteCall
 	bans           []banCall
+	unbans         []banCall
 	restricts      []restrictCall
+	calls          []string
 	queuedDeletes  []queueDeleteCall
 	admins         map[int64]bool
 	sendErr        error
 	requestErr     error
 	deleteErr      error
 	banErr         error
+	unbanErr       error
 	restrictErr    error
 	nextMessageID  int
 }
@@ -95,14 +98,25 @@ func (fake *fakeTelegramGateway) DeleteCallbackMessage(callback *tgbotapi.Callba
 
 func (fake *fakeTelegramGateway) BanChatMember(chatID, userID int64) (*tgbotapi.APIResponse, error) {
 	fake.bans = append(fake.bans, banCall{chatID: chatID, userID: userID})
+	fake.calls = append(fake.calls, "ban")
 	if fake.banErr != nil {
 		return nil, fake.banErr
 	}
 	return &tgbotapi.APIResponse{Ok: true}, nil
 }
 
+func (fake *fakeTelegramGateway) UnbanChatMember(chatID, userID int64) (*tgbotapi.APIResponse, error) {
+	fake.unbans = append(fake.unbans, banCall{chatID: chatID, userID: userID})
+	fake.calls = append(fake.calls, "unban")
+	if fake.unbanErr != nil {
+		return nil, fake.unbanErr
+	}
+	return &tgbotapi.APIResponse{Ok: true}, nil
+}
+
 func (fake *fakeTelegramGateway) RestrictChatMember(chatID, userID int64, permissions string) (*tgbotapi.APIResponse, error) {
 	fake.restricts = append(fake.restricts, restrictCall{chatID: chatID, userID: userID, permissions: permissions})
+	fake.calls = append(fake.calls, "restrict")
 	if fake.restrictErr != nil {
 		return nil, fake.restrictErr
 	}

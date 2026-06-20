@@ -14,6 +14,7 @@ type telegramGateway interface {
 	AnswerCallback(callbackID string, showAlert bool, text string) (*tgbotapi.APIResponse, error)
 	DeleteCallbackMessage(callback *tgbotapi.CallbackQuery) (*tgbotapi.APIResponse, error)
 	BanChatMember(chatID, userID int64) (*tgbotapi.APIResponse, error)
+	UnbanChatMember(chatID, userID int64) (*tgbotapi.APIResponse, error)
 	RestrictChatMember(chatID, userID int64, permissions string) (*tgbotapi.APIResponse, error)
 	IsAdmin(chatID, userID int64) bool
 	QueueDelete(chatID int64, messageID int, delay float64)
@@ -52,6 +53,10 @@ func (liveTelegramGateway) DeleteCallbackMessage(callback *tgbotapi.CallbackQuer
 
 func (liveTelegramGateway) BanChatMember(chatID, userID int64) (*tgbotapi.APIResponse, error) {
 	return bot.Arknights.BanChatMember(chatID, userID)
+}
+
+func (liveTelegramGateway) UnbanChatMember(chatID, userID int64) (*tgbotapi.APIResponse, error) {
+	return bot.Arknights.UnbanChatMember(chatID, userID)
 }
 
 func (liveTelegramGateway) RestrictChatMember(chatID, userID int64, permissions string) (*tgbotapi.APIResponse, error) {

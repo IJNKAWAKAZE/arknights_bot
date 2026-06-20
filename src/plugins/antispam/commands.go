@@ -262,13 +262,27 @@ func ApplyVotePassedState(vote SpamVote) {
 }
 
 func restoreCaller(chatID, userID int64, message *tgbotapi.Message) error {
+	if _, err := guestSpamTelegram.UnbanChatMember(chatID, userID); err != nil {
+		item := SpamLog{
+			ChatID:       chatID,
+			CallerUserID: userID,
+			Action:       ActionRestoreCaller,
+			Reason:       ReasonAdminRestore,
+			Detail:       fmt.Sprintf("unban failed: %v", err),
+		}
+		if message != nil && message.Chat != nil {
+			item.ChatName = message.Chat.Title
+		}
+		AddLog(item)
+		return err
+	}
 	if _, err := guestSpamTelegram.RestrictChatMember(chatID, userID, tgbotapi.AllPermissions); err != nil {
 		item := SpamLog{
 			ChatID:       chatID,
 			CallerUserID: userID,
 			Action:       ActionRestoreCaller,
 			Reason:       ReasonAdminRestore,
-			Detail:       err.Error(),
+			Detail:       fmt.Sprintf("unrestrict failed: %v", err),
 		}
 		if message != nil && message.Chat != nil {
 			item.ChatName = message.Chat.Title
