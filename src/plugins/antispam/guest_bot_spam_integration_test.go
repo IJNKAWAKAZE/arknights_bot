@@ -368,6 +368,34 @@ func TestGuestSpamIntegrationLoadCacheOnlyRestoresFreshActiveUsers(t *testing.T)
 	}
 }
 
+func TestGuestSpamIntegrationLoadCacheRestoresActiveUserAtCutoffBoundary(t *testing.T) {
+	db := setupGuestSpamIntegration(t)
+
+	now := time.Now()
+	cutoffAt := time.Unix(int64(activeWindowCutoff(now)), 0)
+	if err := db.Create(&MemberRisk{
+		ID:            riskID(integrationChatID, 9003),
+		ChatID:        integrationChatID,
+		UserID:        9003,
+		UserName:      "Boundary",
+		FirstSeenAt:   startOfDay(now.AddDate(0, 0, -5)),
+		LastMessageAt: cutoffAt,
+	}).Error; err != nil {
+		t.Fatalf("create cutoff risk: %v", err)
+	}
+
+	clearGuestSpamRedis(t)
+	if err := LoadCacheFromDB(); err != nil {
+		t.Fatalf("load cache from db: %v", err)
+	}
+	if !IsActiveUser(integrationChatID, 9003) {
+		t.Fatal("member at cutoff boundary should be restored as active")
+	}
+	if got := ActiveUserCount(integrationChatID); got != 1 {
+		t.Fatalf("active users after cutoff-boundary reload = %d, want 1", got)
+	}
+}
+
 func TestGuestSpamIntegrationVotePassedBlacklistsAndClearsVote(t *testing.T) {
 	setupGuestSpamIntegration(t)
 
@@ -900,12 +928,6 @@ func setupGuestSpamIntegration(t *testing.T) *gorm.DB {
 	clearGuestSpamTables(t, db)
 	clearGuestSpamRedis(t)
 	return db
-}
-
-func setupGuestSpamIntegrationRedisOnly(t *testing.T) {
-	t.Helper()
-	setupGuestSpamIntegration(t)
-	clearGuestSpamTables(t, bot.DBEngine)
 }
 
 func migrateGuestSpamTestSchema(t *testing.T, db *gorm.DB) {

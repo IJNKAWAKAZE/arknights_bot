@@ -41,9 +41,10 @@ func LoadCacheFromDB() error {
 	if err := bot.DBEngine.Find(&risks).Error; err != nil {
 		return err
 	}
+	activeCutoff := activeWindowCutoff(time.Now())
 	for _, risk := range risks {
 		setJSON(memberRiskKey(risk.ChatID, risk.UserID), risk, riskTTL)
-		if !risk.LastMessageAt.IsZero() && time.Since(risk.LastMessageAt) <= activeWindowTTL {
+		if !risk.LastMessageAt.IsZero() && float64(risk.LastMessageAt.Unix()) >= activeCutoff {
 			if err := bot.GoRedis.ZAdd(redisCtx, activeUsersKey(risk.ChatID), &redis.Z{
 				Score:  float64(risk.LastMessageAt.Unix()),
 				Member: strconv.FormatInt(risk.UserID, 10),
