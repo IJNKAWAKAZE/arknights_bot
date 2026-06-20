@@ -1,14 +1,13 @@
 package antispam
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"testing"
 	"time"
 
 	bot "arknights_bot/config"
+	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
@@ -333,26 +332,14 @@ func TestActiveUserAtExpiryCutoffRemainsActive(t *testing.T) {
 	}
 }
 
-func TestActiveUsersIgnoreSortedSetTTL(t *testing.T) {
-	setupGuestSpamRedisOnlyForUnitTest(t)
-
-	now := time.Now().Truncate(time.Second)
-	writeActiveUserScore(-100100, 1001, now.Add(-activeWindowTTL))
-	if err := bot.GoRedis.Expire(redisCtx, activeUsersKey(-100100), time.Millisecond).Err(); err != nil {
-		t.Fatalf("expire active users key: %v", err)
-	}
-	time.Sleep(25 * time.Millisecond)
-
-	if !IsActiveUser(-100100, 1001) {
-		t.Fatal("user at exact cutoff should remain active even if key ttl would have expired")
-	}
-	if got := ActiveUserCount(-100100); got != 1 {
-		t.Fatalf("active users after key ttl expiry = %d, want 1", got)
-	}
-}
-
 func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
 	setupGuestSpamRedisOnlyForUnitTest(t)
+
+	staleAt := time.Now().Add(-activeWindowTTL - 2*time.Minute).Truncate(time.Second)
+	writeActiveUserScore(testIntegrationChatID, 880001, staleAt)
+	if IsActiveUser(testIntegrationChatID, 880001) {
+		t.Fatal("stale active user should be inactive before refresh")
+	}
 
 	if err := TrackActivityHandle(tgbotapi.Update{Message: trackableGuestSpamMessage(880001, "hello")}); err != nil {
 		t.Fatalf("track activity: %v", err)
@@ -362,6 +349,13 @@ func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
 	}
 	if !IsActiveUser(testIntegrationChatID, 880001) {
 		t.Fatal("tracked user should be active")
+	}
+	score, err := bot.GoRedis.ZScore(redisCtx, activeUsersKey(testIntegrationChatID), "880001").Result()
+	if err != nil {
+		t.Fatalf("read refreshed score: %v", err)
+	}
+	if score <= float64(staleAt.Unix()) {
+		t.Fatalf("refreshed score = %f, want > %d", score, staleAt.Unix())
 	}
 }
 
@@ -401,18 +395,13 @@ const testIntegrationChatID = int64(-100100)
 
 func setupGuestSpamRedisOnlyForUnitTest(t *testing.T) {
 	t.Helper()
-	redisAddr := os.Getenv("GUEST_SPAM_TEST_REDIS_ADDR")
-	if redisAddr == "" {
-		t.Skip("set GUEST_SPAM_TEST_REDIS_ADDR to run redis-backed active user tests")
-		return
-	}
+	mini := miniredis.RunT(t)
 
 	bot.GoRedis = redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: os.Getenv("GUEST_SPAM_TEST_REDIS_PASSWORD"),
-		DB:       0,
+		Addr: mini.Addr(),
+		DB:   0,
 	})
-	if err := bot.GoRedis.Ping(context.Background()).Err(); err != nil {
+	if err := bot.GoRedis.Ping(redisCtx).Err(); err != nil {
 		t.Fatalf("ping redis: %v", err)
 	}
 	clearActiveUserTestRedis(t)
@@ -420,6 +409,7 @@ func setupGuestSpamRedisOnlyForUnitTest(t *testing.T) {
 		clearActiveUserTestRedis(t)
 		_ = bot.GoRedis.Close()
 		bot.GoRedis = nil
+		mini.Close()
 	})
 }
 

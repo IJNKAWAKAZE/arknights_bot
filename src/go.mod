@@ -25,6 +25,7 @@ require (
 )
 
 require (
+	github.com/alicebob/miniredis/v2 v2.38.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aws/aws-sdk-go v1.38.20 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
@@ -79,6 +80,7 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/xuri/efp v0.0.0-20230802181842-ad255f2331ca // indirect
 	github.com/xuri/nfp v0.0.0-20230819163627-dc951e3ffe1a // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611 // indirect
