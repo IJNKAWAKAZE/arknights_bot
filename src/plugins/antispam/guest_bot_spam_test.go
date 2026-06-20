@@ -1,10 +1,15 @@
 package antispam
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"strconv"
 	"testing"
 	"time"
 
 	bot "arknights_bot/config"
+	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
@@ -292,5 +297,108 @@ func TestRequiredVoteCount(t *testing.T) {
 	}
 	if got, ok := requiredVoteCount(5); !ok || got != 3 {
 		t.Fatalf("active=5 required=(%d,%v), want (3,true)", got, ok)
+	}
+}
+
+func TestActiveUsersExpireIndividually(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+
+	now := time.Now()
+	writeActiveUserScore(-100100, 1001, now.Add(-2*time.Minute))
+	writeActiveUserScore(-100100, 1002, now.Add(-12*time.Minute))
+
+	if got := ActiveUserCount(-100100); got != 1 {
+		t.Fatalf("active users = %d, want 1 after pruning expired members", got)
+	}
+	if !IsActiveUser(-100100, 1001) {
+		t.Fatal("fresh user should stay active")
+	}
+	if IsActiveUser(-100100, 1002) {
+		t.Fatal("expired user should be inactive")
+	}
+}
+
+func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+
+	if err := TrackActivityHandle(tgbotapi.Update{Message: trackableGuestSpamMessage(880001, "hello")}); err != nil {
+		t.Fatalf("track activity: %v", err)
+	}
+	if got := ActiveUserCount(testIntegrationChatID); got != 1 {
+		t.Fatalf("active users = %d, want 1", got)
+	}
+	if !IsActiveUser(testIntegrationChatID, 880001) {
+		t.Fatal("tracked user should be active")
+	}
+}
+
+func writeActiveUserScore(chatID int64, userID int64, when time.Time) {
+	if bot.GoRedis == nil {
+		return
+	}
+	if err := bot.GoRedis.ZAdd(redisCtx, activeUsersKey(chatID), &redis.Z{
+		Score:  float64(when.Unix()),
+		Member: strconv.FormatInt(userID, 10),
+	}).Err(); err != nil {
+		panic(err)
+	}
+}
+
+const testIntegrationChatID = int64(-100100)
+
+func setupGuestSpamRedisOnlyForUnitTest(t *testing.T) {
+	t.Helper()
+	redisAddr := os.Getenv("GUEST_SPAM_TEST_REDIS_ADDR")
+	if redisAddr == "" {
+		t.Skip("set GUEST_SPAM_TEST_REDIS_ADDR to run redis-backed active user tests")
+		return
+	}
+
+	bot.GoRedis = redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: os.Getenv("GUEST_SPAM_TEST_REDIS_PASSWORD"),
+		DB:       0,
+	})
+	if err := bot.GoRedis.Ping(context.Background()).Err(); err != nil {
+		t.Fatalf("ping redis: %v", err)
+	}
+	clearActiveUserTestRedis(t)
+	t.Cleanup(func() {
+		clearActiveUserTestRedis(t)
+		_ = bot.GoRedis.Close()
+		bot.GoRedis = nil
+	})
+}
+
+func clearActiveUserTestRedis(t *testing.T) {
+	t.Helper()
+	if bot.GoRedis == nil {
+		return
+	}
+	iter := bot.GoRedis.Scan(redisCtx, 0, redisPrefix+":*", 0).Iterator()
+	for iter.Next(redisCtx) {
+		if err := bot.GoRedis.Del(redisCtx, iter.Val()).Err(); err != nil {
+			t.Fatalf("delete redis key %s: %v", iter.Val(), err)
+		}
+	}
+	if err := iter.Err(); err != nil {
+		t.Fatalf("scan redis: %v", err)
+	}
+}
+
+func trackableGuestSpamMessage(userID int64, text string) *tgbotapi.Message {
+	return &tgbotapi.Message{
+		MessageID: int(userID % 100000),
+		Chat: &tgbotapi.Chat{
+			ID:    testIntegrationChatID,
+			Type:  "supergroup",
+			Title: "Guest Spam Test",
+		},
+		From: &tgbotapi.User{
+			ID:        userID,
+			FirstName: "User",
+			UserName:  fmt.Sprintf("user_%d", userID),
+		},
+		Text: text,
 	}
 }

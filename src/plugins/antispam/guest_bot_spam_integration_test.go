@@ -323,6 +323,44 @@ func TestGuestSpamIntegrationTrackActivityHandle(t *testing.T) {
 	}
 }
 
+func TestGuestSpamIntegrationLoadCacheOnlyRestoresFreshActiveUsers(t *testing.T) {
+	db := setupGuestSpamIntegration(t)
+
+	fresh := time.Now().Add(-2 * time.Minute)
+	stale := time.Now().Add(-20 * time.Minute)
+	if err := db.Create(&MemberRisk{
+		ID:            riskID(integrationChatID, 9001),
+		ChatID:        integrationChatID,
+		UserID:        9001,
+		UserName:      "Fresh",
+		FirstSeenAt:   startOfDay(time.Now().AddDate(0, 0, -5)),
+		LastMessageAt: fresh,
+	}).Error; err != nil {
+		t.Fatalf("create fresh risk: %v", err)
+	}
+	if err := db.Create(&MemberRisk{
+		ID:            riskID(integrationChatID, 9002),
+		ChatID:        integrationChatID,
+		UserID:        9002,
+		UserName:      "Stale",
+		FirstSeenAt:   startOfDay(time.Now().AddDate(0, 0, -5)),
+		LastMessageAt: stale,
+	}).Error; err != nil {
+		t.Fatalf("create stale risk: %v", err)
+	}
+
+	clearGuestSpamRedis(t)
+	if err := LoadCacheFromDB(); err != nil {
+		t.Fatalf("load cache from db: %v", err)
+	}
+	if got := ActiveUserCount(integrationChatID); got != 1 {
+		t.Fatalf("active users after reload = %d, want 1", got)
+	}
+	if !IsActiveUser(integrationChatID, 9001) || IsActiveUser(integrationChatID, 9002) {
+		t.Fatal("reload should keep fresh user only")
+	}
+}
+
 func TestGuestSpamIntegrationVotePassedBlacklistsAndClearsVote(t *testing.T) {
 	setupGuestSpamIntegration(t)
 
@@ -855,6 +893,12 @@ func setupGuestSpamIntegration(t *testing.T) *gorm.DB {
 	clearGuestSpamTables(t, db)
 	clearGuestSpamRedis(t)
 	return db
+}
+
+func setupGuestSpamIntegrationRedisOnly(t *testing.T) {
+	t.Helper()
+	setupGuestSpamIntegration(t)
+	clearGuestSpamTables(t, bot.DBEngine)
 }
 
 func migrateGuestSpamTestSchema(t *testing.T, db *gorm.DB) {

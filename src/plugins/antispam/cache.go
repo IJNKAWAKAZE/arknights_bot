@@ -44,7 +44,12 @@ func LoadCacheFromDB() error {
 	for _, risk := range risks {
 		setJSON(memberRiskKey(risk.ChatID, risk.UserID), risk, riskTTL)
 		if !risk.LastMessageAt.IsZero() && time.Since(risk.LastMessageAt) <= activeWindowTTL {
-			bot.GoRedis.SAdd(redisCtx, activeUsersKey(risk.ChatID), risk.UserID)
+			if err := bot.GoRedis.ZAdd(redisCtx, activeUsersKey(risk.ChatID), &redis.Z{
+				Score:  float64(risk.LastMessageAt.Unix()),
+				Member: strconv.FormatInt(risk.UserID, 10),
+			}).Err(); err != nil {
+				log.Printf("guest spam: restore active user failed: %v", err)
+			}
 			bot.GoRedis.Expire(redisCtx, activeUsersKey(risk.ChatID), activeWindowTTL)
 		}
 	}
@@ -304,8 +309,15 @@ func RecordMessageActivity(chatID int64, userID int64, userName string) {
 	bot.GoRedis.SAdd(redisCtx, memberActivityDirtySetKey(), fmt.Sprintf("%d:%d:%s", chatID, userID, currentDay))
 	risk.RecentMessageCount = recentActivityCount(chatID, userID, now)
 	setMemberRisk(risk, true)
-	bot.GoRedis.SAdd(redisCtx, activeUsersKey(chatID), userID)
-	bot.GoRedis.Expire(redisCtx, activeUsersKey(chatID), activeWindowTTL)
+	key := activeUsersKey(chatID)
+	pruneActiveUsers(chatID, now)
+	if err := bot.GoRedis.ZAdd(redisCtx, key, &redis.Z{
+		Score:  float64(now.Unix()),
+		Member: strconv.FormatInt(userID, 10),
+	}).Err(); err != nil {
+		log.Printf("guest spam: update active user failed: %v", err)
+	}
+	bot.GoRedis.Expire(redisCtx, key, activeWindowTTL)
 }
 
 func TrustFor(chatID, userID int64) MemberTrust {
@@ -446,8 +458,10 @@ func ActiveUserCount(chatID int64) int {
 	if bot.GoRedis == nil {
 		return 0
 	}
-	count, err := bot.GoRedis.SCard(redisCtx, activeUsersKey(chatID)).Result()
+	pruneActiveUsers(chatID, time.Now())
+	count, err := bot.GoRedis.ZCard(redisCtx, activeUsersKey(chatID)).Result()
 	if err != nil {
+		log.Printf("guest spam: count active users failed: %v", err)
 		return 0
 	}
 	return int(count)
@@ -457,8 +471,17 @@ func IsActiveUser(chatID, userID int64) bool {
 	if bot.GoRedis == nil || userID == 0 {
 		return false
 	}
-	ok, err := bot.GoRedis.SIsMember(redisCtx, activeUsersKey(chatID), userID).Result()
-	return err == nil && ok
+	now := time.Now()
+	pruneActiveUsers(chatID, now)
+	score, err := bot.GoRedis.ZScore(redisCtx, activeUsersKey(chatID), strconv.FormatInt(userID, 10)).Result()
+	if err == redis.Nil {
+		return false
+	}
+	if err != nil {
+		log.Printf("guest spam: read active user failed: %v", err)
+		return false
+	}
+	return score >= activeWindowCutoff(now)
 }
 
 func IsTrustedMember(chatID, userID int64) bool {
@@ -649,6 +672,16 @@ func recentActivityCount(chatID, userID int64, now time.Time) int64 {
 		total += count
 	}
 	return total
+}
+
+func pruneActiveUsers(chatID int64, now time.Time) {
+	if bot.GoRedis == nil {
+		return
+	}
+	key := activeUsersKey(chatID)
+	if err := bot.GoRedis.ZRemRangeByScore(redisCtx, key, "-inf", fmt.Sprintf("%f", activeWindowCutoff(now))).Err(); err != nil {
+		log.Printf("guest spam: prune active users failed: %v", err)
+	}
 }
 
 func isTrustedRisk(risk MemberRisk) bool {

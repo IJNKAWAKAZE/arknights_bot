@@ -65,6 +65,10 @@ func activeUsersKey(chatID int64) string {
 	return fmt.Sprintf("%s:active:%d", redisPrefix, chatID)
 }
 
+func activeWindowCutoff(now time.Time) float64 {
+	return float64(now.Add(-activeWindowTTL).Unix())
+}
+
 func logsKey(chatID int64) string {
 	return fmt.Sprintf("%s:logs:%d", redisPrefix, chatID)
 }
