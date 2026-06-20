@@ -333,6 +333,24 @@ func TestActiveUserAtExpiryCutoffRemainsActive(t *testing.T) {
 	}
 }
 
+func TestActiveUsersIgnoreSortedSetTTL(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+
+	now := time.Now().Truncate(time.Second)
+	writeActiveUserScore(-100100, 1001, now.Add(-activeWindowTTL))
+	if err := bot.GoRedis.Expire(redisCtx, activeUsersKey(-100100), time.Millisecond).Err(); err != nil {
+		t.Fatalf("expire active users key: %v", err)
+	}
+	time.Sleep(25 * time.Millisecond)
+
+	if !IsActiveUser(-100100, 1001) {
+		t.Fatal("user at exact cutoff should remain active even if key ttl would have expired")
+	}
+	if got := ActiveUserCount(-100100); got != 1 {
+		t.Fatalf("active users after key ttl expiry = %d, want 1", got)
+	}
+}
+
 func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
 	setupGuestSpamRedisOnlyForUnitTest(t)
 
@@ -347,6 +365,20 @@ func TestTrackActivityHandleRefreshesSortedSetScore(t *testing.T) {
 	}
 }
 
+func TestRecordMessageActivityDoesNotSetActiveUsersTTL(t *testing.T) {
+	setupGuestSpamRedisOnlyForUnitTest(t)
+
+	RecordMessageActivity(testIntegrationChatID, 880001, "User")
+
+	ttl, err := bot.GoRedis.TTL(redisCtx, activeUsersKey(testIntegrationChatID)).Result()
+	if err != nil {
+		t.Fatalf("read active users ttl: %v", err)
+	}
+	if ttl != -1 {
+		t.Fatalf("active users ttl = %s, want no expiration", ttl)
+	}
+}
+
 func writeActiveUserScore(chatID int64, userID int64, when time.Time) {
 	if bot.GoRedis == nil {
 		return
@@ -356,6 +388,12 @@ func writeActiveUserScore(chatID int64, userID int64, when time.Time) {
 		Member: strconv.FormatInt(userID, 10),
 	}).Err(); err != nil {
 		panic(err)
+	}
+}
+
+func writeActiveUsers(chatID int64, when time.Time, userIDs ...int64) {
+	for _, userID := range userIDs {
+		writeActiveUserScore(chatID, userID, when)
 	}
 }
 

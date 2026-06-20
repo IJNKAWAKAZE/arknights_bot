@@ -359,6 +359,13 @@ func TestGuestSpamIntegrationLoadCacheOnlyRestoresFreshActiveUsers(t *testing.T)
 	if !IsActiveUser(integrationChatID, 9001) || IsActiveUser(integrationChatID, 9002) {
 		t.Fatal("reload should keep fresh user only")
 	}
+	ttl, err := bot.GoRedis.TTL(redisCtx, activeUsersKey(integrationChatID)).Result()
+	if err != nil {
+		t.Fatalf("read active users ttl: %v", err)
+	}
+	if ttl != -1 {
+		t.Fatalf("active users ttl after reload = %s, want no expiration", ttl)
+	}
 }
 
 func TestGuestSpamIntegrationVotePassedBlacklistsAndClearsVote(t *testing.T) {
@@ -431,7 +438,7 @@ func TestGuestSpamIntegrationGuestSpamHandleCandidatesAndStartVote(t *testing.T)
 	}
 
 	for _, userID := range []int64{1, 2, 3} {
-		bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), userID)
+		writeActiveUsers(integrationChatID, time.Now(), userID)
 	}
 	fake.sends = nil
 	if err := GuestSpamHandle(tgbotapi.Update{Message: commandMessage("/guest_spam @candidate_bot", 7001)}); err != nil {
@@ -467,7 +474,7 @@ func TestGuestSpamIntegrationGuestSpamHandleSendFailures(t *testing.T) {
 		GuestBotUserName: "send_fail_bot",
 		SeenAt:           time.Now(),
 	})
-	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), 1, 2, 3)
+	writeActiveUsers(integrationChatID, time.Now(), 1, 2, 3)
 	err = GuestSpamHandle(tgbotapi.Update{Message: commandMessage("/guest_spam 505", 7001)})
 	if err == nil {
 		t.Fatal("start vote send failure should return error")
@@ -542,7 +549,7 @@ func TestGuestSpamIntegrationSelectRecentGuestCallbackPaths(t *testing.T) {
 	}
 
 	for _, userID := range []int64{1, 2, 3} {
-		bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), userID)
+		writeActiveUsers(integrationChatID, time.Now(), userID)
 	}
 	fake.callbacks = nil
 	fake.callbackDelete = nil
@@ -639,7 +646,7 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("duplicate callbacks=%+v", fake.callbacks)
 	}
 
-	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), int64(7001))
+	writeActiveUsers(integrationChatID, time.Now(), 7001)
 	SaveVote(SpamVote{ID: "partial-vote", ChatID: integrationChatID, ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2})
 	fake.callbacks = nil
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("partial-cb", "guestspam_vote,vote,partial-vote", 7001)}); err != nil {
@@ -653,7 +660,7 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("partial callbacks=%+v", fake.callbacks)
 	}
 
-	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), int64(7002))
+	writeActiveUsers(integrationChatID, time.Now(), 7002)
 	SaveVote(SpamVote{
 		ID:                "pass-vote",
 		ChatID:            integrationChatID,
@@ -703,7 +710,7 @@ func TestGuestSpamIntegrationSpamVoteWeightTiers(t *testing.T) {
 		t.Fatalf("inactive callbacks=%+v", fake.callbacks)
 	}
 
-	bot.GoRedis.SAdd(redisCtx, activeUsersKey(integrationChatID), int64(7102))
+	writeActiveUsers(integrationChatID, time.Now(), 7102)
 	seedTrustedCaller(7103)
 	fake.admins[7104] = true
 	fake.callbacks = nil

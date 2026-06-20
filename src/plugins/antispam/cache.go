@@ -50,7 +50,6 @@ func LoadCacheFromDB() error {
 			}).Err(); err != nil {
 				log.Printf("guest spam: restore active user failed: %v", err)
 			}
-			bot.GoRedis.Expire(redisCtx, activeUsersKey(risk.ChatID), activeWindowTTL)
 		}
 	}
 
@@ -317,7 +316,6 @@ func RecordMessageActivity(chatID int64, userID int64, userName string) {
 	}).Err(); err != nil {
 		log.Printf("guest spam: update active user failed: %v", err)
 	}
-	bot.GoRedis.Expire(redisCtx, key, activeWindowTTL)
 }
 
 func TrustFor(chatID, userID int64) MemberTrust {
