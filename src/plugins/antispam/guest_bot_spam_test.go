@@ -19,7 +19,7 @@ import (
 func TestCheckGuestBotSpam(t *testing.T) {
 	bot.GuestBotSpamEnabled = true
 	update := tgbotapi.Update{
-		GuestMessage: &tgbotapi.Message{
+		Message: &tgbotapi.Message{
 			MessageID: 1,
 			Chat: &tgbotapi.Chat{
 				ID:   -1001,
@@ -71,7 +71,7 @@ func TestCheckGuestBotSpamDisabled(t *testing.T) {
 		bot.GuestBotSpamEnabled = old
 	})
 
-	update := tgbotapi.Update{GuestMessage: guestMessage(2001, 1001)}
+	update := tgbotapi.Update{Message: guestMessage(2001, 1001)}
 	if CheckGuestBotSpam(update) {
 		t.Fatal("disabled guest bot spam should not match")
 	}

@@ -70,7 +70,7 @@ func TestGuestSpamIntegrationHandleLowTrustDeleteFailureStillBlacklists(t *testi
 	fake := useFakeTelegram(t)
 	fake.deleteErr = errTelegram()
 
-	err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(integrationGuestBotID, integrationCallerID)})
+	err := GuestBotSpamHandle(tgbotapi.Update{Message: testGuestMessage(integrationGuestBotID, integrationCallerID)})
 	if err != nil {
 		t.Fatalf("handle low trust: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestGuestSpamIntegrationHandleTrustedCallerNoTelegramAction(t *testing.T) {
 	fake := useFakeTelegram(t)
 	seedTrustedCaller(integrationCallerID)
 
-	err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(integrationGuestBot2ID, integrationCallerID)})
+	err := GuestBotSpamHandle(tgbotapi.Update{Message: testGuestMessage(integrationGuestBot2ID, integrationCallerID)})
 	if err != nil {
 		t.Fatalf("handle trusted guest message: %v", err)
 	}
@@ -150,10 +150,10 @@ func TestGuestSpamIntegrationHandleMuteSuccessLogged(t *testing.T) {
 	setupGuestSpamIntegration(t)
 	fake := useFakeTelegram(t)
 
-	if err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991201, integrationCallerID)}); err != nil {
+	if err := GuestBotSpamHandle(tgbotapi.Update{Message: testGuestMessage(991201, integrationCallerID)}); err != nil {
 		t.Fatalf("first warning: %v", err)
 	}
-	if err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991202, integrationCallerID)}); err != nil {
+	if err := GuestBotSpamHandle(tgbotapi.Update{Message: testGuestMessage(991202, integrationCallerID)}); err != nil {
 		t.Fatalf("second warning: %v", err)
 	}
 	if len(fake.requests) != 1 {
@@ -169,8 +169,8 @@ func TestGuestSpamIntegrationHandleMuteFailureLogged(t *testing.T) {
 	fake := useFakeTelegram(t)
 	fake.requestErr = errors.New("mute failed")
 
-	first := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991101, integrationCallerID)})
-	second := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: testGuestMessage(991102, integrationCallerID)})
+	first := GuestBotSpamHandle(tgbotapi.Update{Message: testGuestMessage(991101, integrationCallerID)})
+	second := GuestBotSpamHandle(tgbotapi.Update{Message: testGuestMessage(991102, integrationCallerID)})
 	if first != nil || second != nil {
 		t.Fatalf("handle warning sequence errors = %v %v", first, second)
 	}
@@ -251,7 +251,7 @@ func TestGuestSpamIntegrationHandleBlacklistedCallerActionsAndFailures(t *testin
 			fake.requestErr = tt.reqErr
 			AddBlacklist(GuestBotBlacklist{BotID: tt.message.From.ID, BotName: "Known Bot"}, true)
 
-			if err := GuestBotSpamHandle(tgbotapi.Update{GuestMessage: tt.message}); err != nil {
+			if err := GuestBotSpamHandle(tgbotapi.Update{Message: tt.message}); err != nil {
 				t.Fatalf("handle blacklist: %v", err)
 			}
 			if len(fake.bans) != tt.wantBan {

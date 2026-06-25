@@ -18,13 +18,7 @@ func CheckGuestBotSpam(update tgbotapi.Update) bool {
 	if !configGuestBotSpamEnabled() {
 		return false
 	}
-	if update.GuestMessage != nil && isGuestBotMessage(update.GuestMessage) {
-		return true
-	}
-	if update.Message != nil && isGuestBotMessage(update.Message) {
-		return true
-	}
-	return false
+	return update.Message != nil && isGuestBotMessage(update.Message)
 }
 
 func CheckNormalActivity(update tgbotapi.Update) bool {
@@ -41,10 +35,7 @@ func TrackActivityHandle(update tgbotapi.Update) error {
 }
 
 func GuestBotSpamHandle(update tgbotapi.Update) error {
-	message := update.GuestMessage
-	if message == nil {
-		message = update.Message
-	}
+	message := update.Message
 	if message == nil || message.Chat == nil || message.From == nil {
 		return nil
 	}
