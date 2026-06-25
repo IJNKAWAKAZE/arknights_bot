@@ -19,6 +19,7 @@ type fakeTelegramGateway struct {
 	calls          []string
 	queuedDeletes  []queueDeleteCall
 	admins         map[int64]bool
+	beforeSend     func()
 	sendErr        error
 	requestErr     error
 	deleteErr      error
@@ -57,6 +58,9 @@ type queueDeleteCall struct {
 }
 
 func (fake *fakeTelegramGateway) Send(config tgbotapi.Chattable) (tgbotapi.Message, error) {
+	if fake.beforeSend != nil {
+		fake.beforeSend()
+	}
 	fake.sends = append(fake.sends, config)
 	if fake.sendErr != nil {
 		return tgbotapi.Message{}, fake.sendErr

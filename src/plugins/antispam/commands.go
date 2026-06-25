@@ -114,7 +114,10 @@ func SpamVoteCallback(update tgbotapi.Update) error {
 	score := currentVoteScore(vote)
 	vote.Voters = append(vote.Voters, callback.From.ID)
 	vote.VoteScore = score + weight
-	SaveVote(vote)
+	if err := SaveVote(vote); err != nil {
+		guestSpamTelegram.AnswerCallback(callback.ID, true, "保存投票失败，请稍后重试")
+		return err
+	}
 	if vote.VoteScore >= vote.RequiredVoteCount {
 		return applyVotePassed(vote, callback)
 	}
@@ -192,7 +195,10 @@ func startSpamVote(message *tgbotapi.Message, selected RecentGuestMessage) (bool
 		AddLog(logFromRecent(selected, ActionVoteInvalid, ReasonInsufficientAct, fmt.Sprintf("active users: %d", activeCount)))
 		return false, sendTempMessage(message.Chat.ID, message.MessageID, "最近 10 分钟活跃人数少于 3，投票无效，请管理员检查。")
 	}
-	voteID, _ := gonanoid.New(16)
+	voteID, err := gonanoid.New(16)
+	if err != nil {
+		return false, err
+	}
 	vote := SpamVote{
 		ID:                voteID,
 		ChatID:            selected.ChatID,
@@ -219,12 +225,20 @@ func startSpamVote(message *tgbotapi.Message, selected RecentGuestMessage) (bool
 	send := tgbotapi.NewMessage(message.Chat.ID, text)
 	send.ReplyToMessageID = message.MessageID
 	send.ReplyMarkup = keyboard
+	if err := SaveVote(vote); err != nil {
+		return false, err
+	}
 	msg, err := guestSpamTelegram.Send(send)
 	if err != nil {
+		DeleteVote(vote.ID)
 		return false, err
 	}
 	vote.VoteMessageID = msg.MessageID
-	SaveVote(vote)
+	if err := SaveVote(vote); err != nil {
+		guestSpamTelegram.DeleteMessage(message.Chat.ID, msg.MessageID)
+		DeleteVote(vote.ID)
+		return false, err
+	}
 	AddLog(logFromRecent(selected, ActionVoteStarted, ReasonVote, fmt.Sprintf("required votes: %d", required)))
 	return true, nil
 }

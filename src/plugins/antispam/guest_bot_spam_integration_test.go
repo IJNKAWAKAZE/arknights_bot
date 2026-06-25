@@ -407,7 +407,9 @@ func TestGuestSpamIntegrationVotePassedBlacklistsAndClearsVote(t *testing.T) {
 		CreatedAt:         time.Now(),
 		ExpiresAt:         time.Now().Add(10 * time.Minute),
 	}
-	SaveVote(vote)
+	if err := SaveVote(vote); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	ApplyVotePassedState(vote)
 
 	if _, ok := GetVote(vote.ID); ok {
@@ -471,6 +473,152 @@ func TestGuestSpamIntegrationGuestSpamHandleCandidatesAndStartVote(t *testing.T)
 	}
 	if len(voteIDs(t)) != 1 {
 		t.Fatalf("vote dirty ids = %v, want one vote", voteIDs(t))
+	}
+}
+
+func TestGuestSpamIntegrationRecentCandidatesReloadPerChatNotGlobalLimit(t *testing.T) {
+	db := setupGuestSpamIntegration(t)
+	targetChatID := int64(-100500)
+	now := time.Now().Truncate(time.Second)
+
+	target := SpamLog{
+		ID:             "target-recent-candidate",
+		ChatID:         targetChatID,
+		ChatName:       "Target Chat",
+		MessageID:      777001,
+		GuestBotID:     997001,
+		GuestBotName:   "Target Candidate Bot",
+		GuestBotUser:   "target_candidate_bot",
+		CallerUserID:   887001,
+		CallerUserName: "Target Caller",
+		Action:         ActionGuestSeen,
+		Reason:         ReasonTrusted,
+		CreateTime:     now.Add(-23 * time.Hour),
+		UpdateTime:     now.Add(-23 * time.Hour),
+	}
+	if err := db.Create(&target).Error; err != nil {
+		t.Fatalf("create target log: %v", err)
+	}
+
+	noise := make([]SpamLog, 0, 1000)
+	for i := 0; i < 1000; i++ {
+		noise = append(noise, SpamLog{
+			ID:           fmt.Sprintf("noise-recent-%04d", i),
+			ChatID:       int64(-200000 - i),
+			ChatName:     "Busy Chat",
+			MessageID:    800000 + i,
+			GuestBotID:   int64(998000 + i),
+			GuestBotName: "Busy Candidate Bot",
+			GuestBotUser: fmt.Sprintf("busy_candidate_%04d_bot", i),
+			Action:       ActionGuestSeen,
+			Reason:       ReasonTrusted,
+			CreateTime:   now.Add(-time.Duration(i) * time.Second),
+			UpdateTime:   now.Add(-time.Duration(i) * time.Second),
+		})
+	}
+	if err := db.Create(&noise).Error; err != nil {
+		t.Fatalf("create noise logs: %v", err)
+	}
+
+	clearGuestSpamRedis(t)
+	if err := LoadCacheFromDB(); err != nil {
+		t.Fatalf("load cache from db: %v", err)
+	}
+
+	recents := RecentGuestMessages(targetChatID)
+	if len(recents) != 1 {
+		t.Fatalf("recent candidates = %+v, want target candidate", recents)
+	}
+	if recents[0].MessageID != target.MessageID || recents[0].GuestBotID != target.GuestBotID {
+		t.Fatalf("recent candidate = %+v, want message %d bot %d", recents[0], target.MessageID, target.GuestBotID)
+	}
+}
+
+func TestGuestSpamIntegrationRecentCandidatesFallbackDedupesBeyondInitialPage(t *testing.T) {
+	db := setupGuestSpamIntegration(t)
+	targetChatID := int64(-100501)
+	now := time.Now().Truncate(time.Second)
+
+	dupCount := recentMessageLimit * 12
+	if dupCount < recentMessageLimit {
+		dupCount = recentMessageLimit
+	}
+	uniqueCount := recentMessageLimit - 1
+	if uniqueCount < 1 {
+		uniqueCount = 1
+	}
+
+	rows := make([]SpamLog, 0, dupCount+uniqueCount)
+	for i := 0; i < dupCount; i++ {
+		ts := now.Add(-time.Duration(i) * time.Second)
+		rows = append(rows, SpamLog{
+			ID:             fmt.Sprintf("dup-target-%03d", i),
+			ChatID:         targetChatID,
+			ChatName:       "Target Chat",
+			MessageID:      888001,
+			GuestBotID:     997101,
+			GuestBotName:   "Duplicate Candidate Bot",
+			GuestBotUser:   "duplicate_candidate_bot",
+			CallerUserID:   887101,
+			CallerUserName: "Target Caller",
+			Action:         ActionGuestSeen,
+			Reason:         ReasonTrusted,
+			CreateTime:     ts,
+			UpdateTime:     ts,
+		})
+	}
+	for i := 0; i < uniqueCount; i++ {
+		ts := now.Add(-time.Duration(dupCount+i+1) * time.Second)
+		rows = append(rows, SpamLog{
+			ID:             fmt.Sprintf("unique-target-%03d", i),
+			ChatID:         targetChatID,
+			ChatName:       "Target Chat",
+			MessageID:      888100 + i,
+			GuestBotID:     997200 + int64(i),
+			GuestBotName:   fmt.Sprintf("Unique Candidate Bot %d", i),
+			GuestBotUser:   fmt.Sprintf("unique_candidate_%03d_bot", i),
+			CallerUserID:   887200 + int64(i),
+			CallerUserName: fmt.Sprintf("Unique Caller %d", i),
+			Action:         ActionGuestSeen,
+			Reason:         ReasonTrusted,
+			CreateTime:     ts,
+			UpdateTime:     ts,
+		})
+	}
+	if err := db.Create(&rows).Error; err != nil {
+		t.Fatalf("create duplicate and unique logs: %v", err)
+	}
+
+	clearGuestSpamRedis(t)
+	if err := LoadCacheFromDB(); err != nil {
+		t.Fatalf("load cache from db: %v", err)
+	}
+
+	recents := RecentGuestMessages(targetChatID)
+	if len(recents) != recentMessageLimit {
+		t.Fatalf("recent candidates len = %d, want %d", len(recents), recentMessageLimit)
+	}
+	if recents[0].MessageID != 888001 {
+		t.Fatalf("first recent candidate = %+v, want duplicate candidate first", recents[0])
+	}
+	for i := 1; i < len(recents); i++ {
+		wantID := 888100 + i - 1
+		if recents[i].MessageID != wantID {
+			t.Fatalf("recent candidate[%d] = %+v, want message %d", i, recents[i], wantID)
+		}
+		if recents[i-1].SeenAt.Before(recents[i].SeenAt) {
+			t.Fatalf("recent candidates not newest-first at %d: %+v before %+v", i, recents[i-1], recents[i])
+		}
+	}
+
+	warmed := RecentGuestMessages(targetChatID)
+	if len(warmed) != len(recents) {
+		t.Fatalf("warmed recent candidates len = %d, want %d", len(warmed), len(recents))
+	}
+	for i := range recents {
+		if warmed[i].MessageID != recents[i].MessageID || warmed[i].GuestBotID != recents[i].GuestBotID || !warmed[i].SeenAt.Equal(recents[i].SeenAt) {
+			t.Fatalf("warmed recent candidate[%d] = %+v, want %+v", i, warmed[i], recents[i])
+		}
 	}
 }
 
@@ -594,7 +742,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("bad callback data: %v", err)
 	}
 
-	SaveVote(SpamVote{ID: "unknown-action", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 1})
+	if err := SaveVote(SpamVote{ID: "unknown-action", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 1}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("unknown-cb", "guestspam_vote,wat,unknown-action", 7001)}); err != nil {
 		t.Fatalf("unknown action callback: %v", err)
 	}
@@ -603,7 +753,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("unknown action vote = %+v ok=%v, want unchanged", vote, ok)
 	}
 
-	SaveVote(SpamVote{ID: "cancel-vote", ChatID: integrationChatID, StarterUserID: 7001, ExpiresAt: time.Now().Add(time.Hour)})
+	if err := SaveVote(SpamVote{ID: "cancel-vote", ChatID: integrationChatID, StarterUserID: 7001, ExpiresAt: time.Now().Add(time.Hour)}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("cancel-cb", "guestspam_vote,cancel,cancel-vote", 7001)}); err != nil {
 		t.Fatalf("cancel callback: %v", err)
 	}
@@ -614,7 +766,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("cancel callbacks=%+v deletes=%+v", fake.callbacks, fake.callbackDelete)
 	}
 
-	SaveVote(SpamVote{ID: "cancel-denied", ChatID: integrationChatID, StarterUserID: 7001, ExpiresAt: time.Now().Add(time.Hour)})
+	if err := SaveVote(SpamVote{ID: "cancel-denied", ChatID: integrationChatID, StarterUserID: 7001, ExpiresAt: time.Now().Add(time.Hour)}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	fake.callbacks = nil
 	fake.callbackDelete = nil
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("cancel-denied-cb", "guestspam_vote,cancel,cancel-denied", 7002)}); err != nil {
@@ -648,7 +802,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("expired callbacks=%+v", fake.callbacks)
 	}
 
-	SaveVote(SpamVote{ID: "bot-vote", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2})
+	if err := SaveVote(SpamVote{ID: "bot-vote", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	fake.callbacks = nil
 	botVoteCallback := voteCallback("bot-cb", "guestspam_vote,vote,bot-vote", 0)
 	botVoteCallback.From.IsBot = true
@@ -659,7 +815,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("bot callbacks=%+v", fake.callbacks)
 	}
 
-	SaveVote(SpamVote{ID: "dup-vote", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2, Voters: []int64{7001}})
+	if err := SaveVote(SpamVote{ID: "dup-vote", ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2, Voters: []int64{7001}}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	fake.callbacks = nil
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("dup-cb", "guestspam_vote,vote,dup-vote", 7001)}); err != nil {
 		t.Fatalf("duplicate vote callback: %v", err)
@@ -669,7 +827,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 	}
 
 	writeActiveUsers(integrationChatID, time.Now(), 7001)
-	SaveVote(SpamVote{ID: "partial-vote", ChatID: integrationChatID, ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2})
+	if err := SaveVote(SpamVote{ID: "partial-vote", ChatID: integrationChatID, ExpiresAt: time.Now().Add(time.Hour), RequiredVoteCount: 2}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	fake.callbacks = nil
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("partial-cb", "guestspam_vote,vote,partial-vote", 7001)}); err != nil {
 		t.Fatalf("partial vote callback: %v", err)
@@ -683,7 +843,7 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 	}
 
 	writeActiveUsers(integrationChatID, time.Now(), 7002)
-	SaveVote(SpamVote{
+	if err := SaveVote(SpamVote{
 		ID:                "pass-vote",
 		ChatID:            integrationChatID,
 		ChatName:          "Guest Spam Test",
@@ -694,7 +854,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		ExpiresAt:         time.Now().Add(time.Hour),
 		RequiredVoteCount: 2,
 		Voters:            []int64{7001},
-	})
+	}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	fake.callbacks = nil
 	fake.callbackDelete = nil
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("pass-cb", "guestspam_vote,vote,pass-vote", 7002)}); err != nil {
@@ -710,7 +872,7 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		t.Fatalf("pass deletes=%+v callbacks=%+v callbackDeletes=%+v", fake.deletes, fake.callbacks, fake.callbackDelete)
 	}
 
-	SaveVote(SpamVote{
+	if err := SaveVote(SpamVote{
 		ID:                "pass-vote-delete-failed",
 		ChatID:            integrationChatID,
 		ChatName:          "Guest Spam Test",
@@ -721,7 +883,9 @@ func TestGuestSpamIntegrationSpamVoteCallbackPaths(t *testing.T) {
 		ExpiresAt:         time.Now().Add(time.Hour),
 		RequiredVoteCount: 2,
 		Voters:            []int64{7001},
-	})
+	}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	fake.deleteErr = errTelegram()
 	fake.deletes = nil
 	fake.callbacks = nil
@@ -751,12 +915,14 @@ func TestGuestSpamIntegrationSpamVoteWeightTiers(t *testing.T) {
 	setupGuestSpamIntegration(t)
 	fake := useFakeTelegram(t)
 
-	SaveVote(SpamVote{
+	if err := SaveVote(SpamVote{
 		ID:                "inactive-vote",
 		ChatID:            integrationChatID,
 		ExpiresAt:         time.Now().Add(time.Hour),
 		RequiredVoteCount: 1,
-	})
+	}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("inactive-cb", "guestspam_vote,vote,inactive-vote", 7101)}); err != nil {
 		t.Fatalf("inactive vote callback: %v", err)
 	}
@@ -773,7 +939,7 @@ func TestGuestSpamIntegrationSpamVoteWeightTiers(t *testing.T) {
 	fake.admins[7104] = true
 	fake.callbacks = nil
 
-	SaveVote(SpamVote{
+	if err := SaveVote(SpamVote{
 		ID:                "weighted-vote",
 		ChatID:            integrationChatID,
 		ChatName:          "Guest Spam Test",
@@ -783,7 +949,9 @@ func TestGuestSpamIntegrationSpamVoteWeightTiers(t *testing.T) {
 		GuestBotUserName:  "weighted_bot",
 		ExpiresAt:         time.Now().Add(time.Hour),
 		RequiredVoteCount: activeVoteWeight + trustedVoteWeight + adminVoteWeight,
-	})
+	}); err != nil {
+		t.Fatalf("save vote: %v", err)
+	}
 
 	if err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: voteCallback("active-cb", "guestspam_vote,vote,weighted-vote", 7102)}); err != nil {
 		t.Fatalf("active vote callback: %v", err)

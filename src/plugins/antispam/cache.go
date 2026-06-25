@@ -43,7 +43,9 @@ func LoadCacheFromDB() error {
 	}
 	activeCutoff := activeWindowCutoff(time.Now())
 	for _, risk := range risks {
-		setJSON(memberRiskKey(risk.ChatID, risk.UserID), risk, riskTTL)
+		if err := setJSON(memberRiskKey(risk.ChatID, risk.UserID), risk, riskTTL); err != nil {
+			log.Printf("guest spam: restore member risk failed: %v", err)
+		}
 		if !risk.LastMessageAt.IsZero() && float64(risk.LastMessageAt.Unix()) >= activeCutoff {
 			if err := bot.GoRedis.ZAdd(redisCtx, activeUsersKey(risk.ChatID), &redis.Z{
 				Score:  float64(risk.LastMessageAt.Unix()),
@@ -71,34 +73,6 @@ func LoadCacheFromDB() error {
 	}
 	for i := len(logs) - 1; i >= 0; i-- {
 		cacheLog(logs[i], false)
-	}
-	recentSeen := make(map[string]struct{})
-	recentItems := make([]RecentGuestMessage, 0, len(logs))
-	for _, item := range logs {
-		if item.MessageID == 0 || item.GuestBotID == 0 {
-			continue
-		}
-		key := fmt.Sprintf("%d:%d", item.ChatID, item.MessageID)
-		if _, ok := recentSeen[key]; ok {
-			continue
-		}
-		recentSeen[key] = struct{}{}
-		recentItems = append(recentItems, RecentGuestMessage{
-			ChatID:           item.ChatID,
-			ChatName:         item.ChatName,
-			MessageID:        item.MessageID,
-			GuestBotID:       item.GuestBotID,
-			GuestBotName:     item.GuestBotName,
-			GuestBotUserName: item.GuestBotUser,
-			CallerUserID:     item.CallerUserID,
-			CallerUserName:   item.CallerUserName,
-			CallerChatID:     item.CallerChatID,
-			CallerChatName:   item.CallerChatName,
-			SeenAt:           item.CreateTime,
-		})
-	}
-	for i := len(recentItems) - 1; i >= 0; i-- {
-		cacheRecentGuestMessage(recentItems[i])
 	}
 	return nil
 }
@@ -435,6 +409,16 @@ func RecordRecentGuestMessage(message RecentGuestMessage) {
 }
 
 func RecentGuestMessages(chatID int64) []RecentGuestMessage {
+	if result := recentGuestMessagesFromRedis(chatID); len(result) > 0 {
+		return result
+	}
+	if bot.DBEngine == nil {
+		return nil
+	}
+	return loadRecentGuestMessagesFromDB(chatID)
+}
+
+func recentGuestMessagesFromRedis(chatID int64) []RecentGuestMessage {
 	if bot.GoRedis == nil {
 		return nil
 	}
@@ -449,6 +433,52 @@ func RecentGuestMessages(chatID int64) []RecentGuestMessage {
 		if err := json.Unmarshal([]byte(raw), &item); err == nil {
 			result = append(result, item)
 		}
+	}
+	return result
+}
+
+func loadRecentGuestMessagesFromDB(chatID int64) []RecentGuestMessage {
+	if bot.DBEngine == nil || chatID == 0 {
+		return nil
+	}
+	cutoff := time.Now().Add(-recentMessageTTL)
+	pageSize := recentMessageLimit * 10
+	if pageSize < recentMessageLimit {
+		pageSize = recentMessageLimit
+	}
+	seen := make(map[string]struct{}, recentMessageLimit)
+	result := make([]RecentGuestMessage, 0, recentMessageLimit)
+	for offset := 0; len(result) < recentMessageLimit; offset += pageSize {
+		var logs []SpamLog
+		if err := bot.DBEngine.
+			Where("chat_id = ? and create_time >= ? and message_id <> 0 and guest_bot_id <> 0", chatID, cutoff).
+			Order("create_time desc, id desc").
+			Offset(offset).
+			Limit(pageSize).
+			Find(&logs).Error; err != nil {
+			log.Printf("guest spam: load recent messages failed: %v", err)
+			return nil
+		}
+		if len(logs) == 0 {
+			break
+		}
+		for _, recent := range recentItemsFromLogs(logs, recentMessageLimit) {
+			key := fmt.Sprintf("%d:%d", recent.ChatID, recent.MessageID)
+			if _, exists := seen[key]; exists {
+				continue
+			}
+			seen[key] = struct{}{}
+			result = append(result, recent)
+			if len(result) >= recentMessageLimit {
+				break
+			}
+		}
+		if len(logs) < pageSize {
+			break
+		}
+	}
+	for i := len(result) - 1; i >= 0; i-- {
+		cacheRecentGuestMessage(result[i])
 	}
 	return result
 }
@@ -499,18 +529,30 @@ func IsTrustedMember(chatID, userID int64) bool {
 	return isTrustedRisk(risk)
 }
 
-func SaveVote(vote SpamVote) {
+func SaveVote(vote SpamVote) error {
 	if bot.GoRedis == nil {
-		return
+		return errors.New("guest spam redis is not initialized")
 	}
 	if vote.ID == "" {
-		vote.ID, _ = gonanoid.New(16)
+		id, err := gonanoid.New(16)
+		if err != nil {
+			return err
+		}
+		vote.ID = id
 	}
 	if vote.VoteScore == 0 && len(vote.Voters) > 0 {
 		vote.VoteScore = len(vote.Voters)
 	}
-	setJSON(voteKey(vote.ID), vote, voteTTL)
-	bot.GoRedis.SAdd(redisCtx, voteDirtySetKey(), vote.ID)
+	if err := setJSON(voteKey(vote.ID), vote, voteTTL); err != nil {
+		return err
+	}
+	if err := bot.GoRedis.SAdd(redisCtx, voteDirtySetKey(), vote.ID).Err(); err != nil {
+		if rollbackErr := rollbackVote(vote.ID); rollbackErr != nil {
+			return fmt.Errorf("save vote dirty set failed: %w; rollback failed: %v", err, rollbackErr)
+		}
+		return err
+	}
+	return nil
 }
 
 func GetVote(voteID string) (SpamVote, bool) {
@@ -534,6 +576,19 @@ func DeleteVote(voteID string) {
 	}
 	bot.GoRedis.Del(redisCtx, voteKey(voteID))
 	bot.GoRedis.SRem(redisCtx, voteDirtySetKey(), voteID)
+}
+
+func rollbackVote(voteID string) error {
+	if bot.GoRedis == nil {
+		return errors.New("guest spam redis is not initialized")
+	}
+	pipe := bot.GoRedis.TxPipeline()
+	pipe.Del(redisCtx, voteKey(voteID))
+	pipe.SRem(redisCtx, voteDirtySetKey(), voteID)
+	if _, err := pipe.Exec(redisCtx); err != nil && err != redis.Nil {
+		return fmt.Errorf("rollback vote failed: %w", err)
+	}
+	return nil
 }
 
 func AddLog(item SpamLog) {
@@ -581,7 +636,9 @@ func cacheBlacklist(item GuestBotBlacklist, dirty bool) {
 	if bot.GoRedis == nil || item.BotID == 0 {
 		return
 	}
-	setJSON(blacklistBotKey(item.BotID), item, blacklistCacheTTL)
+	if err := setJSON(blacklistBotKey(item.BotID), item, blacklistCacheTTL); err != nil {
+		log.Printf("guest spam: cache blacklist failed: %v", err)
+	}
 	bot.GoRedis.SAdd(redisCtx, blacklistSetKey(), item.BotID)
 	if dirty {
 		bot.GoRedis.SAdd(redisCtx, blacklistDirtySetKey(), item.BotID)
@@ -632,6 +689,49 @@ func cacheRecentGuestMessage(message RecentGuestMessage) {
 	bot.GoRedis.Expire(redisCtx, key, recentMessageTTL)
 }
 
+func recentFromLog(item SpamLog) (RecentGuestMessage, bool) {
+	if item.MessageID == 0 || item.GuestBotID == 0 {
+		return RecentGuestMessage{}, false
+	}
+	return RecentGuestMessage{
+		ChatID:           item.ChatID,
+		ChatName:         item.ChatName,
+		MessageID:        item.MessageID,
+		GuestBotID:       item.GuestBotID,
+		GuestBotName:     item.GuestBotName,
+		GuestBotUserName: item.GuestBotUser,
+		CallerUserID:     item.CallerUserID,
+		CallerUserName:   item.CallerUserName,
+		CallerChatID:     item.CallerChatID,
+		CallerChatName:   item.CallerChatName,
+		SeenAt:           item.CreateTime,
+	}, true
+}
+
+func recentItemsFromLogs(logs []SpamLog, limit int) []RecentGuestMessage {
+	if limit <= 0 {
+		limit = recentMessageLimit
+	}
+	seen := make(map[string]struct{}, len(logs))
+	items := make([]RecentGuestMessage, 0, min(limit, len(logs)))
+	for _, item := range logs {
+		recent, ok := recentFromLog(item)
+		if !ok {
+			continue
+		}
+		key := fmt.Sprintf("%d:%d", recent.ChatID, recent.MessageID)
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		items = append(items, recent)
+		if len(items) >= limit {
+			break
+		}
+	}
+	return items
+}
+
 func getMemberRisk(chatID, userID int64) (MemberRisk, bool) {
 	var risk MemberRisk
 	if getJSON(memberRiskKey(chatID, userID), &risk) {
@@ -643,7 +743,9 @@ func getMemberRisk(chatID, userID int64) (MemberRisk, bool) {
 	if err := bot.DBEngine.Where("chat_id = ? and user_id = ?", chatID, userID).First(&risk).Error; err != nil {
 		return risk, false
 	}
-	setJSON(memberRiskKey(chatID, userID), risk, riskTTL)
+	if err := setJSON(memberRiskKey(chatID, userID), risk, riskTTL); err != nil {
+		log.Printf("guest spam: cache member risk failed: %v", err)
+	}
 	return risk, true
 }
 
@@ -651,7 +753,9 @@ func setMemberRisk(risk MemberRisk, dirty bool) {
 	if bot.GoRedis == nil {
 		return
 	}
-	setJSON(memberRiskKey(risk.ChatID, risk.UserID), risk, riskTTL)
+	if err := setJSON(memberRiskKey(risk.ChatID, risk.UserID), risk, riskTTL); err != nil {
+		log.Printf("guest spam: cache member risk failed: %v", err)
+	}
 	if dirty {
 		bot.GoRedis.SAdd(redisCtx, memberDirtySetKey(), fmt.Sprintf("%d:%d", risk.ChatID, risk.UserID))
 	}
@@ -687,11 +791,11 @@ func isTrustedRisk(risk MemberRisk) bool {
 	return isTrustedRiskAt(risk, time.Now())
 }
 
-func setJSON(key string, val any, expiration time.Duration) {
+func setJSON(key string, val any, expiration time.Duration) error {
 	if bot.GoRedis == nil {
-		return
+		return errors.New("guest spam redis is not initialized")
 	}
-	bot.GoRedis.Set(redisCtx, key, marshalString(val), expiration)
+	return bot.GoRedis.Set(redisCtx, key, marshalString(val), expiration).Err()
 }
 
 func getJSON(key string, val any) bool {

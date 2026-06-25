@@ -11,6 +11,7 @@ import (
 
 	bot "arknights_bot/config"
 	"github.com/alicebob/miniredis/v2"
+	"github.com/alicebob/miniredis/v2/server"
 	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
@@ -450,6 +451,227 @@ func TestApplyVotePassedWritesDeleteMessageLogOnSuccess(t *testing.T) {
 	}
 }
 
+func TestSaveVoteReturnsRedisError(t *testing.T) {
+	mini := setupGuestSpamRedisOnlyForUnitTest(t)
+	mini.Server().SetPreHook(func(peer *server.Peer, cmd string, args ...string) bool {
+		if cmd == "SADD" && len(args) >= 2 && args[0] == voteDirtySetKey() {
+			peer.WriteError("ERR injected redis failure")
+			return true
+		}
+		return false
+	})
+	t.Cleanup(func() {
+		mini.Server().SetPreHook(nil)
+	})
+
+	if err := SaveVote(SpamVote{
+		ID:                "redis-down-vote",
+		ChatID:            testIntegrationChatID,
+		MessageID:         601,
+		GuestBotID:        996001,
+		RequiredVoteCount: 2,
+		ExpiresAt:         time.Now().Add(10 * time.Minute),
+	}); err == nil {
+		t.Fatal("SaveVote should return redis error")
+	}
+	if _, err := bot.GoRedis.Get(redisCtx, voteKey("redis-down-vote")).Result(); err != redis.Nil {
+		t.Fatalf("vote key should be removed, got err=%v", err)
+	}
+}
+
+func TestStartSpamVoteDoesNotSendWhenSaveVoteFails(t *testing.T) {
+	mini := setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+	for _, userID := range []int64{1, 2, 3} {
+		writeActiveUsers(testIntegrationChatID, time.Now(), userID)
+	}
+
+	mini.Server().SetPreHook(func(peer *server.Peer, cmd string, args ...string) bool {
+		if cmd == "SADD" && len(args) >= 2 && args[0] == voteDirtySetKey() {
+			peer.WriteError("ERR injected redis failure")
+			return true
+		}
+		return false
+	})
+	t.Cleanup(func() {
+		mini.Server().SetPreHook(nil)
+	})
+
+	started, err := startSpamVote(&tgbotapi.Message{
+		MessageID: 7001,
+		Chat:      &tgbotapi.Chat{ID: testIntegrationChatID, Type: "supergroup", Title: "Guest Spam Test"},
+		From:      &tgbotapi.User{ID: 9001, FirstName: "Starter"},
+	}, RecentGuestMessage{
+		ChatID:           testIntegrationChatID,
+		ChatName:         "Guest Spam Test",
+		MessageID:        601,
+		GuestBotID:       996001,
+		GuestBotName:     "Redis Down Bot",
+		GuestBotUserName: "redis_down_bot",
+	})
+	if err == nil {
+		t.Fatal("startSpamVote should return save error")
+	}
+	if started {
+		t.Fatal("startSpamVote should not report started when save fails")
+	}
+	if len(fake.sends) != 0 {
+		t.Fatalf("sends = %+v, want no vote message when first save fails", fake.sends)
+	}
+}
+
+func TestSaveVoteRollsBackVoteKeyWhenDirtySetFails(t *testing.T) {
+	mini := setupGuestSpamRedisOnlyForUnitTest(t)
+	mini.Server().SetPreHook(func(peer *server.Peer, cmd string, args ...string) bool {
+		if cmd == "SADD" && len(args) >= 2 && args[0] == voteDirtySetKey() {
+			peer.WriteError("ERR injected redis failure")
+			return true
+		}
+		return false
+	})
+	t.Cleanup(func() {
+		mini.Server().SetPreHook(nil)
+	})
+
+	vote := SpamVote{
+		ID:                "dirty-set-fail-vote",
+		ChatID:            testIntegrationChatID,
+		MessageID:         602,
+		GuestBotID:        996002,
+		RequiredVoteCount: 2,
+		ExpiresAt:         time.Now().Add(10 * time.Minute),
+	}
+	if err := SaveVote(vote); err == nil {
+		t.Fatal("SaveVote should return dirty-set error")
+	}
+	if _, err := bot.GoRedis.Get(redisCtx, voteKey(vote.ID)).Result(); err != redis.Nil {
+		t.Fatalf("vote key should be rolled back, got err=%v", err)
+	}
+	if ok, err := bot.GoRedis.SIsMember(redisCtx, voteDirtySetKey(), vote.ID).Result(); err != nil {
+		t.Fatalf("read dirty set: %v", err)
+	} else if ok {
+		t.Fatal("vote ID should be removed from dirty set after rollback")
+	}
+}
+
+func TestStartSpamVoteCleansUpMessageWhenSecondSaveFails(t *testing.T) {
+	mini := setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+	for _, userID := range []int64{1, 2, 3} {
+		writeActiveUsers(testIntegrationChatID, time.Now(), userID)
+	}
+
+	firstSaveOK := false
+	mini.Server().SetPreHook(func(peer *server.Peer, cmd string, args ...string) bool {
+		if cmd == "SADD" && len(args) >= 2 && args[0] == voteDirtySetKey() {
+			if !firstSaveOK {
+				firstSaveOK = true
+				return false
+			}
+			peer.WriteError("ERR injected redis failure")
+			return true
+		}
+		return false
+	})
+	fake.beforeSend = func() {
+		mini.Server().SetPreHook(func(_ *server.Peer, cmd string, args ...string) bool {
+			return cmd == "SADD" && len(args) >= 2 && args[0] == voteDirtySetKey()
+		})
+	}
+	t.Cleanup(func() {
+		fake.beforeSend = nil
+		mini.Server().SetPreHook(nil)
+	})
+
+	started, err := startSpamVote(&tgbotapi.Message{
+		MessageID: 7001,
+		Chat:      &tgbotapi.Chat{ID: testIntegrationChatID, Type: "supergroup", Title: "Guest Spam Test"},
+		From:      &tgbotapi.User{ID: 9001, FirstName: "Starter"},
+	}, RecentGuestMessage{
+		ChatID:           testIntegrationChatID,
+		ChatName:         "Guest Spam Test",
+		MessageID:        603,
+		GuestBotID:       996003,
+		GuestBotName:     "Second Save Fail Bot",
+		GuestBotUserName: "second_save_fail_bot",
+	})
+	if err == nil {
+		t.Fatal("startSpamVote should return second save error")
+	}
+	if started {
+		t.Fatal("startSpamVote should not report started when second save fails")
+	}
+	if len(fake.sends) != 1 {
+		t.Fatalf("sends = %+v, want one vote message sent before failure", fake.sends)
+	}
+	if len(fake.deletes) != 1 {
+		t.Fatalf("deletes = %+v, want sent vote message deleted on second save failure", fake.deletes)
+	}
+	if hasLogAction(RecentLogs(testIntegrationChatID, 10), ActionVoteStarted) {
+		t.Fatalf("logs should not contain ActionVoteStarted on second save failure: %+v", RecentLogs(testIntegrationChatID, 10))
+	}
+	if _, err := bot.GoRedis.Get(redisCtx, voteKey("second-save-fail-vote")).Result(); err != redis.Nil {
+		t.Fatalf("vote key should be removed after second save failure, got err=%v", err)
+	}
+}
+
+func TestSpamVoteCallbackReportsSaveFailure(t *testing.T) {
+	mini := setupGuestSpamRedisOnlyForUnitTest(t)
+	fake := useFakeTelegram(t)
+	for _, userID := range []int64{1, 2, 3} {
+		writeActiveUsers(testIntegrationChatID, time.Now(), userID)
+	}
+
+	vote := SpamVote{
+		ID:                "callback-save-fail",
+		ChatID:            testIntegrationChatID,
+		ChatName:          "Guest Spam Test",
+		MessageID:         604,
+		GuestBotID:        996004,
+		GuestBotName:      "Callback Save Fail Bot",
+		GuestBotUserName:  "callback_save_fail_bot",
+		StarterUserID:     9001,
+		StarterUserName:   "Starter",
+		ActiveUserCount:   3,
+		RequiredVoteCount: 2,
+		Voters:            []int64{},
+		ExpiresAt:         time.Now().Add(10 * time.Minute),
+	}
+	if err := SaveVote(vote); err != nil {
+		t.Fatalf("seed vote: %v", err)
+	}
+
+	mini.Server().SetPreHook(func(peer *server.Peer, cmd string, args ...string) bool {
+		if cmd == "SADD" && len(args) >= 2 && args[0] == voteDirtySetKey() {
+			peer.WriteError("ERR injected redis failure")
+			return true
+		}
+		return false
+	})
+	t.Cleanup(func() {
+		mini.Server().SetPreHook(nil)
+	})
+
+	callback := unitTestVoteCallback("callback-save-fail-cb", "guestspam_vote,vote,callback-save-fail", 7001)
+	writeActiveUserScore(testIntegrationChatID, 7001, time.Now())
+	fake.callbacks = nil
+	err := SpamVoteCallback(tgbotapi.Update{CallbackQuery: callback})
+	if err == nil {
+		t.Fatal("SpamVoteCallback should return save error")
+	}
+	if len(fake.callbacks) != 1 || !fake.callbacks[0].showAlert || fake.callbacks[0].text != "保存投票失败，请稍后重试" {
+		t.Fatalf("callbacks = %+v, want save failure alert", fake.callbacks)
+	}
+	if _, err := bot.GoRedis.Get(redisCtx, voteKey(vote.ID)).Result(); err != redis.Nil {
+		t.Fatalf("vote key should be rolled back, got err=%v", err)
+	}
+	if ok, err := bot.GoRedis.SIsMember(redisCtx, voteDirtySetKey(), vote.ID).Result(); err != nil {
+		t.Fatalf("read dirty set: %v", err)
+	} else if ok {
+		t.Fatal("vote ID should be removed from dirty set after callback save failure")
+	}
+}
+
 func TestRestoreCallerSuccessUnbansBeforeUnrestrictAndClearsWarnings(t *testing.T) {
 	setupGuestSpamRedisOnlyForUnitTest(t)
 	fake := useFakeTelegram(t)
@@ -613,7 +835,7 @@ func writeActiveUsers(chatID int64, when time.Time, userIDs ...int64) {
 
 const testIntegrationChatID = int64(-100100)
 
-func setupGuestSpamRedisOnlyForUnitTest(t *testing.T) {
+func setupGuestSpamRedisOnlyForUnitTest(t *testing.T) *miniredis.Miniredis {
 	t.Helper()
 	mini := miniredis.RunT(t)
 
@@ -626,11 +848,14 @@ func setupGuestSpamRedisOnlyForUnitTest(t *testing.T) {
 	}
 	clearActiveUserTestRedis(t)
 	t.Cleanup(func() {
-		clearActiveUserTestRedis(t)
-		_ = bot.GoRedis.Close()
+		if bot.GoRedis != nil {
+			clearActiveUserTestRedis(t)
+			_ = bot.GoRedis.Close()
+		}
 		bot.GoRedis = nil
 		mini.Close()
 	})
+	return mini
 }
 
 func clearActiveUserTestRedis(t *testing.T) {
@@ -663,5 +888,24 @@ func trackableGuestSpamMessage(userID int64, text string) *tgbotapi.Message {
 			UserName:  fmt.Sprintf("user_%d", userID),
 		},
 		Text: text,
+	}
+}
+
+func unitTestVoteCallback(id string, data string, userID int64) *tgbotapi.CallbackQuery {
+	return &tgbotapi.CallbackQuery{
+		ID:   id,
+		Data: data,
+		From: &tgbotapi.User{
+			ID:        userID,
+			FirstName: "Voter",
+		},
+		Message: &tgbotapi.Message{
+			MessageID: 9002,
+			Chat: &tgbotapi.Chat{
+				ID:    testIntegrationChatID,
+				Type:  "supergroup",
+				Title: "Guest Spam Test",
+			},
+		},
 	}
 }
