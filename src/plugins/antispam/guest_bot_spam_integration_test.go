@@ -1133,6 +1133,110 @@ func TestGuestSpamIntegrationRestoreClearsWarnings(t *testing.T) {
 	}
 }
 
+func TestGuestSpamIntegrationMessagePathGuestBotSpam(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	fake := useFakeTelegram(t)
+
+	guestBotID := int64(995001)
+	callerID := int64(886001)
+
+	// Construct path B update: update.Message with embedded GuestBotCallerUser
+	update := tgbotapi.Update{
+		Message: &tgbotapi.Message{
+			MessageID: 5001,
+			Chat: &tgbotapi.Chat{
+				ID:    integrationChatID,
+				Type:  "supergroup",
+				Title: "Guest Spam Test",
+			},
+			From: &tgbotapi.User{
+				ID:        guestBotID,
+				IsBot:     true,
+				FirstName: "Message Path Bot",
+				UserName:  "message_path_bot",
+			},
+			GuestBotCallerUser: &tgbotapi.User{
+				ID:        callerID,
+				FirstName: "Message Path Caller",
+				UserName:  "message_path_caller",
+			},
+			Text: "hello from path B",
+		},
+	}
+
+	// Step 1: CheckGuestBotSpam must detect it
+	if !CheckGuestBotSpam(update) {
+		t.Fatal("CheckGuestBotSpam should detect path B message")
+	}
+
+	// Step 2: GuestBotSpamHandle must process it (delete, blacklist, warn)
+	if err := GuestBotSpamHandle(update); err != nil {
+		t.Fatalf("GuestBotSpamHandle: %v", err)
+	}
+
+	// Step 3: Verify Telegram delete was called
+	if len(fake.deletes) != 1 || fake.deletes[0].messageID != 5001 {
+		t.Fatalf("deletes = %+v, want messageID 5001", fake.deletes)
+	}
+
+	// Step 4: Verify bot is now blacklisted
+	if !IsBlacklisted(guestBotID) {
+		t.Fatal("guest bot should be blacklisted after low trust detection")
+	}
+
+	// Step 5: Verify caller warning was recorded (warningCount > 0)
+	risk, ok := getMemberRisk(integrationChatID, callerID)
+	if !ok {
+		t.Fatal("caller risk should exist")
+	}
+	if risk.WarningCount < 1 {
+		t.Fatalf("caller warning count = %d, want >= 1", risk.WarningCount)
+	}
+
+	// Step 6: Verify spam log was recorded
+	logs := RecentLogs(integrationChatID, 10)
+	if len(logs) == 0 {
+		t.Fatal("spam logs should exist after processing path B message")
+	}
+	hasAction := func(action string) bool {
+		for _, item := range logs {
+			if item.Action == action {
+				return true
+			}
+		}
+		return false
+	}
+	if !hasAction(ActionAutoBlacklist) {
+		t.Fatal("spam logs should contain ActionAutoBlacklist")
+	}
+}
+
+func TestGuestSpamIntegrationMessagePathNormalMessageIgnored(t *testing.T) {
+	setupGuestSpamIntegration(t)
+	_ = useFakeTelegram(t)
+
+	// Plain message without guest fields must NOT trigger
+	update := tgbotapi.Update{
+		Message: &tgbotapi.Message{
+			MessageID: 5002,
+			Chat: &tgbotapi.Chat{
+				ID:    integrationChatID,
+				Type:  "supergroup",
+				Title: "Guest Spam Test",
+			},
+			From: &tgbotapi.User{
+				ID:        1001,
+				FirstName: "Normal User",
+			},
+			Text: "hello",
+		},
+	}
+
+	if CheckGuestBotSpam(update) {
+		t.Fatal("normal update.Message must not trigger guest bot spam")
+	}
+}
+
 func setupGuestSpamIntegration(t *testing.T) *gorm.DB {
 	t.Helper()
 	dsn := os.Getenv("GUEST_SPAM_TEST_MYSQL_DSN")

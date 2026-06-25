@@ -77,6 +77,54 @@ func TestCheckGuestBotSpamDisabled(t *testing.T) {
 	}
 }
 
+func TestCheckGuestBotSpamViaMessagePath(t *testing.T) {
+	bot.GuestBotSpamEnabled = true
+	update := tgbotapi.Update{
+		Message: &tgbotapi.Message{
+			MessageID: 1,
+			Chat: &tgbotapi.Chat{
+				ID:   -1001,
+				Type: "supergroup",
+			},
+			From: &tgbotapi.User{
+				ID:        2001,
+				IsBot:     true,
+				FirstName: "Ad Bot",
+			},
+			GuestBotCallerUser: &tgbotapi.User{
+				ID:        1001,
+				FirstName: "Caller",
+			},
+		},
+	}
+
+	if !CheckGuestBotSpam(update) {
+		t.Fatal("update.Message with GuestBotCallerUser must be detected as guest bot spam")
+	}
+}
+
+func TestCheckGuestBotSpamViaMessagePathIgnoresPlainMessage(t *testing.T) {
+	bot.GuestBotSpamEnabled = true
+	update := tgbotapi.Update{
+		Message: &tgbotapi.Message{
+			MessageID: 1,
+			Chat: &tgbotapi.Chat{
+				ID:   -1001,
+				Type: "supergroup",
+			},
+			From: &tgbotapi.User{
+				ID:        1001,
+				FirstName: "User",
+			},
+			Text: "hello",
+		},
+	}
+
+	if CheckGuestBotSpam(update) {
+		t.Fatal("plain update.Message without guest fields must not be detected as guest bot spam")
+	}
+}
+
 func TestIsGuestBotMessageShapes(t *testing.T) {
 	if !isGuestBotMessage(&tgbotapi.Message{GuestBotCallerUser: &tgbotapi.User{ID: 1}}) {
 		t.Fatal("caller user should mark guest bot message")
