@@ -45,6 +45,14 @@ func GuestBotSpamHandle(update tgbotapi.Update) error {
 		if err := deleteGuestMessageWithLog(message, decision.Reason); err != nil {
 			log.Printf("guest spam: delete low trust message failed: %v", err)
 		}
+		// Also delete the caller's triggering message (the one the guest bot replied to)
+		if message.ReplyToMessage != nil && message.GuestBotCallerUser != nil &&
+			message.ReplyToMessage.From != nil &&
+			message.ReplyToMessage.From.ID == message.GuestBotCallerUser.ID {
+			if _, err := guestSpamTelegram.DeleteMessage(message.Chat.ID, message.ReplyToMessage.MessageID); err != nil {
+				log.Printf("guest spam: delete caller message failed: %v", err)
+			}
+		}
 	}
 	if decision.BanCallerUser || decision.BanCallerChat {
 		penalizeBlacklistCaller(message)
