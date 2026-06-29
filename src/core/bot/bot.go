@@ -3,6 +3,7 @@ package bot
 import (
 	bot "arknights_bot/config"
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/antispam"
 	"arknights_bot/plugins/apremind"
 	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
@@ -23,6 +24,8 @@ func Serve() {
 	b := bot.Arknights.AddHandle()
 	bot.Arknights.Debug = viper.GetBool("bot.debug")
 	bot.Arknights.IgnoreChannelCMD = true
+	b.NewObserverProcessor(antispam.CheckNormalActivity, antispam.TrackActivityHandle)
+	b.NewProcessor(antispam.CheckGuestBotSpam, antispam.GuestBotSpamHandle)
 	b.JoinRequestProcessor(gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
@@ -36,6 +39,8 @@ func Serve() {
 	b.NewCallBackProcessor("sign", sign.SignPlayer)
 	b.NewCallBackProcessor("player", player.PlayerData)
 	b.NewCallBackProcessor("report", system.Report)
+	b.NewCallBackProcessor("guestspam_select", antispam.SelectRecentGuestCallback)
+	b.NewCallBackProcessor("guestspam_vote", antispam.SpamVoteCallback)
 
 	// InlineQuery
 	b.NewInlineQueryProcessor("干员", operator.InlineOperator)
@@ -83,6 +88,8 @@ func Serve() {
 	b.NewCommandProcessor("depot", player.PlayerHandle)
 	b.NewCommandProcessor("join_lottery", lottery.JoinLotteryHandle)
 	b.NewCommandProcessor("lottery_detail", lottery.LotteryDetailHandle)
+	b.NewCommandProcessor("guest_spam", antispam.GuestSpamHandle)
+	b.NewCommandProcessor("guest_spam_log", antispam.GuestSpamLogHandle)
 
 	// 图片
 	b.NewPhotoMessageProcessor("/recruit", system.RecruitHandle)

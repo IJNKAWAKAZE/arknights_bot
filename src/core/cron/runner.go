@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"arknights_bot/plugins/antispam"
 	"arknights_bot/plugins/apremind"
 	"arknights_bot/plugins/arknightsnews"
 	"arknights_bot/plugins/birthday"
@@ -54,6 +55,16 @@ func StartCron() error {
 
 	//重置每日寻访次数 0 0 0 * * ?
 	_, err = crontab.AddFunc("0 0 0 * * ?", system.ResetHeadhuntTimes)
+	if err != nil {
+		return err
+	}
+
+	//每日0点10分同步guest spam缓存到数据库 0 10 0 * * ?
+	_, err = crontab.AddFunc("0 10 0 * * ?", func() {
+		if err := antispam.SyncCacheToDB(); err != nil {
+			log.Println("guest spam缓存同步失败", err)
+		}
+	})
 	if err != nil {
 		return err
 	}

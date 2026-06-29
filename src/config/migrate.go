@@ -23,6 +23,21 @@ var userSignMigrations = []migrationColumn{
 			" COMMENT '签到通知模式 0-全部通知 1-仅失败通知 2-仅成功通知'" +
 			" AFTER user_number",
 	},
+	{
+		table:    "user_sign",
+		column:   "ap_remind",
+		alterSQL: "ALTER TABLE user_sign ADD COLUMN ap_remind INT NOT NULL DEFAULT 0 COMMENT '是否开启理智提醒 0-关闭 1-开启' AFTER notify_mode",
+	},
+	{
+		table:    "user_sign",
+		column:   "ap_threshold",
+		alterSQL: "ALTER TABLE user_sign ADD COLUMN ap_threshold INT NOT NULL DEFAULT 80 COMMENT '理智提醒阈值百分比' AFTER ap_remind",
+	},
+	{
+		table:    "user_sign",
+		column:   "ap_notified",
+		alterSQL: "ALTER TABLE user_sign ADD COLUMN ap_notified INT NOT NULL DEFAULT 0 COMMENT '理智提醒是否已通知 0-未通知 1-已通知' AFTER ap_threshold",
+	},
 }
 
 // MigrateDB applies all pending schema migrations to the connected database.
@@ -51,6 +66,9 @@ func MigrateDB() error {
 
 	// Create user_ap_remind table and migrate data from user_sign if needed.
 	if err := migrateApRemindTable(); err != nil {
+		return err
+	}
+	if err := migrateGuestSpamTables(); err != nil {
 		return err
 	}
 
@@ -157,4 +175,92 @@ func columnExists(table, column string) (bool, error) {
 		return false, fmt.Errorf("migrate: checking column %s.%s: %w", table, column, res.Error)
 	}
 	return count > 0, nil
+}
+
+func migrateGuestSpamTables() error {
+	tables := map[string]string{
+		"guest_spam_member_risk": `CREATE TABLE guest_spam_member_risk (
+			id varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+			chat_id bigint NULL DEFAULT NULL,
+			user_id bigint NULL DEFAULT NULL,
+			user_name varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			first_seen_at timestamp(0) NULL DEFAULT NULL,
+			last_message_at timestamp(0) NULL DEFAULT NULL,
+			recent_message_count bigint NULL DEFAULT 0,
+			warning_count bigint NULL DEFAULT 0,
+			mute_level bigint NULL DEFAULT 0,
+			last_penalty_at timestamp(0) NULL DEFAULT NULL,
+			remark varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			create_time timestamp(0) NULL DEFAULT NULL,
+			update_time timestamp(0) NULL DEFAULT NULL,
+			PRIMARY KEY (id) USING BTREE,
+			INDEX idx_guest_spam_member_chat_user (chat_id, user_id)
+		) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'guest spam成员风控状态' ROW_FORMAT = Dynamic`,
+		"guest_spam_member_activity": `CREATE TABLE guest_spam_member_activity (
+			id varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+			chat_id bigint NULL DEFAULT NULL,
+			user_id bigint NULL DEFAULT NULL,
+			activity_day date NOT NULL,
+			message_count bigint NULL DEFAULT 0,
+			remark varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			create_time timestamp(0) NULL DEFAULT NULL,
+			update_time timestamp(0) NULL DEFAULT NULL,
+			PRIMARY KEY (id) USING BTREE,
+			INDEX idx_guest_spam_activity_chat_user_day (chat_id, user_id, activity_day),
+			INDEX idx_guest_spam_activity_day (activity_day)
+		) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'guest spam成员日活跃' ROW_FORMAT = Dynamic`,
+		"guest_spam_bot_blacklist": `CREATE TABLE guest_spam_bot_blacklist (
+			id varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+			bot_id bigint NULL DEFAULT NULL,
+			bot_name varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			bot_user_name varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			source varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			first_chat_id bigint NULL DEFAULT NULL,
+			first_message_id int NULL DEFAULT NULL,
+			first_caller_user_id bigint NULL DEFAULT NULL,
+			first_caller_chat_id bigint NULL DEFAULT NULL,
+			remark varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			create_time timestamp(0) NULL DEFAULT NULL,
+			update_time timestamp(0) NULL DEFAULT NULL,
+			PRIMARY KEY (id) USING BTREE,
+			UNIQUE INDEX uk_guest_spam_bot_id (bot_id)
+		) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'guest spam bot全局黑名单' ROW_FORMAT = Dynamic`,
+		"guest_spam_log": `CREATE TABLE guest_spam_log (
+			id varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+			chat_id bigint NULL DEFAULT NULL,
+			chat_name varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			message_id int NULL DEFAULT NULL,
+			guest_bot_id bigint NULL DEFAULT NULL,
+			guest_bot_name varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			guest_bot_user varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			caller_user_id bigint NULL DEFAULT NULL,
+			caller_user_name varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			caller_chat_id bigint NULL DEFAULT NULL,
+			caller_chat_name varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			action varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			reason varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			detail varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			remark varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+			create_time timestamp(0) NULL DEFAULT NULL,
+			update_time timestamp(0) NULL DEFAULT NULL,
+			PRIMARY KEY (id) USING BTREE,
+			INDEX idx_guest_spam_log_chat (chat_id),
+			INDEX idx_guest_spam_log_bot (guest_bot_id),
+			INDEX idx_guest_spam_log_action (action)
+		) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'guest spam处理日志' ROW_FORMAT = Dynamic`,
+	}
+	for table, createSQL := range tables {
+		exists, err := tableExists(table)
+		if err != nil {
+			return err
+		}
+		if exists {
+			continue
+		}
+		if err := DBEngine.Exec(createSQL).Error; err != nil {
+			return fmt.Errorf("migrate: creating %s table: %w", table, err)
+		}
+		log.Printf("migrate: created table %s", table)
+	}
+	return nil
 }
