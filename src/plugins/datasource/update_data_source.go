@@ -233,7 +233,7 @@ func UpdateDataSourceRunner() {
 	utils.RedisSet("operatorList", json.MustMarshalString(operators), 0)
 	MaterialInfo()
 	log.Println("数据源更新完毕")
-	utils.DataNeedUpdate = true
+	utils.SetDataNeedUpdate()
 }
 
 func MaterialInfo() {
