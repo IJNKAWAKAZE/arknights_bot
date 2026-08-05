@@ -20,6 +20,8 @@ import (
 // Serve TG机器人阻塞监听
 func Serve() {
 	log.Println("机器人启动成功")
+	// 恢复重启前挂起的入群验证（过期拒绝，未过期重启定时器）
+	gatekeeper.RecoverPendingVerifications()
 	b := bot.Arknights.AddHandle()
 	bot.Arknights.Debug = viper.GetBool("bot.debug")
 	bot.Arknights.IgnoreChannelCMD = true

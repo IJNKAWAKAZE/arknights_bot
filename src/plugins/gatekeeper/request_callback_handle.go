@@ -23,6 +23,7 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 	chatId, _ := strconv.ParseInt(d[2], 10, 64)
 
 	if has, correct := verifySet.checkExistAndRemove(userId, chatId); has {
+		verifyRemove(chatId, userId)
 		if d[3] != correct {
 			callbackQuery.Answer(true, "验证未通过")
 			bot.Arknights.DeclineChatJoinRequest(chatId, userId)

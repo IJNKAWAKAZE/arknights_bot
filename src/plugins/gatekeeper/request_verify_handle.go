@@ -47,6 +47,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
 	correct := options[r.Int64()+1]
 	verifySet.add(userId, chatId, correct.Name)
+	// 持久化待验证状态，重启后可恢复定时器
+	verifySave(chatId, userId, correct.Name)
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for i := 0; i < len(options); i += 2 {
@@ -66,8 +68,11 @@ func VerifyRequestMember(update tgbotapi.Update) {
 		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
 		bot.Arknights.ApproveChatJoinRequest(chatId, userId)
 		verifySet.checkExistAndRemove(userId, chatId)
+		verifyRemove(chatId, userId)
 		return
 	}
+	// 记录验证图片消息 ID，供超时后删除
+	verifySaveMessage(chatId, userId, photo.MessageID)
 	go requestVerify(chatId, userId, photo.MessageID)
 }
 
@@ -76,8 +81,11 @@ func requestVerify(chatId int64, userId int64, messageId int) {
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}
+	verifyRemove(chatId, userId)
 	bot.Arknights.DeclineChatJoinRequest(chatId, userId)
 	// 删除入群验证消息
-	delMsg := tgbotapi.NewDeleteMessage(userId, messageId)
-	bot.Arknights.Send(delMsg)
+	if messageId > 0 {
+		delMsg := tgbotapi.NewDeleteMessage(userId, messageId)
+		bot.Arknights.Send(delMsg)
+	}
 }

@@ -41,9 +41,24 @@ CREATE TABLE `group_joined`  (
 -- ----------------------------
 -- Table structure for group_lottery
 -- ----------------------------
+-- ----------------------------
+-- Table structure for join_request_verify
+-- ----------------------------
+DROP TABLE IF EXISTS `join_request_verify`;
+CREATE TABLE `join_request_verify`  (
+  `chat_id` bigint NOT NULL COMMENT '群组ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `correct` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '验证答案',
+  `message_id` int NOT NULL DEFAULT 0 COMMENT '验证图片消息ID',
+  `expire_at` datetime NOT NULL COMMENT '验证过期时间',
+  PRIMARY KEY (`chat_id`, `user_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '入群验证待处理状态' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for group_lottery
+-- ----------------------------
 DROP TABLE IF EXISTS `group_lottery`;
-CREATE TABLE `group_lottery`  (
-  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+CREATE TABLE `group_lottery`  (  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `group_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '群组名称',
   `group_number` bigint NULL DEFAULT NULL COMMENT '群组ID',
   `status` int NULL DEFAULT 1 COMMENT '抽奖状态0关闭1开启2暂停报名',
