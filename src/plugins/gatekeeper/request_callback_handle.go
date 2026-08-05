@@ -22,6 +22,12 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 	userId, _ := strconv.ParseInt(d[1], 10, 64)
 	chatId, _ := strconv.ParseInt(d[2], 10, 64)
 
+	// 校验回调发起者必须是申请人本人
+	if callbackQuery.From.ID != userId {
+		callbackQuery.Answer(true, "这不是你的验证！")
+		return nil
+	}
+
 	if has, correct := verifySet.checkExistAndRemove(userId, chatId); has {
 		if d[3] != correct {
 			callbackQuery.Answer(true, "验证未通过")

@@ -33,6 +33,20 @@ func (b *safeCallBack) checkExist(userId useridT, chatId chatidT) bool {
 	return false
 }
 
+// addIfNotExist 原子地检查并登记验证条目，已存在时返回 false，
+// 避免 checkExist 与 add 之间的 TOCTOU 窗口导致重复下发题目
+func (b *safeCallBack) addIfNotExist(userId useridT, chatId chatidT, correct string) bool {
+	defer b.mu.Unlock()
+	b.mu.Lock()
+	val := fmt.Sprintf("%d%d", chatId, userId)
+	if b._checkVal(val) {
+		return false
+	}
+	b.set[val] = true
+	b.correct = correct
+	return true
+}
+
 func (b *safeCallBack) checkExistAndRemove(userId useridT, chatId chatidT) (bool, string) {
 	defer b.mu.Unlock()
 	b.mu.Lock()

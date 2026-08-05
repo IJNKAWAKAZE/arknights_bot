@@ -8,6 +8,7 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"math/big"
+	"strconv"
 	"time"
 )
 
@@ -45,14 +46,19 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	}
 
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
-	correct := options[r.Int64()+1]
-	verifySet.add(userId, chatId, correct.Name)
+	correctIdx := r.Int64() + 1
+	correct := options[correctIdx]
+	// 原子登记验证条目（防止重投更新产生重复题目），callback 携带选项序号而非干员名，
+	// 既规避 Telegram 64 字节回调数据上限，也避免答案明文出现在客户端可见数据中
+	if !verifySet.addIfNotExist(userId, chatId, strconv.FormatInt(correctIdx, 10)) {
+		return
+	}
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
 	for i := 0; i < len(options); i += 2 {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("request,%d,%d,%s", userId, chatId, options[i].Name)),
-			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("request,%d,%d,%s", userId, chatId, options[i+1].Name)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i].Name, fmt.Sprintf("request,%d,%d,%d", userId, chatId, i)),
+			tgbotapi.NewInlineKeyboardButtonData(options[i+1].Name, fmt.Sprintf("request,%d,%d,%d", userId, chatId, i+1)),
 		))
 	}
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
