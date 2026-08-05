@@ -5,7 +5,6 @@ import (
 	"arknights_bot/utils"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
-	"strings"
 )
 
 func NewMemberHandle(update tgbotapi.Update) error {
@@ -24,12 +23,10 @@ func NewMemberHandle(update tgbotapi.Update) error {
 			if err != nil {
 				return err
 			}
-			for _, word := range bot.ADWords {
-				if strings.Contains(chat.Bio, word) {
-					message.Delete()
-					bot.Arknights.BanChatMember(chatId, userId)
-					return nil
-				}
+			if isAdUser(member, chat.Bio) {
+				message.Delete()
+				bot.Arknights.BanChatMember(chatId, userId)
+				return nil
 			}
 			go VerifyMember(message)
 			continue

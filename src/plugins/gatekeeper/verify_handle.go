@@ -52,8 +52,8 @@ func VerifyMember(message *tgbotapi.Message) {
 		}
 	}
 
-	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
-	correct := options[r.Int64()+1]
+	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
+	correct := options[r.Int64()]
 	verifySet.add(userId, chatId, correct.Name)
 
 	var buttons [][]tgbotapi.InlineKeyboardButton

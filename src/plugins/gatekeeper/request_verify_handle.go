@@ -14,6 +14,17 @@ import (
 func VerifyRequestMember(update tgbotapi.Update) {
 	chatId := update.ChatJoinRequest.Chat.ID
 	userId := update.ChatJoinRequest.From.ID
+	member := update.ChatJoinRequest.From
+	// 广告词检查：昵称/用户名/简介命中广告词直接拒绝
+	bio := ""
+	if chat, err := bot.Arknights.GetChatInfo(userId); err == nil {
+		bio = chat.Bio
+	}
+	if isAdUser(member, bio) {
+		log.Printf("入群验证：用户 %d（%s）命中广告词，拒绝入群申请。群：%d", userId, member.FullName(), chatId)
+		bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+		return
+	}
 	if verifySet.checkExist(userId, chatId) {
 		return
 	}
@@ -44,8 +55,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 		}
 	}
 
-	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
-	correct := options[r.Int64()+1]
+	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
+	correct := options[r.Int64()]
 	verifySet.add(userId, chatId, correct.Name)
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
