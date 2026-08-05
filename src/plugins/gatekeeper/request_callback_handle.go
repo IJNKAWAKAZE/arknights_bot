@@ -26,8 +26,11 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 		if d[3] != correct {
 			callbackQuery.Answer(true, "验证未通过")
 			bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+			// 记录失败次数，超过上限后限制该用户再次申请
+			limiter.recordFail(chatId, userId)
 		} else {
 			callbackQuery.Answer(true, "验证通过！")
+			limiter.resetFail(chatId, userId)
 			bot.Arknights.ApproveChatJoinRequest(chatId, userId)
 			// 新人入群提醒
 			var joined utils.GroupJoined
