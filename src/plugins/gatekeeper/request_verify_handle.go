@@ -86,8 +86,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	sendPhoto.Caption = "请选择上图干员的正确名字"
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
-		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
-		bot.Arknights.ApproveChatJoinRequest(chatId, userId)
+		log.Printf("发送验证图片失败，拒绝入群申请。用户：%d，群：%d，图片：%s，原因：%s", userId, chatId, correct.ThumbURL, err.Error())
+		bot.Arknights.DeclineChatJoinRequest(chatId, userId)
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
@@ -99,6 +99,7 @@ func requestVerify(chatId int64, userId int64, messageId int) {
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}
+	log.Printf("入群验证：拒绝用户 %d 加入群 %d，原因：验证超时", userId, chatId)
 	bot.Arknights.DeclineChatJoinRequest(chatId, userId)
 	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(userId, messageId)

@@ -7,44 +7,40 @@ import (
 
 type chatidT = int64
 type useridT = int64
+
+// safeCallBack 记录每个群内待验证用户的正确答案
 type safeCallBack struct {
-	mu      sync.Mutex
-	set     map[string]bool
-	correct string
+	mu  sync.Mutex
+	set map[string]string
 }
 
-var verifySet = safeCallBack{set: make(map[string]bool)}
+var verifySet = safeCallBack{set: make(map[string]string)}
 
 func (b *safeCallBack) add(userId useridT, chatId chatidT, correct string) {
 	b.mu.Lock()
-	val := fmt.Sprintf("%d%d", chatId, userId)
-	b.set[val] = true
-	b.correct = correct
-	b.mu.Unlock()
+	defer b.mu.Unlock()
+	b.set[verifyKey(chatId, userId)] = correct
 }
 
 func (b *safeCallBack) checkExist(userId useridT, chatId chatidT) bool {
-	defer b.mu.Unlock()
 	b.mu.Lock()
-	val := fmt.Sprintf("%d%d", chatId, userId)
-	if b._checkVal(val) {
-		return true
-	}
-	return false
+	defer b.mu.Unlock()
+	_, ok := b.set[verifyKey(chatId, userId)]
+	return ok
 }
 
 func (b *safeCallBack) checkExistAndRemove(userId useridT, chatId chatidT) (bool, string) {
-	defer b.mu.Unlock()
 	b.mu.Lock()
-	val := fmt.Sprintf("%d%d", chatId, userId)
-	if b._checkVal(val) {
-		delete(b.set, val)
-		return true, b.correct
+	defer b.mu.Unlock()
+	key := verifyKey(chatId, userId)
+	if correct, ok := b.set[key]; ok {
+		delete(b.set, key)
+		return true, correct
 	}
 	return false, ""
 }
 
-func (b *safeCallBack) _checkVal(val string) bool {
-	_, ok := b.set[val]
-	return ok
+// verifyKey 使用分隔符拼接 (chatId, userId)，避免如 (12,345) 与 (123,45) 产生相同 key
+func verifyKey(chatId chatidT, userId useridT) string {
+	return fmt.Sprintf("%d:%d", chatId, userId)
 }

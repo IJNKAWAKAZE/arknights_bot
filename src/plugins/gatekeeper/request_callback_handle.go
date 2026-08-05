@@ -6,6 +6,7 @@ import (
 	"arknights_bot/utils"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -26,9 +27,11 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 		if d[3] != correct {
 			callbackQuery.Answer(true, "验证未通过")
 			bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+			log.Printf("入群验证：拒绝用户 %d（%s）加入群 %d，原因：答错", userId, callbackQuery.From.FullName(), chatId)
 		} else {
 			callbackQuery.Answer(true, "验证通过！")
 			bot.Arknights.ApproveChatJoinRequest(chatId, userId)
+			log.Printf("入群验证：通过用户 %d（%s）加入群 %d，原因：答对", userId, callbackQuery.From.FullName(), chatId)
 			// 新人入群提醒
 			var joined utils.GroupJoined
 			utils.GetJoinedByChatId(chatId).Scan(&joined)
