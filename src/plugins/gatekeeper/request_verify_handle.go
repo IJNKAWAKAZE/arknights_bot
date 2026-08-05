@@ -14,6 +14,7 @@ import (
 func VerifyRequestMember(update tgbotapi.Update) {
 	chatId := update.ChatJoinRequest.Chat.ID
 	userId := update.ChatJoinRequest.From.ID
+	log.Printf("入群验证：收到用户 %d（%s）的入群申请，群 %d", userId, update.ChatJoinRequest.From.FullName(), chatId)
 	if verifySet.checkExist(userId, chatId) {
 		return
 	}
@@ -76,6 +77,7 @@ func requestVerify(chatId int64, userId int64, messageId int) {
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}
+	log.Printf("入群验证：拒绝用户 %d 加入群 %d，原因：验证超时", userId, chatId)
 	bot.Arknights.DeclineChatJoinRequest(chatId, userId)
 	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(userId, messageId)
