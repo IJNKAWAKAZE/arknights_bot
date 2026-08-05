@@ -63,8 +63,8 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	sendPhoto.Caption = "请选择上图干员的正确名字"
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
-		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
-		bot.Arknights.ApproveChatJoinRequest(chatId, userId)
+		log.Printf("发送验证图片失败，拒绝入群申请。用户：%d，群：%d，图片：%s，原因：%s", userId, chatId, correct.ThumbURL, err.Error())
+		bot.Arknights.DeclineChatJoinRequest(chatId, userId)
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
