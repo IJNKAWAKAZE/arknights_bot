@@ -334,23 +334,32 @@ func Md5(str string) string {
 	return m5str
 }
 
+var imgClient = &http.Client{Timeout: 15 * time.Second}
+
 func GetImg(url string) []byte {
-	var resp *http.Response
 	var pic []byte
 	times := 0
 	for times < 3 {
-		resp1, err := http.Get(url)
-		resp = resp1
+		resp, err := imgClient.Get(url)
 		if err != nil {
 			log.Println("获取图片失败", err)
 			times++
 			continue
 		}
-		pic, _ = io.ReadAll(resp.Body)
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("获取图片失败，状态码：%d，URL：%s", resp.StatusCode, url)
+			resp.Body.Close()
+			times++
+			continue
+		}
+		pic, err = io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			log.Println("读取图片失败", err)
+			times++
+			continue
+		}
 		break
-	}
-	if resp != nil {
-		defer resp.Body.Close()
 	}
 	return pic
 }

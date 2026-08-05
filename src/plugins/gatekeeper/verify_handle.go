@@ -27,6 +27,11 @@ func VerifyMember(message *tgbotapi.Message) {
 
 	// 抽取验证信息
 	operatorsPool := utils.GetOperators()
+	if len(operatorsPool) < 12 { // 不足 12 个干员时去重循环会无限空转，恢复权限后放弃本次验证
+		log.Println("入群验证：干员数据不足，恢复用户", userId, "发言权限")
+		bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
+		return
+	}
 	var randNumMap = make(map[int64]struct{})
 	var options []utils.Operator
 	for i := 0; i < 12; i++ { // 随机抽取 12 个干员
@@ -41,6 +46,10 @@ func VerifyMember(message *tgbotapi.Message) {
 		}
 		operator := operatorsPool[operatorIndex]
 		operatorName := operator.Name
+		if len(operator.Skins) == 0 {
+			i--
+			continue
+		}
 		painting := operator.Skins[0].Url
 		if painting != "" {
 			options = append(options, utils.Operator{
@@ -52,6 +61,12 @@ func VerifyMember(message *tgbotapi.Message) {
 		}
 	}
 
+	if len(options) < 2 {
+		log.Println("入群验证：可用干员不足，恢复用户", userId, "发言权限")
+		verifySet.checkExistAndRemove(userId, chatId)
+		bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
+		return
+	}
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
 	correct := options[r.Int64()+1]
 	verifySet.add(userId, chatId, correct.Name)

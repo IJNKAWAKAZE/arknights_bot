@@ -8,18 +8,30 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"math/big"
+	"runtime/debug"
 	"time"
 )
 
 func VerifyRequestMember(update tgbotapi.Update) {
 	chatId := update.ChatJoinRequest.Chat.ID
 	userId := update.ChatJoinRequest.From.ID
-	log.Printf("入群验证：收到用户 %d（%s）的入群申请，群 %d", userId, update.ChatJoinRequest.From.FullName(), chatId)
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("入群验证协程异常：%v\n%s", r, debug.Stack())
+			verifySet.checkExistAndRemove(userId, chatId)
+			bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+		}
+	}()
 	if verifySet.checkExist(userId, chatId) {
 		return
 	}
 	// 抽取验证信息
 	operatorsPool := utils.GetOperators()
+	if len(operatorsPool) < 12 { // 不足 12 个干员时去重循环会无限空转，直接放弃本次验证
+		log.Printf("入群验证：干员数据不足，拒绝用户 %d 加入群 %d", userId, chatId)
+		bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+		return
+	}
 	var randNumMap = make(map[int64]struct{})
 	var options []utils.Operator
 	for i := 0; i < 12; i++ { // 随机抽取 12 个干员
@@ -34,6 +46,10 @@ func VerifyRequestMember(update tgbotapi.Update) {
 		}
 		operator := operatorsPool[operatorIndex]
 		operatorName := operator.Name
+		if len(operator.Skins) == 0 {
+			i--
+			continue
+		}
 		painting := operator.Skins[0].Url
 		if painting != "" {
 			options = append(options, utils.Operator{
@@ -45,6 +61,12 @@ func VerifyRequestMember(update tgbotapi.Update) {
 		}
 	}
 
+	if len(options) < 2 {
+		log.Printf("入群验证：可用干员不足，拒绝用户 %d 加入群 %d", userId, chatId)
+		verifySet.checkExistAndRemove(userId, chatId)
+		bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+		return
+	}
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options)-1)))
 	correct := options[r.Int64()+1]
 	verifySet.add(userId, chatId, correct.Name)
