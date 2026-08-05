@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-var verifyC = make(chan interface{}, 10)
-
 func VerifyMember(message *tgbotapi.Message) {
 	chatId := message.Chat.ID
 	userId := message.From.ID
@@ -22,6 +20,7 @@ func VerifyMember(message *tgbotapi.Message) {
 	_, err := bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.NoMessagesPermission)
 	if err != nil {
 		log.Println(err.Error())
+		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
 
@@ -70,14 +69,6 @@ func VerifyMember(message *tgbotapi.Message) {
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
-	if len(verifyC) > 0 {
-		obj := <-verifyC
-		log.Println(obj, "停止发送验证信息")
-		message.Delete()
-		bot.Arknights.BanChatMember(chatId, userId)
-		verifySet.checkExistAndRemove(userId, chatId)
-		return
-	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.GetImg(correct.ThumbURL)})
 	sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 	sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, name), userId)

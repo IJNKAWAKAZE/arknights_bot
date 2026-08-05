@@ -26,6 +26,8 @@ func Serve() {
 	b.JoinRequestProcessor(gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
+	// 验证期间抢先发送消息的用户直接踢出
+	b.NewProcessor(gatekeeper.CheckMember, gatekeeper.KickMember)
 
 	// callback
 	b.NewCallBackProcessor("verify", gatekeeper.CallBackData)

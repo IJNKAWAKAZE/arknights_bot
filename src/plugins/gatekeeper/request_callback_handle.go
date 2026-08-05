@@ -29,6 +29,8 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 		} else {
 			callbackQuery.Answer(true, "验证通过！")
 			bot.Arknights.ApproveChatJoinRequest(chatId, userId)
+			// 标记为机器人批准进入，避免入群事件触发重复验证
+			recentlyApproved.mark(userId, chatId)
 			// 新人入群提醒
 			var joined utils.GroupJoined
 			utils.GetJoinedByChatId(chatId).Scan(&joined)
