@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
@@ -70,8 +71,36 @@ var enemyTree suffixtree.GST
 var enemyArray []pair
 var operators []Operator
 
-func GetOperators() []Operator {
+// dataMu 保护干员/敌人/物品数据的并发读写，防止重建期间读取到混合状态
+var dataMu sync.RWMutex
+
+// SetDataNeedUpdate 标记数据需要重新加载（数据源更新完成后调用）
+func SetDataNeedUpdate() {
+	dataMu.Lock()
+	DataNeedUpdate = true
+	dataMu.Unlock()
+}
+
+// ensureData 数据就绪检查，仅在需要重建时获取写锁（double-check）
+func ensureData() {
+	dataMu.RLock()
+	need := DataNeedUpdate
+	dataMu.RUnlock()
+	if !need {
+		return
+	}
+	dataMu.Lock()
+	defer dataMu.Unlock()
+	if !DataNeedUpdate {
+		return
+	}
 	updateData()
+}
+
+func GetOperators() []Operator {
+	ensureData()
+	dataMu.RLock()
+	defer dataMu.RUnlock()
 	return operators
 }
 func updateData() {
@@ -179,8 +208,10 @@ var isTesting = false
 
 func GetOperatorByName(name string) Operator {
 	if !isTesting {
-		updateData()
+		ensureData()
 	}
+	dataMu.RLock()
+	defer dataMu.RUnlock()
 
 	// 先尝试精确匹配
 	lowerName := strings.ToLower(name)
@@ -226,7 +257,9 @@ func GetOperatorByName(name string) Operator {
 }
 
 func GetOperatorsByName(name string) []Operator {
-	updateData()
+	ensureData()
+	dataMu.RLock()
+	defer dataMu.RUnlock()
 	var operatorList []Operator
 	var set = make(map[int]bool)
 
@@ -276,12 +309,16 @@ func GetOperatorsByName(name string) []Operator {
 }
 
 func GetRecruitOperatorList() []Operator {
-	updateData()
+	ensureData()
+	dataMu.RLock()
+	defer dataMu.RUnlock()
 	return recruitOperatorList
 }
 
 func GetEnemiesByName(name string) map[string]string {
-	updateData()
+	ensureData()
+	dataMu.RLock()
+	defer dataMu.RUnlock()
 	var enemyMap = make(map[string]string)
 	for _, index := range enemyTree.Search(strings.ToLower(name)) {
 		a := enemyArray[index]
