@@ -58,7 +58,15 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
-	sendPhoto := tgbotapi.NewPhoto(userId, tgbotapi.FileBytes{Bytes: utils.GetImg(correct.ThumbURL)})
+	img := utils.GetImg(correct.ThumbURL)
+	if len(img) == 0 {
+		// 验证图片获取失败时拒绝入群（fail-closed，绝不放行）
+		log.Printf("入群验证：验证图片获取失败，拒绝用户 %d 加入群 %d。图片：%s", userId, chatId, correct.ThumbURL)
+		verifySet.checkExistAndRemove(userId, chatId)
+		bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+		return
+	}
+	sendPhoto := tgbotapi.NewPhoto(userId, tgbotapi.FileBytes{Bytes: img})
 	sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 	sendPhoto.Caption = "请选择上图干员的正确名字"
 	photo, err := bot.Arknights.Send(sendPhoto)

@@ -78,15 +78,30 @@ func VerifyMember(message *tgbotapi.Message) {
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: utils.GetImg(correct.ThumbURL)})
+	img := utils.GetImg(correct.ThumbURL)
+	if len(img) == 0 {
+		// 验证图片获取失败视为无法验证，保持 fail-closed 踢出
+		log.Printf("群内验证：验证图片获取失败，踢出用户 %d（%s）。群：%d，图片：%s", userId, name, chatId, correct.ThumbURL)
+		verifySet.checkExistAndRemove(userId, chatId)
+		bot.Arknights.BanChatMember(chatId, userId)
+		delJoinMessage := tgbotapi.NewDeleteMessage(chatId, messageId)
+		bot.Arknights.Send(delJoinMessage)
+		go unban(chatId, userId)
+		return
+	}
+	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: img})
 	sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 	sendPhoto.Caption = fmt.Sprintf("欢迎[%s](tg://user?id=%d)，请选择上图干员的正确名字，60秒未选择自动踢出。", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, name), userId)
 	sendPhoto.ParseMode = tgbotapi.ModeMarkdownV2
 	photo, err := bot.Arknights.Send(sendPhoto)
 	if err != nil {
-		log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
-		bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
+		// 验证信息发送失败时保持限权并踢出，绝不放行未验证用户
+		log.Printf("群内验证：发送验证图片失败，踢出用户 %d（%s）。群：%d，图片：%s，原因：%s", userId, name, chatId, correct.ThumbURL, err.Error())
 		verifySet.checkExistAndRemove(userId, chatId)
+		bot.Arknights.BanChatMember(chatId, userId)
+		delJoinMessage := tgbotapi.NewDeleteMessage(chatId, messageId)
+		bot.Arknights.Send(delJoinMessage)
+		go unban(chatId, userId)
 		return
 	}
 	go verify(chatId, userId, photo.MessageID, messageId)
