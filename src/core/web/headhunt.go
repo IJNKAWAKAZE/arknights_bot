@@ -2,7 +2,9 @@ package web
 
 import (
 	"arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/utils/cache"
+	"arknights_bot/utils/model"
+	"arknights_bot/utils/search"
 	"crypto/rand"
 	"fmt"
 	"math/big"
@@ -25,14 +27,14 @@ func Headhunt(r *gin.Engine) {
 		times := 0
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		key := fmt.Sprintf("headhunt:%d", userId)
-		if utils.RedisIsExists(key) {
-			times, _ = strconv.Atoi(utils.RedisGet(key))
+		if cache.RedisIsExists(key) {
+			times, _ = strconv.Atoi(cache.RedisGet(key))
 		}
-		var operators []utils.Operator
+		var operators []model.Operator
 		for i := 0; i < 10; i++ {
-			var operator utils.Operator
+			var operator model.Operator
 			name := genOpeName(&r6prob, &r5prob, &r4prob, &r3prob, &times)
-			char := utils.GetOperatorByName(name)
+			char := search.GetOperatorByName(name)
 			operator.Profession = char.Profession
 			operator.Rarity = char.Rarity
 			operator.ThumbURL = char.ThumbURL
@@ -40,7 +42,7 @@ func Headhunt(r *gin.Engine) {
 			operators = append(operators, operator)
 			times++
 		}
-		utils.RedisSet(key, strconv.Itoa(times), 0)
+		cache.RedisSet(key, strconv.Itoa(times), 0)
 		c.HTML(http.StatusOK, "Headhunt.tmpl", operators)
 	})
 }
@@ -103,6 +105,8 @@ func reProb(r6prob, r5prob, r4prob, r3prob *float64, times *int) {
 
 // 随机干员
 func randChar(rank int) string {
+	config.DataMu.RLock()
+	defer config.DataMu.RUnlock()
 	upWeight := 50
 	if rank == 6 {
 		upWeight = viper.GetInt("headhunt.up_weight")

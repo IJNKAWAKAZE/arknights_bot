@@ -1,9 +1,10 @@
 package gatekeeper
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
+	"arknights_bot/utils/model"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
@@ -25,7 +26,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 
 	if d[2] == "PASS" || d[2] == "BAN" {
 
-		if !bot.Arknights.IsAdminWithPermissions(chatId, callbackQuery.From.ID, tgbotapi.AdminCanRestrictMembers) {
+		if !config.Arknights.IsAdminWithPermissions(chatId, callbackQuery.From.ID, tgbotapi.AdminCanRestrictMembers) {
 			callbackQuery.Answer(true, "无使用权限！")
 			return nil
 		}
@@ -51,6 +52,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 	if has, correct := verifySet.checkExistAndRemove(userId, chatId); has {
 		if d[2] != correct {
 			callbackQuery.Answer(true, "验证未通过，请一分钟后再试！")
+			auditJoin(chatId, userId, callbackQuery.From.FullName(), "拒绝", "人工模式验证答错")
 			ban(chatId, userId, callbackQuery, joinMessageId)
 			go unban(chatId, userId)
 			return nil
@@ -64,12 +66,17 @@ func CallBackData(callBack tgbotapi.Update) error {
 }
 
 func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adminPass bool) error {
-	bot.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
+	config.Arknights.RestrictChatMember(chatId, userId, tgbotapi.AllPermissions)
 	callbackQuery.Delete()
 
+	if adminPass {
+		auditJoin(chatId, userId, callbackQuery.From.FullName(), "管理员放行", "管理员手动放行")
+	} else {
+		auditJoin(chatId, userId, callbackQuery.From.FullName(), "验证通过", "人工模式验证答对")
+	}
 	if !adminPass {
-		var joined utils.GroupJoined
-		utils.GetJoinedByChatId(chatId).Scan(&joined)
+		var joined model.GroupJoined
+		repo.GetJoinedByChatId(chatId).Scan(&joined)
 		// 新人入群提醒
 		var welcome string
 		if joined.Welcome != "" {
@@ -85,7 +92,7 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, text)
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
@@ -96,8 +103,8 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 }
 
 func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, joinMessageId int) {
-	bot.Arknights.BanChatMember(chatId, userId)
+	config.Arknights.BanChatMember(chatId, userId)
 	callbackQuery.Delete()
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)
-	bot.Arknights.Send(delJoinMessage)
+	config.Arknights.Send(delJoinMessage)
 }

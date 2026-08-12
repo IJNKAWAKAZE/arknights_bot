@@ -1,9 +1,10 @@
 package gatekeeper
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
+	"arknights_bot/utils/model"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
@@ -26,22 +27,24 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 	if has, correct := verifySet.checkExistAndRemove(userId, chatId); has {
 		if d[3] != correct {
 			callbackQuery.Answer(true, "验证未通过")
-			bot.Arknights.DeclineChatJoinRequest(chatId, userId)
+			auditJoin(chatId, userId, callbackQuery.From.FullName(), "拒绝", "入群申请验证答错")
+			config.Arknights.DeclineChatJoinRequest(chatId, userId)
 			log.Printf("入群验证：拒绝用户 %d（%s）加入群 %d，原因：答错", userId, callbackQuery.From.FullName(), chatId)
 		} else {
 			callbackQuery.Answer(true, "验证通过！")
-			bot.Arknights.ApproveChatJoinRequest(chatId, userId)
+			auditJoin(chatId, userId, callbackQuery.From.FullName(), "验证通过", "入群申请验证答对")
+			config.Arknights.ApproveChatJoinRequest(chatId, userId)
 			log.Printf("入群验证：通过用户 %d（%s）加入群 %d，原因：答对", userId, callbackQuery.From.FullName(), chatId)
 			// 新人入群提醒
-			var joined utils.GroupJoined
-			utils.GetJoinedByChatId(chatId).Scan(&joined)
+			var joined model.GroupJoined
+			repo.GetJoinedByChatId(chatId).Scan(&joined)
 			var welcome string
 			if joined.Welcome != "" {
 				welcome = "，" + joined.Welcome
 			}
 			text := fmt.Sprintf("欢迎[%s](tg://user?id=%d)%s\n", tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, callbackQuery.From.FullName()), callbackQuery.From.ID, welcome)
 			if joined.Reg != -1 {
-				chat, _ := bot.Arknights.GetChatInfo(chatId)
+				chat, _ := config.Arknights.GetChatInfo(chatId)
 				if chat.UserName != "" {
 					text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/%s/%d)", chat.UserName, joined.Reg)
 				} else {
@@ -50,7 +53,7 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 			}
 			sendMessage := tgbotapi.NewMessage(chatId, text)
 			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-			msg, err := bot.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
 			}

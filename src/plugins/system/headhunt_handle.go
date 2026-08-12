@@ -1,9 +1,10 @@
 package system
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
+	"arknights_bot/utils/cache"
+	"arknights_bot/utils/media"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
@@ -19,76 +20,76 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	headhuntKey := fmt.Sprintf("headhuntFlag:%d", chatId)
 
 	if param == "" {
-		if utils.RedisIsExists(headhuntKey) && utils.RedisGet(headhuntKey) == "off" {
+		if cache.RedisIsExists(headhuntKey) && cache.RedisGet(headhuntKey) == "off" {
 			sendMessage := tgbotapi.NewMessage(chatId, "模拟寻访功能已关闭！")
-			msg, err := bot.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
 			}
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 			return nil
 		}
 	}
 
 	if param != "" {
-		if bot.Arknights.IsAdmin(chatId, userId) {
+		if config.Arknights.IsAdmin(chatId, userId) {
 			text := ""
 			if param == "on" {
-				utils.RedisSet(headhuntKey, "on", 0)
+				cache.RedisSet(headhuntKey, "on", 0)
 				text = "模拟寻访已开启！"
 			} else if param == "off" {
-				utils.RedisSet(headhuntKey, "off", 0)
+				cache.RedisSet(headhuntKey, "off", 0)
 				text = "模拟寻访已关闭！"
 			}
 			sendMessage := tgbotapi.NewMessage(chatId, text)
-			msg, err := bot.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
 			}
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 			return nil
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 
 	key := fmt.Sprintf("headhuntTimes:%d", userId)
 	if !update.Message.Chat.IsPrivate() {
-		if !utils.RedisIsExists(key) {
-			utils.RedisSet(key, "1", 0)
+		if !cache.RedisIsExists(key) {
+			cache.RedisSet(key, "1", 0)
 		} else {
-			times, _ := strconv.Atoi(utils.RedisGet(key))
-			headhuntTimes := bot.HeadhuntTimes
+			times, _ := strconv.Atoi(cache.RedisGet(key))
+			headhuntTimes := config.HeadhuntTimes
 			if times == headhuntTimes {
 				messagecleaner.AddDelQueue(chatId, messageId, 60)
 				sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
 				sendMessage.ReplyToMessageID = messageId
-				msg, err := bot.Arknights.Send(sendMessage)
+				msg, err := config.Arknights.Send(sendMessage)
 				if err != nil {
 					return err
 				}
 				messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
 				return nil
 			}
-			utils.RedisSet(key, strconv.Itoa(times+1), 0)
+			cache.RedisSet(key, strconv.Itoa(times+1), 0)
 		}
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 	port := viper.GetString("http.port")
-	pic, err := utils.Screenshot(fmt.Sprintf("http://localhost:%s/headhunt?userId=%d", port, userId), 0, 1)
+	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/headhunt?userId=%d", port, userId), 0, 1)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
-		times, _ := strconv.Atoi(utils.RedisGet(key))
-		utils.RedisSet(key, strconv.Itoa(times-1), 0)
+		msg, err := config.Arknights.Send(sendMessage)
+		times, _ := strconv.Atoi(cache.RedisGet(key))
+		cache.RedisSet(key, strconv.Itoa(times-1), 0)
 		if err != nil {
 			return err
 		}
@@ -97,7 +98,7 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendPhoto)
+	msg, err := config.Arknights.Send(sendPhoto)
 	if err != nil {
 		return err
 	}
@@ -108,8 +109,8 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	return nil
 }
 func ResetHeadhuntTimes() {
-	res, ctx := utils.RedisScanKeys("headhuntTimes:*")
+	res, ctx := cache.RedisScanKeys("headhuntTimes:*")
 	for res.Next(ctx) {
-		utils.RedisDel(res.Val())
+		cache.RedisDel(res.Val())
 	}
 }

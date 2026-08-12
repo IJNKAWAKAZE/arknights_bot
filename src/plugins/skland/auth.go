@@ -1,244 +1,94 @@
 package skland
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"fmt"
 	"github.com/starudream/go-lib/core/v2/gh"
 	"github.com/tidwall/gjson"
 	"log"
 )
 
-type GrantAppData struct {
-	Uid  string `json:"uid"`
-	Code string `json:"code"`
-}
-
-type GenCredByCodeData struct {
-	UserId string `json:"userId"`
-	Cred   string `json:"cred"`
-	Token  string `json:"token"`
-}
-
-type AuthRefreshData struct {
-	Token string `json:"token"`
-}
-
-type ListPlayerData struct {
-	List []*PlayersByApp `json:"list"`
-}
-
-type PlayersByApp struct {
-	AppCode     string    `json:"appCode"`
-	AppName     string    `json:"appName"`
-	DefaultUid  string    `json:"defaultUid"`
-	BindingList []*Player `json:"bindingList"`
-}
-
-type Player struct {
-	Uid             string `json:"uid"`
-	ChannelName     string `json:"channelName"`
-	ChannelMasterId string `json:"channelMasterId"`
-	NickName        string `json:"nickName"`
-	IsOfficial      bool   `json:"isOfficial"`
-	IsDefault       bool   `json:"isDefault"`
-	IsDelete        bool   `json:"isDelete"`
-}
-
-type GenTokenByUidData struct {
-	Token string `json:"token"`
-}
-
-type User struct {
-	HgId string `json:"hgId"`
-}
-
-// Login 使用token登录
+// Login 使用 token 登录
 func Login(token, serverName string) (Account, error) {
 	account := Account{}
-
 	if token == "" {
 		return account, fmt.Errorf("token is empty")
 	}
 	account.Hypergryph.Token = token
+	isGlobal := serverName == serverGlobal
 
-	if serverName == "国服" {
-		res, err := grantApp(token, "4ca99fa6b56cc2ba")
-		if err != nil {
-			return account, fmt.Errorf("grant app error: %w", err)
-		}
-		account.Hypergryph.Code = res.Code
-
-		res1, err := authLoginByCode(res.Code)
-		if err != nil {
-			return account, fmt.Errorf("auth login by code error: %w", err)
-		}
-		u, _ := CheckToken(token)
-		account.UserId = u.HgId
-		account.Skland.Cred = res1.Cred
-		account.Skland.Token = res1.Token
-	} else if serverName == "国际服" {
-		res, err := grantAppI(token, "6eb76d4e13aa36e6")
-		if err != nil {
-			return account, fmt.Errorf("grant app error: %w", err)
-		}
-		account.Hypergryph.Code = res.Code
-
-		res1, err := iAuthLoginByCode(res.Code)
-		if err != nil {
-			return account, fmt.Errorf("auth login by code error: %w", err)
-		}
-		u, _ := ICheckToken(token)
-		account.UserId = u.HgId
-		account.Skland.Cred = res1.Cred
-		account.Skland.Token = res1.Token
+	appCode := "4ca99fa6b56cc2ba"
+	if isGlobal {
+		appCode = "6eb76d4e13aa36e6"
 	}
+	res, err := grantApp(token, appCode, isGlobal)
+	if err != nil {
+		return account, fmt.Errorf("grant app error: %w", err)
+	}
+	account.Hypergryph.Code = res.Code
+
+	res1, err := authLoginByCode(res.Code, isGlobal)
+	if err != nil {
+		return account, fmt.Errorf("auth login by code error: %w", err)
+	}
+	u, err := checkToken(token, isGlobal)
+	if err != nil {
+		return account, fmt.Errorf("check token error: %w", err)
+	}
+	account.UserId = u.HgId
+	account.Skland.Cred = res1.Cred
+	account.Skland.Token = res1.Token
 	return account, nil
 }
 
-// 获取 OAuth2 授权代码
-func grantApp(token string, code string) (*GrantAppData, error) {
-	req := HR().SetBody(gh.M{"type": 0, "token": token, "appCode": code})
-	return HypergryphRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant")
-}
-
-// 国际服获取 OAuth2 授权代码
-func grantAppI(token string, code string) (*GrantAppData, error) {
-	req := HR().SetBody(gh.M{"type": 0, "token": token, "appCode": code})
-	return GryphlineRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant")
-}
-
-// 获取Cred
-func authLoginByCode(code string) (*GenCredByCodeData, error) {
-	req := SKR().SetHeader("did", did).SetBody(gh.M{"kind": 1, "code": code})
-	return SklandRequest[*GenCredByCodeData](req, "POST", "/web/v1/user/auth/generate_cred_by_code")
-}
-
-// 国际服获取Cred
-func iAuthLoginByCode(code string) (*GenCredByCodeData, error) {
-	req := SKR().SetBody(gh.M{"kind": 1, "code": code})
-	return SkportRequest[*GenCredByCodeData](req, "POST", "/web/v1/user/auth/generate_cred_by_code")
-}
-
-// RefreshToken 刷新 token
+// RefreshToken 刷新 token，cred 失效时重新登录并更新数据库
 func RefreshToken(account Account, serverName string) (Account, error) {
-	if serverName == "国服" {
-		res, err := authRefresh(account.Skland.Cred)
-		if err != nil {
-			return account, fmt.Errorf("auth refresh error: %w", err)
+	isGlobal := serverName == serverGlobal
+	res, err := authRefresh(account.Skland.Cred, isGlobal)
+	if err != nil {
+		return account, fmt.Errorf("auth refresh error: %w", err)
+	}
+	account.Skland.Token = res.Token
+	// 检查 cred 是否有效
+	_, err = listPlayer(account.Skland, isGlobal)
+	if err != nil {
+		log.Println("cred失效，尝试重新登录。")
+		if _, err = checkToken(account.Hypergryph.Token, isGlobal); err != nil {
+			return account, err
 		}
-		account.Skland.Token = res.Token
-		// 检查cred是否有效
-		_, err = listPlayer(account.Skland)
+		account, err = Login(account.Hypergryph.Token, serverName)
 		if err != nil {
-			log.Println("cred失效，尝试重新登录。")
-			_, err = CheckToken(account.Hypergryph.Token)
-			if err != nil {
-				return account, err
-			}
-			account, err = Login(account.Hypergryph.Token, serverName)
-			if err != nil {
-				return account, err
-			}
-			// 更新token
-			bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
+			return account, err
 		}
-	} else if serverName == "国际服" {
-		res, err := iAuthRefresh(account.Skland.Cred)
-		if err != nil {
-			return account, fmt.Errorf("auth refresh error: %w", err)
-		}
-		account.Skland.Token = res.Token
-		// 检查cred是否有效
-		_, err = iListPlayer(account.Skland)
-		if err != nil {
-			log.Println("cred失效，尝试重新登录。")
-			_, err = ICheckToken(account.Hypergryph.Token)
-			if err != nil {
-				return account, err
-			}
-			account, err = Login(account.Hypergryph.Token, serverName)
-			if err != nil {
-				return account, err
-			}
-			// 更新token
-			bot.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?", account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
-		}
+		// 更新 token
+		config.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?",
+			account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
 	}
 	return account, nil
-}
-
-// CheckToken 检查token有效性
-func CheckToken(token string) (*User, error) {
-	req := HR().SetQueryParam("token", token)
-	user, err := HypergryphRequest[*User](req, "GET", "/user/info/v1/basic")
-	if err != nil {
-		return nil, fmt.Errorf("token已失效请重新登录！")
-	}
-	return user, err
-}
-
-// ICheckToken 国际服检查token有效性
-func ICheckToken(token string) (*User, error) {
-	req := HR().SetQueryParam("token", token)
-	user, err := GryphlineRequest[*User](req, "GET", "/user/info/v1/basic")
-	if err != nil {
-		return nil, fmt.Errorf("token已失效请重新登录！")
-	}
-	return user, err
-}
-
-// 刷新 auth
-func authRefresh(cred string) (*AuthRefreshData, error) {
-	req := SKR().SetHeader("cred", cred)
-	return SklandRequest[*AuthRefreshData](req, "GET", "/api/v1/auth/refresh")
-}
-
-// 国际服刷新 auth
-func iAuthRefresh(cred string) (*AuthRefreshData, error) {
-	req := SKR().SetHeader("cred", cred)
-	return SkportRequest[*AuthRefreshData](req, "GET", "/api/v1/auth/refresh")
-}
-
-// 获取绑定用户列表
-func listPlayer(skland AccountSkland) (*ListPlayerData, error) {
-	return SklandRequest[*ListPlayerData](SKR(), "GET", "/api/v1/game/player/binding", skland)
-}
-
-// 国际服获取绑定用户列表
-func iListPlayer(skland AccountSkland) (*ListPlayerData, error) {
-	return SkportRequest[*ListPlayerData](SKR(), "GET", "/api/v1/game/player/binding", skland)
 }
 
 // ArknightsPlayers 获取明日方舟绑定角色
 func ArknightsPlayers(skland AccountSkland, serverName string) ([]*Player, error) {
-	var players []*Player
-	var playerList *ListPlayerData
-	var err error
-	if serverName == "国服" {
-		playerList, err = listPlayer(skland)
-	} else if serverName == "国际服" {
-		playerList, err = iListPlayer(skland)
-	}
-
+	playerList, err := listPlayer(skland, serverName == serverGlobal)
 	if err != nil {
-		return players, err
+		return nil, err
 	}
 	for _, player := range playerList.List {
 		if player.AppCode == "arknights" {
-			players = player.BindingList
+			return player.BindingList, nil
 		}
 	}
-	return players, nil
+	return nil, nil
 }
 
-// LoginHypergryph  官网登录
-func LoginHypergryph(token, uid string) (string, error) {
+// loginHypergryph 官网登录获取 u8 token
+func loginHypergryph(token, uid string) (string, error) {
 	if token == "" {
 		return "", fmt.Errorf("token is empty")
 	}
 
 	reqGrantApp := HR().SetBody(gh.M{"type": 1, "token": token, "appCode": "be36d44aa36bfb5b"})
-	grantAppToken, err := HypergryphASRequest(reqGrantApp, "POST", "/user/oauth2/v2/grant")
+	grantAppToken, err := hgRawRequest(reqGrantApp, "POST", "/user/oauth2/v2/grant", hypergryphAddr)
 	if err != nil {
 		return "", fmt.Errorf("grant app error: %w", err)
 	}
@@ -251,10 +101,47 @@ func LoginHypergryph(token, uid string) (string, error) {
 	u8Token := gjson.Parse(string(res.Body())).Get("data.token").String()
 
 	reqLogin := HR().SetBody(gh.M{"share_by": "", "share_type": "", "source_from": "", "token": u8Token})
-	resLogin, err := HypergryphAKRequest(reqLogin, "POST", "/user/api/role/login")
+	resLogin, err := hgRawRequest(reqLogin, "POST", "/user/api/role/login", hypergryphAKAddr)
 	if err != nil || resLogin == "" {
 		return "", fmt.Errorf("登录失败：%w", err)
 	}
 
 	return u8Token, nil
+}
+
+// grantApp 获取 OAuth2 授权代码
+func grantApp(token, appCode string, isGlobal bool) (*GrantAppData, error) {
+	req := HR().SetBody(gh.M{"type": 0, "token": token, "appCode": appCode})
+	return hgRequest[*GrantAppData](req, "POST", "/user/oauth2/v2/grant", isGlobal)
+}
+
+// authLoginByCode 获取 Cred
+func authLoginByCode(code string, isGlobal bool) (*GenCredByCodeData, error) {
+	req := SKR()
+	if !isGlobal {
+		req.SetHeader("did", did)
+	}
+	req.SetBody(gh.M{"kind": 1, "code": code})
+	return skRequest[*GenCredByCodeData](req, "POST", "/web/v1/user/auth/generate_cred_by_code", isGlobal)
+}
+
+// authRefresh 刷新 auth
+func authRefresh(cred string, isGlobal bool) (*AuthRefreshData, error) {
+	req := SKR().SetHeader("cred", cred)
+	return skRequest[*AuthRefreshData](req, "GET", "/api/v1/auth/refresh", isGlobal)
+}
+
+// listPlayer 获取绑定用户列表
+func listPlayer(skland AccountSkland, isGlobal bool) (*ListPlayerData, error) {
+	return skRequest[*ListPlayerData](SKR(), "GET", "/api/v1/game/player/binding", isGlobal, skland)
+}
+
+// checkToken 检查 token 有效性
+func checkToken(token string, isGlobal bool) (*User, error) {
+	req := HR().SetQueryParam("token", token)
+	user, err := hgRequest[*User](req, "GET", "/user/info/v1/basic", isGlobal)
+	if err != nil {
+		return nil, fmt.Errorf("token已失效请重新登录！")
+	}
+	return user, err
 }

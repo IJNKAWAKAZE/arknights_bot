@@ -1,9 +1,10 @@
 package operator
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
+	"arknights_bot/utils/cache"
+	"arknights_bot/utils/media"
 	"fmt"
 	"log"
 
@@ -29,28 +30,28 @@ func OperatorHandle(update tgbotapi.Update) error {
 		)
 		sendMessage := tgbotapi.NewMessage(chatId, "请选择要查询的干员")
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 	operator := ParseOperator(name)
 	if operator.OP.Name == "" {
 		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "查无此人，请输入正确的干员名称。")
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
-		messagecleaner.AddDelQueue(chatId, messageId, bot.MsgDelDelay)
+		msg, err := config.Arknights.Send(sendMessage)
+		messagecleaner.AddDelQueue(chatId, messageId, config.MsgDelDelay)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 	name = operator.OP.Name
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	url := viper.GetString("api.wiki") + name
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
@@ -64,34 +65,34 @@ func OperatorHandle(update tgbotapi.Update) error {
 
 	fileId := ""
 	key := "operator:" + name
-	if utils.RedisIsExists(key) {
-		fileId = utils.RedisGet(key)
+	if cache.RedisIsExists(key) {
+		fileId = cache.RedisGet(key)
 	}
 
 	if fileId != "" {
 		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(fileId))
 		sendPhoto.ReplyToMessageID = messageId
 		sendPhoto.ReplyMarkup = inlineKeyboardMarkup
-		bot.Arknights.Send(sendPhoto)
+		config.Arknights.Send(sendPhoto)
 		return nil
 	}
 
 	port := viper.GetString("http.port")
-	pic, err := utils.Screenshot(fmt.Sprintf("http://localhost:%s/operator?name=%s", port, name), 0, 1.5)
+	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/operator?name=%s", port, name), 0, 1.5)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	sendPhoto.ReplyMarkup = inlineKeyboardMarkup
 	sendPhoto.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendPhoto)
+	msg, err := config.Arknights.Send(sendPhoto)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	utils.RedisSet(key, msg.Photo[0].FileID, 0)
+	cache.RedisSet(key, msg.Photo[0].FileID, 0)
 	return nil
 }

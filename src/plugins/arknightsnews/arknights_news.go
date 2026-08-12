@@ -1,8 +1,10 @@
 package arknightsnews
 
 import (
-	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/config"
+	"arknights_bot/utils/cache"
+	mediautil "arknights_bot/utils/media"
+	"arknights_bot/utils/repo"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -34,11 +36,11 @@ func BilibiliNews() {
 	if strings.Contains(text, "详情请点击抽奖查看") {
 		return
 	}
-	groups := utils.GetNewsGroups()
+	groups := repo.GetNewsGroups()
 	if pics == nil {
 		for _, group := range groups {
 			sendMessage := tgbotapi.NewMessage(group, text)
-			bot.Arknights.Send(sendMessage)
+			config.Arknights.Send(sendMessage)
 		}
 		return
 	}
@@ -49,13 +51,13 @@ func BilibiliNews() {
 	if len(pics) == 1 {
 		for _, group := range groups {
 			if pics[0].Height > pics[0].Width*3 {
-				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url), Name: pics[0].Url})
+				sendDocument := tgbotapi.NewDocument(group, tgbotapi.FileBytes{Bytes: mediautil.GetImg(pics[0].Url), Name: pics[0].Url})
 				sendDocument.Caption = text
-				bot.Arknights.Send(sendDocument)
+				config.Arknights.Send(sendDocument)
 			} else {
-				sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileBytes{Bytes: utils.GetImg(pics[0].Url)})
+				sendPhoto := tgbotapi.NewPhoto(group, tgbotapi.FileBytes{Bytes: mediautil.GetImg(pics[0].Url)})
 				sendPhoto.Caption = text
-				bot.Arknights.Send(sendPhoto)
+				config.Arknights.Send(sendPhoto)
 			}
 		}
 		return
@@ -72,7 +74,7 @@ func BilibiliNews() {
 	for i, pic := range pics {
 		if d {
 			var inputDocument tgbotapi.InputMediaDocument
-			inputDocument.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url), Name: pic.Url}
+			inputDocument.Media = tgbotapi.FileBytes{Bytes: mediautil.GetImg(pic.Url), Name: pic.Url}
 			inputDocument.Type = "document"
 			if i == len(pics)-1 {
 				inputDocument.Caption = text
@@ -87,7 +89,7 @@ func BilibiliNews() {
 				continue
 			}
 			var inputPhoto tgbotapi.InputMediaPhoto
-			inputPhoto.Media = tgbotapi.FileBytes{Bytes: utils.GetImg(pic.Url)}
+			inputPhoto.Media = tgbotapi.FileBytes{Bytes: mediautil.GetImg(pic.Url)}
 			inputPhoto.Type = "photo"
 			if i == 0 {
 				inputPhoto.Caption = text
@@ -98,7 +100,7 @@ func BilibiliNews() {
 	mediaGroup.Media = media
 	for _, group := range groups {
 		mediaGroup.ChatID = group
-		bot.Arknights.SendMediaGroup(mediaGroup)
+		config.Arknights.SendMediaGroup(mediaGroup)
 	}
 }
 
@@ -190,10 +192,10 @@ func ParseBilibiliDynamic() (string, []Pic) {
 				}
 				text = strings.ReplaceAll(summary, "[图片]", "") + "\n\n专栏地址：https:" + item.Get("modules.module_dynamic.major.opus.jump_url").String()
 			}
-			if utils.RedisSetIsExists("tg_arknights", link) {
+			if cache.RedisSetIsExists("tg_arknights", link) {
 				return "", nil
 			}
-			utils.RedisAddSet("tg_arknights", link)
+			cache.RedisAddSet("tg_arknights", link)
 			break
 		}
 	}

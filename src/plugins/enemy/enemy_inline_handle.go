@@ -1,8 +1,8 @@
 package enemy
 
 import (
-	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/config"
+	"arknights_bot/utils/search"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"strings"
@@ -10,7 +10,7 @@ import (
 
 func InlineEnemy(update tgbotapi.Update) error {
 	_, name, _ := strings.Cut(update.InlineQuery.Query, "敌人-")
-	enemyList := utils.GetEnemiesByName(name)
+	enemyList := search.GetEnemiesByName(name)
 	var inlineQueryResults []interface{}
 	for k, v := range enemyList {
 		id, _ := gonanoid.New(32)
@@ -31,6 +31,6 @@ func InlineEnemy(update tgbotapi.Update) error {
 		Results:       inlineQueryResults,
 		CacheTime:     0,
 	}
-	bot.Arknights.Send(answerInlineQuery)
+	config.Arknights.Send(answerInlineQuery)
 	return nil
 }

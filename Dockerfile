@@ -1,3 +1,5 @@
+# 运行阶段：二进制由本地编译好后放入构建上下文（仓库根目录）
+# 注意：容器为 debian/linux，请放置 Linux 版二进制（GOOS=linux）
 FROM debian:12
 WORKDIR /root
 ENV TZ="Asia/Shanghai"
@@ -26,5 +28,6 @@ RUN apt update && apt install ffmpeg\
           libcairo2\
           libasound2\
           libatspi2.0-0 -y
-COPY arknights /root
-CMD ["/root/arknights"]
+
+COPY arknights_bot /root/arknights_bot
+CMD ["/root/arknights_bot"]

@@ -1,15 +1,9 @@
 <html>
 <head>
+    <meta name="referrer" content="no-referrer" />
     <title>帮助</title>
+    <link rel="stylesheet" href="/assets/css/common.css" />
     <style>
-        @font-face{
-            font-family: 'NotoSansHans';
-            src : url('/assets/font/NotoSansHans-Regular.ttf');
-        }
-        body {
-            margin: 0;
-            font-family: 'NotoSansHans',serif;
-        }
         #main {
             position: absolute;
             width: 660px;
@@ -74,7 +68,10 @@
         }
         .bg {
             float: left;
-            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/assets/help/amiya.png') round;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/assets/help/amiya.png');
+            background-size: cover, 660px auto;
+            background-position: center top;
+            background-repeat: no-repeat;
         }
     </style>
 </head>

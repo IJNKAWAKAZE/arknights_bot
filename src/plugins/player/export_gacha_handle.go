@@ -1,10 +1,10 @@
 package player
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/xuri/excelize/v2"
@@ -23,15 +23,15 @@ func (_ PlayerOperationExport) hintWordForPlayerSelection() string {
 
 func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	var userGacha []UserGacha
-	res := utils.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
+	res := repo.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "不存在抽卡记录！")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	f := excelize.NewFile()
 	// 设置单元格的值
@@ -44,7 +44,7 @@ func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, 
 	// 根据指定路径保存文件
 	if err := f.SaveAs(fileName); err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "生成文件失败！")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 	}
 
 	file, _ := os.Open(fileName)
@@ -53,6 +53,6 @@ func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, 
 	os.Remove(fileName)
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: b, Name: fileName})
 	sendDocument.Caption = "抽卡记录导出成功！"
-	bot.Arknights.Send(sendDocument)
+	config.Arknights.Send(sendDocument)
 	return nil
 }

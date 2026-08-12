@@ -30,6 +30,7 @@ services:
       - ./assets:/root/assets
       - ./template:/root/template
       - ./arknights.yaml:/root/arknights.yaml
+      - ./logs:/root/logs
       - playwright:/root/.cache/ms-playwright-go
       - ms-playwright:/root/.cache/ms-playwright
 volumes:

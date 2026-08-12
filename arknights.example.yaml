@@ -18,8 +18,6 @@ api:
   wiki: https://prts.wiki/w/
   voice_data: https://torappu.prts.wiki/assets/audio/
   enemy: https://prts.wiki/index.php?title=%E6%95%8C%E4%BA%BA%E4%B8%80%E8%A7%88%2F%E6%95%B0%E6%8D%AE&action=raw
-  item: https://backend.yituliu.cn/item/value?expCoefficient=0.633
-  stage_result: https://backend.yituliu.cn/stage/result?expCoefficient=0.633
   bilibili_buvid: https://api.bilibili.com/x/frontend/finger/spi
   bilibili_register_buvid: https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi
   bilibili_dynamic: https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?offset=&host_mid=161775300&timezone_offset=-480&features=itemOpusStyle,listOnly
@@ -39,6 +37,8 @@ redis:
   pool_size: 20
 
 http:
+  # 监听地址，默认仅本机访问，如需公网访问改为 0.0.0.0
+  host: 127.0.0.1
   port: 23333
 
 telegraph :
@@ -67,8 +67,8 @@ enemy_name: 多萝西-多萝西(敌方)/弑君者-弑君者(敌方)/W-W(敌方)/
 # 忽略生日的干员
 ignore_birthday: ["百炼嘉维尔", "承曦格雷伊", "纯烬艾雅法拉", "淬羽赫默", "涤火杰西卡", "归溟幽灵鲨", "寒芒克洛丝", "荒芜拉普兰德", "火龙S黑角", "假日威龙陈", "缄默德克萨斯", "历阵锐枪芬", "琳琅诗怀雅", "麒麟R夜刀", "圣约送葬人", "维娜·维多利亚", "维什戴尔", "焰影苇草", "炎狱炎熔", "耀骑士临光", "引星棘刺", "濯尘芙蓉", "浊心斯卡蒂", "阿米娅(近卫)", "阿米娅(医疗)", "烛煌", "新约能天使", "酒神", "司霆惊蛰", "斩业星熊", "凛御银灰", "圣聆初雪", "溯光星源", "撷英调香师"]
 
-# 过滤bio关键词
-ad: []
+# bio广告词过滤，命中即拒绝入群申请/踢出
+ad: ["代肝", "代充", "代练", "广告"]
 
 # 森空岛请求代理 不填就不使用代理
 proxy: http://localhost:1234

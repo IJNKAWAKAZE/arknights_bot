@@ -1,0 +1,16 @@
+@font-face {
+    font-family: 'NotoSansHans';
+    src: url('/assets/font/NotoSansHans-Regular.ttf');
+}
+
+body {
+    margin: 0;
+    font-family: 'NotoSansHans', serif;
+}
+
+/* 稀有度图标宽度（Box/Missing 页面共用） */
+img.rarity[data="4"] { width: 34px; }
+img.rarity[data="3"] { width: 30px; }
+img.rarity[data="2"] { width: 25px; }
+img.rarity[data="1"] { width: 20px; }
+img.rarity[data="0"] { width: 15px; }

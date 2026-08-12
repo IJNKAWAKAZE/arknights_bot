@@ -2,15 +2,8 @@
 <head>
     <meta name="referrer" content="no-referrer" />
     <title>名片</title>
+    <link rel="stylesheet" href="/assets/css/common.css" />
     <style>
-        @font-face{
-            font-family: 'NotoSansHans';
-            src : url('/assets/font/NotoSansHans-Regular.ttf');
-        }
-        body {
-            margin: 0;
-            font-family: 'NotoSansHans',serif;
-        }
         #main {
             position: absolute;
             background-image: url("assets/card/bg.png");
@@ -236,21 +229,13 @@
     </div>
 </div>
 </body>
+<script src="/template/js/common.js"></script>
 <script>
-    window.onload = function(){
-        const regTime = document.getElementById("ts");
-        regTime.textContent = timestampToTime(regTime.textContent)
-    }
-    function timestampToTime(timestamp) {
-        timestamp = timestamp ? timestamp : null;
-        let date = new Date(timestamp*1000);
-        let Y = date.getFullYear() + '-';
-        let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
-        let D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
-        let h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
-        let m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
-        let s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
-        return Y + M + D;
-    }
+    ready(function () {
+        var regTime = document.getElementById("ts");
+        if (regTime) {
+            regTime.textContent = timestampToTime(regTime.textContent, false);
+        }
+    });
 </script>
 </html>

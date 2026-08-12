@@ -2,15 +2,15 @@ package commandoperation
 
 import (
 	"arknights_bot/plugins/account"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 )
 
-var OperationTypeMaps = make(map[string]OperationI)
+var OperationTypeMaps = make(map[string]Operation)
 
-// OperationI don't embed this class at most of the time embed OperationAbstract is more useful
-type OperationI interface {
+// Operation don't embed this class at most of the time embed OperationAbstract is more useful
+type Operation interface {
 
 	//this requirement of the string it can change base on the role of the user
 	CheckRequirementsAndPrepare(update tgbotapi.Update) bool
@@ -23,7 +23,7 @@ type OperationI interface {
 	NextStepOperation(playerUID string, userAccount account.UserAccount, param string) *NextStepOperation
 }
 type OperationAbstract struct {
-	OperationI
+	Operation
 }
 
 func mapToStatic() {
@@ -43,7 +43,7 @@ func (operation OperationAbstract) GetCallBackFunctionOnMultiPlayer(update tgbot
 	newOP := OperationTypeMaps[getTypeName]
 	return NewMultiuserCallBackFunction(
 		func(uid string) error {
-			utils.GetAccountByUid(account.UserNumber, uid).Scan(&account)
+			repo.GetAccountByUid(account.UserNumber, uid).Scan(&account)
 			return newOP.Run(uid, account, chatId, update.Message)
 		},
 		update.Message.From.ID)

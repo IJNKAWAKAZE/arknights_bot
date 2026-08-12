@@ -1,7 +1,7 @@
 package gatekeeper
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
@@ -17,7 +17,7 @@ func KickMember(update tgbotapi.Update) error {
 	chatId := message.Chat.ID
 	userId := message.From.ID
 	message.Delete()
-	bot.Arknights.BanChatMember(chatId, userId)
+	config.Arknights.BanChatMember(chatId, userId)
 	verifyC <- nil
 	return nil
 }

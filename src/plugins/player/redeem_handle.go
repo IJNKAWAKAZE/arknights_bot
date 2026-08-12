@@ -1,11 +1,11 @@
 package player
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/cache"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strings"
@@ -31,15 +31,15 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 	if userAccount.ServerName == "国际服" {
 		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 	cdk := message.CommandArguments()
 	cdk = strings.ToUpper(cdk)
-	if utils.RedisIsExists("risk_control") {
+	if cache.RedisIsExists("risk_control") {
 		SendMessage := tgbotapi.NewMessage(chatId, "触发风控，请等待解除后再进行兑换！")
 		SendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(SendMessage)
+		config.Arknights.Send(SendMessage)
 		return nil
 	}
 	token := userAccount.HypergryphToken
@@ -47,20 +47,20 @@ func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, 
 	if err != nil {
 		SendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		SendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(SendMessage)
+		config.Arknights.Send(SendMessage)
 		return err
 	}
 	if result != "" {
 		if result == "需要验证" {
-			utils.RedisSet("risk_control", "1", time.Hour)
+			cache.RedisSet("risk_control", "1", time.Hour)
 		}
 		SendMessage := tgbotapi.NewMessage(chatId, result)
 		SendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(SendMessage)
+		config.Arknights.Send(SendMessage)
 		return fmt.Errorf(result)
 	}
 	SendMessage := tgbotapi.NewMessage(chatId, "CDK兑换成功，请进入游戏领取奖励。")
 	SendMessage.ReplyToMessageID = messageId
-	bot.Arknights.Send(SendMessage)
+	config.Arknights.Send(SendMessage)
 	return nil
 }

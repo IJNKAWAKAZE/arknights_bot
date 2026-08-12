@@ -2,15 +2,8 @@
 <head>
     <meta name="referrer" content="no-referrer" />
     <title>仓库</title>
+    <link rel="stylesheet" href="/assets/css/common.css" />
     <style>
-        @font-face{
-            font-family: 'NotoSansHans';
-            src : url('/assets/font/NotoSansHans-Regular.ttf');
-        }
-        body {
-            margin: 0;
-            font-family: 'NotoSansHans',serif;
-        }
         #main {
             width: 850px;
             background-color: #2e3031;
@@ -40,7 +33,6 @@
     <div class="item">
         <img class="icon" src="{{.Icon}}" onerror="this.src='assets/common/amiya.png'"/>
         <div class="count">{{.Count}}</div>
-        <!--<div>{{.Name}}</div>-->
     </div>
     {{end}}
 </div>

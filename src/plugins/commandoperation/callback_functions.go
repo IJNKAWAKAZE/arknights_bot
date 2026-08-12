@@ -1,9 +1,10 @@
 package commandoperation
 
 import (
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
-	"arknights_bot/utils"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
+	"log"
 )
 
 var callBackMap = make(map[string]MultiuserCallBackFunction)
@@ -67,7 +68,7 @@ type NextStepOperation struct {
 	PlayerID      string
 	Account       account.UserAccount
 	Param         string
-	NextOperation OperationI
+	NextOperation Operation
 }
 
 func (op NextStepOperation) Run(update tgbotapi.Update) error {
@@ -78,12 +79,25 @@ func (op NextStepOperation) Run(update tgbotapi.Update) error {
 
 		err = op.NextOperation.Run(op.PlayerID, op.Account, chatId, update.Message)
 		if err != nil {
-			utils.SendMessage(chatId, "未知错误，请重试。", false, &messageID)
+			tgMessage := tgbotapi.NewMessage(chatId, "未知错误，请重试。")
+			tgMessage.ReplyToMessageID = messageID
+			sent, sendErr := config.Arknights.Send(tgMessage)
+			if sendErr != nil {
+				log.Printf("%v can not be send error : %v", sent, sendErr)
+			}
 		}
 		RemoveNextStep(chatId)
 	} else {
 		msg, isMarkDown := op.NextOperation.HintOnRequirementsFailed()
-		utils.SendMessage(chatId, msg+" 使用 /cancel 指令取消操作", isMarkDown, &messageID)
+		tgMessage := tgbotapi.NewMessage(chatId, msg+" 使用 /cancel 指令取消操作")
+		tgMessage.ReplyToMessageID = messageID
+		if isMarkDown {
+			tgMessage.ParseMode = tgbotapi.ModeMarkdownV2
+		}
+		sent, sendErr := config.Arknights.Send(tgMessage)
+		if sendErr != nil {
+			log.Printf("%v can not be send error : %v", sent, sendErr)
+		}
 	}
 	return err
 }

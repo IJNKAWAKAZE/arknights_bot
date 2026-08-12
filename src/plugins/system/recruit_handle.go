@@ -1,8 +1,8 @@
 package system
 
 import (
-	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/config"
+	"arknights_bot/utils/media"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
@@ -30,45 +30,48 @@ func ReplyRecruitHandle(update tgbotapi.Update) error {
 
 func recruit(chatId int64, messageId int, param, fileId string) error {
 	var tags []string
-	file, _ := utils.DownloadFile(fileId)
+	file, _ := media.DownloadFile(fileId)
 	lang, engine, sep := "chs", "2", "\n"
 	if param == "jp" {
 		lang, engine, sep = "jpn", "1", "\r\n"
 	}
 
-	results, err := utils.OCR(file, lang, engine, sep)
+	results, err := media.OCR(file, lang, engine, sep)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "识别失败请稍后再试")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 	}
 	if results == nil {
 		log.Println("图片识别失败")
 		return nil
 	}
+	config.DataMu.RLock()
+	recruitTagMap := config.RecruitTagMap
+	config.DataMu.RUnlock()
 	for _, result := range results {
-		if bot.RecruitTagMap[result] != "" {
-			log.Println(bot.RecruitTagMap[result])
-			tags = append(tags, bot.RecruitTagMap[result])
+		if tag := recruitTagMap[result]; tag != "" {
+			log.Println(tag)
+			tags = append(tags, tag)
 		}
 	}
 	if len(tags) != 5 {
 		sendMessage := tgbotapi.NewMessage(chatId, "标签数量错误，请更换图片。")
 		sendMessage.ReplyToMessageID = messageId
-		_, err := bot.Arknights.Send(sendMessage)
+		_, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	port := viper.GetString("http.port")
-	pic, err := utils.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s&client=%s", port, strings.Join(tags, " "), param), 0, 1.5)
+	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s&client=%s", port, strings.Join(tags, " "), param), 0, 1.5)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ReplyToMessageID = messageId
-		_, err := bot.Arknights.Send(sendMessage)
+		_, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
@@ -76,7 +79,7 @@ func recruit(chatId int64, messageId int, param, fileId string) error {
 	}
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "recruit.jpg"})
 	sendDocument.ReplyToMessageID = messageId
-	_, err = bot.Arknights.Send(sendDocument)
+	_, err = config.Arknights.Send(sendDocument)
 	if err != nil {
 		return err
 	}

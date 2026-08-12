@@ -1,8 +1,8 @@
 package operator
 
 import (
-	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/config"
+	"arknights_bot/utils/search"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"strings"
@@ -10,7 +10,7 @@ import (
 
 func InlineOperator(update tgbotapi.Update) error {
 	_, name, _ := strings.Cut(update.InlineQuery.Query, "干员-")
-	operatorList := utils.GetOperatorsByName(name)
+	operatorList := search.GetOperatorsByName(name)
 	var inlineQueryResults []interface{}
 	for _, operator := range operatorList {
 		id, _ := gonanoid.New(32)
@@ -31,6 +31,6 @@ func InlineOperator(update tgbotapi.Update) error {
 		Results:       inlineQueryResults,
 		CacheTime:     0,
 	}
-	bot.Arknights.Send(answerInlineQuery)
+	config.Arknights.Send(answerInlineQuery)
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	playerOperationMap = map[string]commandoperation.OperationI{
+	playerOperationMap = map[string]commandoperation.Operation{
 		"state":        PlayerOperationState{},
 		"box":          PlayerOperationBox{},
 		"box_detail":   PlayerOperationBoxDetail{},
@@ -26,7 +26,7 @@ func initFactory() {
 		commandoperation.OperationTypeMaps[k] = f
 	}
 }
-func playerOperationFactory(operation string) *commandoperation.OperationI {
+func playerOperationFactory(operation string) *commandoperation.Operation {
 	result, ok := playerOperationMap[operation]
 	if !ok {
 		return nil

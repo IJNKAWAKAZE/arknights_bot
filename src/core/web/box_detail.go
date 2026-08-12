@@ -1,9 +1,8 @@
 package web
 
 import (
-	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -36,26 +35,20 @@ func BoxDetail(r *gin.Engine) {
 	r.GET("/boxDetail", func(c *gin.Context) {
 		r.LoadHTMLFiles("./template/BoxDetail.tmpl")
 		var detailList []Detail
-		var userAccount account.UserAccount
-		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		param := c.Query("param")
 		sklandId := c.Query("sklandId")
-		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-		skAccount.Hypergryph.Token = userAccount.HypergryphToken
-		skAccount.Skland.Token = userAccount.SklandToken
-		skAccount.Skland.Cred = userAccount.SklandCred
+		playerData, userAccount, skAccount, err := player.GetPlayerData(userId, sklandId, uid)
+		if err != nil {
+			log.Println(err)
+			renderError(c, err)
+			return
+		}
 		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount, userAccount.ServerName)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
-			return
-		}
-		playerData, _, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
-		if err != nil {
-			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 

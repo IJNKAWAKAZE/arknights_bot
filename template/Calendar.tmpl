@@ -3,15 +3,8 @@
     <meta name="referrer" content="no-referrer" />
     <script src="/template/js/calendar.js"></script>
     <title>日历</title>
+    <link rel="stylesheet" href="/assets/css/common.css" />
     <style>
-        @font-face{
-            font-family: 'NotoSansHans';
-            src : url('/assets/font/NotoSansHans-Regular.ttf');
-        }
-        body {
-            margin: 0;
-            font-family: 'NotoSansHans',serif;
-        }
         #main {
             width: 1920px;
             height: 1080px;
@@ -94,11 +87,18 @@
         }
         .dayTbody {
             height: calc(100% - 40px);
+            -webkit-box-orient: vertical;
+            -webkit-flex-direction: column;
+            -ms-flex-direction: column;
+            flex-direction: column;
         }
         .dayTbody .dayTr {
             width: 100%;
             border-top: 1px solid #c8cacc;
-            height: calc(100% / 5);
+            -webkit-box-flex: 1;
+            -webkit-flex: 1 1 0;
+            -ms-flex: 1 1 0;
+            flex: 1 1 0;
         }
         .dayTbody .dayTr .dayTd {
             display: -webkit-box;

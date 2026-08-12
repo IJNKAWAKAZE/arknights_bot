@@ -13,8 +13,10 @@ import (
 	"log"
 )
 
+var crontab *cron.Cron
+
 func StartCron() error {
-	crontab := cron.New(cron.WithSeconds())
+	crontab = cron.New(cron.WithSeconds())
 
 	//明日方舟bilibili动态 0/30 * * * * ?
 	_, err := crontab.AddFunc("0/30 * * * * ?", arknightsnews.BilibiliNews)
@@ -72,4 +74,11 @@ func StartCron() error {
 	apremind.InitApRemind()
 
 	return nil
+}
+
+// Stop 停止定时任务
+func Stop() {
+	if crontab != nil {
+		crontab.Stop()
+	}
 }

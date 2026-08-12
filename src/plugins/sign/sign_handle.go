@@ -1,11 +1,11 @@
 package sign
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -23,31 +23,31 @@ func SignHandle(update tgbotapi.Update) error {
 	var userAccount account.UserAccount
 	var players []account.UserPlayer
 
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 
 	// 获取绑定角色
-	res = utils.GetPlayersByUserId(userId).Scan(&players)
+	res = repo.GetPlayersByUserId(userId).Scan(&players)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 
@@ -71,11 +71,11 @@ func SignHandle(update tgbotapi.Update) error {
 		default:
 			sendMessage := tgbotapi.NewMessage(chatId, "未知的签到指令参数，请使用 /help 查看使用说明。")
 			sendMessage.ReplyToMessageID = messageId
-			msg, err := bot.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
 			}
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		}
 		return nil
 	}
@@ -93,14 +93,14 @@ func SignHandle(update tgbotapi.Update) error {
 		)
 		sendMessage := tgbotapi.NewMessage(chatId, "请选择要签到的角色")
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 	} else {
 		// 绑定单个角色执行签到
-		utils.GetAccountByUid(userId, players[0].Uid).Scan(&userAccount)
+		repo.GetAccountByUid(userId, players[0].Uid).Scan(&userAccount)
 		return Sign(players[0], userAccount, chatId)
 	}
 	return nil
@@ -114,28 +114,28 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	skAccount.Skland.Cred = account.SklandCred
 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount, account.ServerName)
 	if err != nil {
 		log.Println(playerName, err)
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\n失败原因:%s", playerName, err.Error()))
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 	// 今日已完成签到
 	if hasSigned {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", playerName))
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 	// 签到成功
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, award))
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	return nil
 }
 
@@ -146,15 +146,15 @@ func autoSign(update tgbotapi.Update) {
 	chatId := message.Chat.ID
 	messageId := message.MessageID
 	var userSign UserSign
-	res := utils.GetAutoSignByUserId(userId).Scan(&userSign)
+	res := repo.GetAutoSignByUserId(userId).Scan(&userSign)
 	if res.RowsAffected > 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "已开启自动签到！")
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return
 	}
 	id, _ := gonanoid.New(32)
@@ -165,15 +165,15 @@ func autoSign(update tgbotapi.Update) {
 		NotifyMode: 0,
 	}
 
-	bot.DBEngine.Table("user_sign").Create(&userSign)
+	config.DBEngine.Table("user_sign").Create(&userSign)
 
 	sendMessage := tgbotapi.NewMessage(chatId, "开启自动签到成功！")
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 }
 
 // 关闭自动签到
@@ -183,15 +183,15 @@ func stopSign(update tgbotapi.Update) {
 	chatId := message.Chat.ID
 	messageId := message.MessageID
 
-	bot.DBEngine.Exec("delete from user_sign where user_number = ?", userId)
+	config.DBEngine.Exec("delete from user_sign where user_number = ?", userId)
 
 	sendMessage := tgbotapi.NewMessage(chatId, "已关闭自动签到！")
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 }
 
 // 设置签到通知模式
@@ -202,19 +202,19 @@ func setNotifyMode(update tgbotapi.Update, mode int) {
 	messageId := message.MessageID
 
 	var userSign UserSign
-	res := utils.GetAutoSignByUserId(userId).Scan(&userSign)
+	res := repo.GetAutoSignByUserId(userId).Scan(&userSign)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "请先开启自动签到！(/sign auto)")
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return
 	}
 
-	bot.DBEngine.Exec("update user_sign set notify_mode = ? where user_number = ?", mode, userId)
+	config.DBEngine.Exec("update user_sign set notify_mode = ? where user_number = ?", mode, userId)
 
 	var modeText string
 	switch mode {
@@ -228,9 +228,9 @@ func setNotifyMode(update tgbotapi.Update, mode int) {
 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("签到通知模式已设置为：%s", modeText))
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 }

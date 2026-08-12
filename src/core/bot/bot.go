@@ -1,13 +1,12 @@
 package bot
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/apremind"
 	"arknights_bot/plugins/enemy"
 	"arknights_bot/plugins/gatekeeper"
 	"arknights_bot/plugins/lottery"
-	"arknights_bot/plugins/material"
 	"arknights_bot/plugins/operator"
 	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/sign"
@@ -20,9 +19,9 @@ import (
 // Serve TG机器人阻塞监听
 func Serve() {
 	log.Println("机器人启动成功")
-	b := bot.Arknights.AddHandle()
-	bot.Arknights.Debug = viper.GetBool("bot.debug")
-	bot.Arknights.IgnoreChannelCMD = true
+	b := config.Arknights.AddHandle()
+	config.Arknights.Debug = viper.GetBool("bot.debug")
+	config.Arknights.IgnoreChannelCMD = true
 	b.JoinRequestProcessor(gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
@@ -41,7 +40,6 @@ func Serve() {
 	b.NewInlineQueryProcessor("干员", operator.InlineOperator)
 	b.NewInlineQueryProcessor("皮肤", skin.InlineSkin)
 	b.NewInlineQueryProcessor("敌人", enemy.InlineEnemy)
-	b.NewInlineQueryProcessor("材料", material.InlineMaterial)
 
 	// 私聊
 	b.NewPrivateCommandProcessor("start", system.HelpHandle)
@@ -74,7 +72,6 @@ func Serve() {
 	b.NewCommandProcessor("operator", operator.OperatorHandle)
 	b.NewCommandProcessor("skin", skin.SkinHandle)
 	b.NewCommandProcessor("enemy", enemy.EnemyHandle)
-	b.NewCommandProcessor("material", material.MaterialHandle)
 	b.NewCommandProcessor("report", system.ReportHandle)
 	b.NewCommandProcessor("quiz", system.QuizHandle)
 	b.NewCommandProcessor("redeem", player.PlayerHandle)

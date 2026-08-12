@@ -1,7 +1,7 @@
 package system
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
 	"bytes"
 	"fmt"
@@ -23,13 +23,13 @@ func ReportHandle(update tgbotapi.Update) error {
 		target := replyToMessage.From.ID
 		name := replyToMessage.From.FullName()
 
-		if bot.Arknights.IsAdmin(chatId, target) {
+		if config.Arknights.IsAdmin(chatId, target) {
 			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
-			msg, err := bot.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
 			}
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 			return nil
 		}
 
@@ -49,7 +49,7 @@ func ReportHandle(update tgbotapi.Update) error {
 		} else {
 			text.WriteString(fmt.Sprintf("消息存放：[%d](https://t.me/c/%s/%d)", replyMessageId, strings.ReplaceAll(strconv.FormatInt(replyToMessage.Chat.ID, 10), "-100", ""), replyMessageId))
 		}
-		charAdmins, _ := bot.Arknights.GetChatAdministrators(getAdmins)
+		charAdmins, _ := config.Arknights.GetChatAdministrators(getAdmins)
 		var admins []int64
 		for _, admin := range charAdmins {
 			if !admin.User.IsBot {
@@ -73,7 +73,7 @@ func ReportHandle(update tgbotapi.Update) error {
 		sendMessage := tgbotapi.NewMessage(chatId, text.String())
 		sendMessage.ReplyMarkup = inlineKeyboardMarkup
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 	}
 
 	return nil

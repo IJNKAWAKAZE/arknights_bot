@@ -1,9 +1,7 @@
 package web
 
 import (
-	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/plugins/player"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -35,20 +33,14 @@ func Box(r *gin.Engine) {
 	r.GET("/box", func(c *gin.Context) {
 		r.LoadHTMLFiles("./template/Box.tmpl")
 		var box BoxInfo
-		var userAccount account.UserAccount
-		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		param := c.Query("param")
 		sklandId := c.Query("sklandId")
-		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-		skAccount.Hypergryph.Token = userAccount.HypergryphToken
-		skAccount.Skland.Token = userAccount.SklandToken
-		skAccount.Skland.Cred = userAccount.SklandCred
-		playerData, _, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
+		playerData, _, _, err := player.GetPlayerData(userId, sklandId, uid)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 
@@ -105,7 +97,7 @@ func Box(r *gin.Engine) {
 		box.Name = playerData.Status.Name
 		box.Chars = chars
 		if len(box.Chars) == 0 {
-			utils.WebC <- fmt.Errorf("无符合干员")
+			renderError(c, fmt.Errorf("无符合干员"))
 			return
 		}
 

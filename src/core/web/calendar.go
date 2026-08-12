@@ -1,7 +1,6 @@
 package web
 
 import (
-	"arknights_bot/utils"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
@@ -28,13 +27,13 @@ func Calendar(r *gin.Engine) {
 		resp, err := http.Get(viper.GetString("api.calendar"))
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 		text := doc.Text()

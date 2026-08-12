@@ -1,8 +1,8 @@
 package system
 
 import (
-	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/config"
+	"arknights_bot/utils/media"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
@@ -16,20 +16,20 @@ func HelpHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	if fileId == "" {
 		port := viper.GetString("http.port")
-		pic, err := utils.Screenshot("http://localhost:"+port+"/help", 0, 1.5)
+		pic, err := media.Screenshot("http://localhost:"+port+"/help", 0, 1.5)
 		if err != nil {
 			sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 			sendMessage.ReplyToMessageID = messageId
-			bot.Arknights.Send(sendMessage)
+			config.Arknights.Send(sendMessage)
 			return nil
 		}
 		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 		sendPhoto.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendPhoto)
+		msg, err := config.Arknights.Send(sendPhoto)
 		if err != nil {
 			log.Println(err)
 			return err
@@ -39,6 +39,6 @@ func HelpHandle(update tgbotapi.Update) error {
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(fileId))
 	sendPhoto.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendPhoto)
+	config.Arknights.Send(sendPhoto)
 	return nil
 }

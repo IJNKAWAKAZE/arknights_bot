@@ -1,10 +1,10 @@
 package apremind
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -22,29 +22,29 @@ func ApHandle(update tgbotapi.Update) error {
 
 	var userAccount account.UserAccount
 
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 
 	if param == "" {
 		sendMessage := tgbotapi.NewMessage(chatId, "请指定理智提醒参数，使用 /help 查看使用说明。")
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 
@@ -63,22 +63,22 @@ func ApHandle(update tgbotapi.Update) error {
 			if err != nil || threshold < 1 || threshold > 100 {
 				sendMessage := tgbotapi.NewMessage(chatId, "理智提醒阈值请输入1-100之间的整数！")
 				sendMessage.ReplyToMessageID = messageId
-				msg, err := bot.Arknights.Send(sendMessage)
+				msg, err := config.Arknights.Send(sendMessage)
 				if err != nil {
 					return err
 				}
-				messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+				messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 				return nil
 			}
 			apSetThreshold(update, threshold)
 		} else {
 			sendMessage := tgbotapi.NewMessage(chatId, "未知的理智提醒参数，请使用 /help 查看使用说明。")
 			sendMessage.ReplyToMessageID = messageId
-			msg, err := bot.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
 			}
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		}
 	}
 	return nil
@@ -92,7 +92,7 @@ func apRemindOn(update tgbotapi.Update) {
 	messageId := message.MessageID
 
 	var userApRemind UserApRemind
-	res := utils.GetApRemindByUserId(userId).Scan(&userApRemind)
+	res := repo.GetApRemindByUserId(userId).Scan(&userApRemind)
 	if res.RowsAffected > 0 {
 		displayThreshold := userApRemind.ApThreshold
 		if displayThreshold == 0 {
@@ -100,11 +100,11 @@ func apRemindOn(update tgbotapi.Update) {
 		}
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("已开启理智提醒！当前阈值 %d%%。", displayThreshold))
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return
 	}
 
@@ -117,17 +117,17 @@ func apRemindOn(update tgbotapi.Update) {
 		ApNotified:  0,
 	}
 
-	bot.DBEngine.Table("user_ap_remind").Create(&userApRemind)
+	config.DBEngine.Table("user_ap_remind").Create(&userApRemind)
 
 	ScheduleNextApCheck(userId)
 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("理智提醒已开启！当理智恢复到 %d%% 时将发送通知。", defaultApThreshold))
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 }
 
 // 关闭理智提醒
@@ -138,15 +138,15 @@ func apRemindOff(update tgbotapi.Update) {
 	messageId := message.MessageID
 
 	CancelApCheck(userId)
-	bot.DBEngine.Exec("delete from user_ap_remind where user_number = ?", userId)
+	config.DBEngine.Exec("delete from user_ap_remind where user_number = ?", userId)
 
 	sendMessage := tgbotapi.NewMessage(chatId, "理智提醒已关闭！")
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 }
 
 // 设置理智提醒阈值
@@ -157,28 +157,28 @@ func apSetThreshold(update tgbotapi.Update, threshold int) {
 	messageId := message.MessageID
 
 	var userApRemind UserApRemind
-	res := utils.GetApRemindByUserId(userId).Scan(&userApRemind)
+	res := repo.GetApRemindByUserId(userId).Scan(&userApRemind)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "请先开启理智提醒！(/ap on)")
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return
 	}
 
-	bot.DBEngine.Exec("update user_ap_remind set ap_threshold = ?, ap_notified = 0 where user_number = ?", threshold, userId)
+	config.DBEngine.Exec("update user_ap_remind set ap_threshold = ?, ap_notified = 0 where user_number = ?", threshold, userId)
 
 	// Reschedule so the new threshold is used for the next check.
 	ScheduleNextApCheck(userId)
 
 	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("理智提醒阈值已设置为 %d%%", threshold))
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 }

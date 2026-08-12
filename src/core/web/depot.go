@@ -3,7 +3,8 @@ package web
 import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/hashutil"
+	"arknights_bot/utils/repo"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -58,14 +59,14 @@ func Depot(r *gin.Engine) {
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		sklandId := c.Query("sklandId")
-		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
+		repo.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
 		skAccount.Hypergryph.Token = userAccount.HypergryphToken
 		skAccount.Skland.Token = userAccount.SklandToken
 		skAccount.Skland.Cred = userAccount.SklandCred
 		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount, userAccount.ServerName)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 		for _, item := range playerCultivate.Items {
@@ -80,7 +81,7 @@ func Depot(r *gin.Engine) {
 				depotItem.SortId = itemMap[item.ID].SortId
 				// 图标
 				paintingName := fmt.Sprintf("道具_带框_%s.png", depotItem.Name)
-				m := utils.Md5(paintingName)
+				m := hashutil.Md5(paintingName)
 				path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				depotItem.Icon = path + paintingName + "/75px-" + paintingName
 				depotItems = append(depotItems, depotItem)

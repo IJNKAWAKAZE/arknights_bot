@@ -1,7 +1,9 @@
 package operator
 
 import (
-	"arknights_bot/utils"
+	"arknights_bot/utils/hashutil"
+	"arknights_bot/utils/model"
+	"arknights_bot/utils/search"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
@@ -11,7 +13,7 @@ import (
 )
 
 type Operator struct {
-	OP               utils.Operator   `json:"op"`               // 基本信息
+	OP               model.Operator   `json:"op"`               // 基本信息
 	Painting         string           `json:"painting"`         // 立绘
 	AttackRange      template.HTML    `json:"attackRange"`      // 攻击范围
 	ProfessionBranch ProfessionBranch `json:"professionBranch"` // 职业分支
@@ -61,7 +63,7 @@ func ParseOperator(name string) Operator {
 	var operator Operator
 	api := viper.GetString("api.wiki")
 	response, _ := http.Get(api + name)
-	op := utils.GetOperatorByName(name)
+	op := search.GetOperatorByName(name)
 	if op.Name != "" {
 		operator.OP = op
 		operator.Painting = op.Skins[0].Url
@@ -80,7 +82,7 @@ func ParseOperator(name string) Operator {
 					tds := selection.Find("td")
 					operator.ProfessionBranch.Name = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
 					paintingName := fmt.Sprintf("职业分支图标_%s.png", operator.ProfessionBranch.Name)
-					m := utils.Md5(paintingName)
+					m := hashutil.Md5(paintingName)
 					path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 					operator.ProfessionBranch.Pic = path + paintingName
 					tds.Each(func(j int, selection *goquery.Selection) {

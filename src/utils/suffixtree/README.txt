@@ -1,1 +1,0 @@
-from https://github.com/ljfuyuan/suffixtree modified to make the type is usable

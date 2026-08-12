@@ -2,7 +2,8 @@ package web
 
 import (
 	"arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/utils/model"
+	"arknights_bot/utils/search"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"sort"
@@ -11,7 +12,7 @@ import (
 
 type RecruitList struct {
 	Tags      []string         `json:"tags"`
-	Operators []utils.Operator `json:"operators"`
+	Operators []model.Operator `json:"operators"`
 }
 
 func Recruit(r *gin.Engine) {
@@ -20,7 +21,10 @@ func Recruit(r *gin.Engine) {
 		tags := strings.Split(c.Query("tags"), " ")
 		client := c.Query("client")
 		var recruitList []RecruitList
-		recruitOperatorList := utils.GetRecruitOperatorList()
+		recruitOperatorList := search.GetRecruitOperatorList()
+		config.DataMu.RLock()
+		recruitMissing := config.RecruitMissing
+		config.DataMu.RUnlock()
 		var tagList [][]string
 		n := len(tags)
 		nBit := 1 << n
@@ -49,7 +53,7 @@ func Recruit(r *gin.Engine) {
 				continue
 			}
 			for _, operator := range recruitOperatorList {
-				if client == "jp" && config.RecruitMissing[operator.Name] != "" {
+				if client == "jp" && recruitMissing[operator.Name] != "" {
 					continue
 				}
 				opTags := operator.Tags + " " + operator.ProfessionZH + " " + operator.Position

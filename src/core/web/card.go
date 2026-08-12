@@ -2,8 +2,10 @@ package web
 
 import (
 	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
+	"arknights_bot/utils/search"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
@@ -83,56 +85,31 @@ func Card(r *gin.Engine) {
 		playerCard, err := cardData(userId, sklandId, uid)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 		c.HTML(http.StatusOK, "Card.tmpl", playerCard)
-	})
-
-	r.GET("/oldCard", func(c *gin.Context) {
-		utils.WebC = make(chan error, 10)
-		defer close(utils.WebC)
-		r.LoadHTMLFiles("./template/OldCard.tmpl")
-		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
-		uid := c.Query("uid")
-		sklandId := c.Query("sklandId")
-		playerCard, err := cardData(userId, sklandId, uid)
-		if err != nil {
-			log.Println(err)
-			utils.WebC <- err
-			return
-		}
-		c.HTML(http.StatusOK, "OldCard.tmpl", playerCard)
 	})
 }
 
 func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	var playerCard PlayerCard
-	var userAccount account.UserAccount
-	var skAccount skland.Account
-	utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-	var userPlayer account.UserPlayer
-	utils.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
-	playerCard.ServerName = userPlayer.ServerName
-	skAccount.Hypergryph.Token = userAccount.HypergryphToken
-	skAccount.Skland.Token = userAccount.SklandToken
-	skAccount.Skland.Cred = userAccount.SklandCred
-	playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
+	playerData, userAccount, skAccount, err := player.GetPlayerData(userId, sklandId, uid)
 	if err != nil {
 		log.Println(err)
-		utils.WebC <- err
 		return playerCard, err
 	}
+	var userPlayer account.UserPlayer
+	repo.GetPlayerByUserId(userAccount.UserNumber, uid).Scan(&userPlayer)
+	playerCard.ServerName = userPlayer.ServerName
 	playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount, userAccount.ServerName)
 	if err != nil {
 		log.Println(err)
-		utils.WebC <- err
 		return playerCard, err
 	}
 	playerCards, err := skland.GetPlayerCards(skAccount, userAccount.ServerName)
 	if err != nil {
 		log.Println(err)
-		utils.WebC <- err
 		return playerCard, err
 	}
 	// 计算模组数据
@@ -178,7 +155,7 @@ func cardData(userId int64, sklandId, uid string) (PlayerCard, error) {
 	} else {
 		// 头像
 		paintingName := fmt.Sprintf("%s.png", strings.ToUpper(avatarId[:1])+avatarId[1:])
-		m := utils.Md5(paintingName)
+		m := hashutil.Md5(paintingName)
 		path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 		playerCard.Avatar = path + paintingName + "/80px-" + paintingName
 	}*/
@@ -229,7 +206,7 @@ func getSkinUrl(secretaryName, skinId string) (string, string, error) {
 	if strings.Contains(skinId, "amiya3") {
 		secretaryName = "阿米娅(医疗)"
 	}
-	operator := utils.GetOperatorByName(secretaryName)
+	operator := search.GetOperatorByName(secretaryName)
 	enName := operator.NameEn
 	if !strings.Contains(skinId, "@") {
 		if strings.Contains(skinId, "#1") {

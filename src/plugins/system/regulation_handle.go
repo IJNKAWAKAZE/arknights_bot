@@ -1,9 +1,10 @@
 package system
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
+	"arknights_bot/utils/model"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
@@ -16,14 +17,14 @@ func RegulationHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
-	if bot.Arknights.IsAdmin(chatId, userId) {
+	if config.Arknights.IsAdmin(chatId, userId) {
 		replyToMessage := update.Message.ReplyToMessage
 		if replyToMessage != nil {
 			replyMessageId := replyToMessage.MessageID
-			var joined utils.GroupJoined
-			utils.GetJoinedByChatId(chatId).Scan(&joined)
+			var joined model.GroupJoined
+			repo.GetJoinedByChatId(chatId).Scan(&joined)
 			joined.Reg = replyMessageId
-			bot.DBEngine.Table("group_joined").Save(&joined)
+			config.DBEngine.Table("group_joined").Save(&joined)
 			var sendMessage tgbotapi.MessageConfig
 			if replyToMessage.Chat.UserName != "" {
 				sendMessage = tgbotapi.NewMessage(chatId, fmt.Sprintf("消息[%d](https://t.me/%s/%d)已设置为群规！", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))
@@ -31,21 +32,21 @@ func RegulationHandle(update tgbotapi.Update) error {
 				sendMessage = tgbotapi.NewMessage(chatId, fmt.Sprintf("消息[%d](https://t.me/c/%s/%d)已设置为群规！", replyMessageId, strings.ReplaceAll(strconv.FormatInt(replyToMessage.Chat.ID, 10), "-100", ""), replyMessageId))
 			}
 			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-			msg, err := bot.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.Send(sendMessage)
 			if err != nil {
 				return err
 			}
-			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		}
 		return nil
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return err
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 	return nil
 }

@@ -1,26 +1,26 @@
 package pinyin
 
 import (
-	"strings"
 	"github.com/mozillazg/go-pinyin"
+	"strings"
 )
 
 type Args struct {
-	Style     int // 拼音风格
+	Style     int  // 拼音风格
 	Heteronym bool // 是否启用多音字模式
 }
 
 const (
-	Tone         = pinyin.Tone         // 带声调
-	Tone2        = pinyin.Tone2        // 声调在拼音之后
-	Tone3        = pinyin.Tone3        // 声调在韵母之后
-	Initials     = pinyin.Initials     // 仅声母
-	FirstLetter  = pinyin.FirstLetter  // 首字母
-	Finals       = pinyin.Finals       // 仅韵母
-	FinalsTone   = pinyin.FinalsTone   // 仅韵母带声调
-	FinalsTone2  = pinyin.FinalsTone2  // 仅韵母声调在拼音之后
-	FinalsTone3  = pinyin.FinalsTone3  // 仅韵母声调在韵母之后
-	Normal       = pinyin.Normal       // 普通风格，不带声调
+	Tone        = pinyin.Tone        // 带声调
+	Tone2       = pinyin.Tone2       // 声调在拼音之后
+	Tone3       = pinyin.Tone3       // 声调在韵母之后
+	Initials    = pinyin.Initials    // 仅声母
+	FirstLetter = pinyin.FirstLetter // 首字母
+	Finals      = pinyin.Finals      // 仅韵母
+	FinalsTone  = pinyin.FinalsTone  // 仅韵母带声调
+	FinalsTone2 = pinyin.FinalsTone2 // 仅韵母声调在拼音之后
+	FinalsTone3 = pinyin.FinalsTone3 // 仅韵母声调在韵母之后
+	Normal      = pinyin.Normal      // 普通风格，不带声调
 )
 
 func NewArgs() *Args {
@@ -54,7 +54,7 @@ func Convert(s string, args *Args) string {
 func Homophones(s string, args *Args) map[string][]string {
 	result := make(map[string][]string)
 	pys := Pinyin(s, args)
-	
+
 	for _, words := range pys {
 		for _, word := range words {
 			if _, exists := result[word]; !exists {
@@ -62,7 +62,7 @@ func Homophones(s string, args *Args) map[string][]string {
 			}
 		}
 	}
-	
+
 	return result
 }
 

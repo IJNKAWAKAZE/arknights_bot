@@ -1,9 +1,8 @@
 package web
 
 import (
-	"arknights_bot/plugins/account"
-	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/plugins/player"
+	"arknights_bot/utils/search"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -29,25 +28,19 @@ func Missing(r *gin.Engine) {
 		r.LoadHTMLFiles("./template/Missing.tmpl")
 		var missingInfo MissingInfo
 		param := c.Query("param")
-		var userAccount account.UserAccount
-		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		sklandId := c.Query("sklandId")
-		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-		skAccount.Hypergryph.Token = userAccount.HypergryphToken
-		skAccount.Skland.Token = userAccount.SklandToken
-		skAccount.Skland.Cred = userAccount.SklandCred
-		playerData, _, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
+		playerData, _, _, err := player.GetPlayerData(userId, sklandId, uid)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 
 		var chars []MissingChar
 		myOperators := make(map[string]Char)
-		operatorList := utils.GetOperators()
+		operatorList := search.GetOperators()
 
 		for _, c := range playerData.Chars {
 			rarity := playerData.CharInfoMap[c.CharID].Rarity
@@ -104,7 +97,7 @@ func Missing(r *gin.Engine) {
 		missingInfo.Name = playerData.Status.Name
 		missingInfo.Chars = chars
 		if len(missingInfo.Chars) == 0 {
-			utils.WebC <- fmt.Errorf("你什么都不缺")
+			renderError(c, fmt.Errorf("你什么都不缺"))
 			return
 		}
 

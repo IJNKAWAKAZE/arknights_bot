@@ -1,9 +1,9 @@
 package account
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
@@ -16,11 +16,11 @@ func SetTokenHandle(update tgbotapi.Update) error {
 
 	var userAccount UserAccount
 
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 	var buttons [][]tgbotapi.InlineKeyboardButton
@@ -33,7 +33,7 @@ func SetTokenHandle(update tgbotapi.Update) error {
 	)
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的服务器")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	return nil
 }
 
@@ -45,7 +45,7 @@ func ResetToken(update tgbotapi.Update) error {
 	token := message.Text
 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	var userToken UserToken
 	err := json.Unmarshal([]byte(token), &userToken)
@@ -55,20 +55,20 @@ func ResetToken(update tgbotapi.Update) error {
 	account, err := skland.Login(token, serverNameMap[chatId])
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return err
 	}
 	// 查查询账户信息
 	var userAccount UserAccount
-	res := utils.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
+	res := repo.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
 		userAccount.SklandToken = account.Skland.Token
 		userAccount.SklandCred = account.Skland.Cred
-		bot.DBEngine.Table("user_account").Save(&userAccount)
+		config.DBEngine.Table("user_account").Save(&userAccount)
 		sendMessage := tgbotapi.NewMessage(chatId, "重设token成功！")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 	}
 	delete(tgbotapi.WaitMessage, chatId)
 	return nil

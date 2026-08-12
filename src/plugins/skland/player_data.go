@@ -139,14 +139,14 @@ type PlayerData struct {
 				} `json:"bubble"`
 				WorkTime int `json:"workTime"`
 			} `json:"chars"`
-			CompleteWorkTime int    `json:"completeWorkTime"`
-			LastUpdateTime   int    `json:"lastUpdateTime"`
-			FormulaID        string `json:"formulaId"`
-			Capacity         int    `json:"capacity"`
-			Weight           int    `json:"weight"`
-			Complete         int    `json:"complete"`
-			Remain           int    `json:"remain"`
-			Speed            int    `json:"speed"`
+			CompleteWorkTime int     `json:"completeWorkTime"`
+			LastUpdateTime   int     `json:"lastUpdateTime"`
+			FormulaID        string  `json:"formulaId"`
+			Capacity         int     `json:"capacity"`
+			Weight           int     `json:"weight"`
+			Complete         int     `json:"complete"`
+			Remain           int     `json:"remain"`
+			Speed            float64 `json:"speed"`
 		} `json:"manufactures"`
 		ManufacturesCurrent int `json:"manufacturesCurrent"`
 		ManufacturesTotal   int `json:"manufacturesTotal"`

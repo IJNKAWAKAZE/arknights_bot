@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
@@ -110,7 +110,7 @@ func InitApRemind() {
 
 	// Pre-load all users with AP remind enabled into cache and queue.
 	var users []UserApRemind
-	res := utils.GetApRemindUsers().Scan(&users)
+	res := repo.GetApRemindUsers().Scan(&users)
 	if res.RowsAffected > 0 {
 		log.Println("初始化理智提醒调度器...")
 		for _, user := range users {
@@ -168,7 +168,7 @@ func DailyApCheck() {
 
 func (s *apScheduler) loadUserCache(userNumber int64) {
 	var user UserApRemind
-	if r := utils.GetApRemindByUserId(userNumber).Scan(&user); r.RowsAffected == 0 {
+	if r := repo.GetApRemindByUserId(userNumber).Scan(&user); r.RowsAffected == 0 {
 		delete(s.cache, userNumber)
 		return
 	}
@@ -179,12 +179,12 @@ func (s *apScheduler) loadUserCache(userNumber int64) {
 	}
 
 	var players []account.UserPlayer
-	utils.GetPlayersByUserId(userNumber).Scan(&players)
+	repo.GetPlayersByUserId(userNumber).Scan(&players)
 
 	cached := make([]apPlayerCache, 0, len(players))
 	for _, p := range players {
 		var ua account.UserAccount
-		if r := utils.GetAccountByUid(userNumber, p.Uid).Scan(&ua); r.RowsAffected > 0 {
+		if r := repo.GetAccountByUid(userNumber, p.Uid).Scan(&ua); r.RowsAffected > 0 {
 			cached = append(cached, apPlayerCache{
 				Uid:             p.Uid,
 				PlayerName:      p.PlayerName,
@@ -328,6 +328,7 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 			log.Println("理智提醒：获取角色信息失败:", player.PlayerName, err)
 			continue // try next player
 		}
+		repo.UpdatePlayerName(player.Uid, pd.Status.Name)
 
 		ap := pd.Status.Ap
 		maxAp := ap.Max
@@ -348,9 +349,9 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 					"⚡ 理智提醒\n角色 %s 当前理智：%d/%d (%d%%)\n已达到设定阈值 %d%%",
 					player.PlayerName, currentAp, maxAp, apPercent, threshold,
 				))
-				bot.Arknights.Send(msg)
+				config.Arknights.Send(msg)
 				uc.ApNotified = 1
-				bot.DBEngine.Exec("update user_ap_remind set ap_notified = 1 where user_number = ?", uc.UserNumber)
+				config.DBEngine.Exec("update user_ap_remind set ap_notified = 1 where user_number = ?", uc.UserNumber)
 				log.Printf("理智提醒：用户 %d 角色 %s 理智已达阈值，已通知", uc.UserNumber, player.PlayerName)
 			}
 			// Notified – remove from queue; daily check will re-add when AP drops.
@@ -360,7 +361,7 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 		// ── AP below threshold ──
 		if uc.ApNotified == 1 {
 			uc.ApNotified = 0
-			bot.DBEngine.Exec("update user_ap_remind set ap_notified = 0 where user_number = ?", uc.UserNumber)
+			config.DBEngine.Exec("update user_ap_remind set ap_notified = 0 where user_number = ?", uc.UserNumber)
 		}
 
 		// Edge case: ap.Current (from API, without elapsed-time adjustment) may already

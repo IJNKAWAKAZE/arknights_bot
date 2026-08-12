@@ -1,9 +1,9 @@
 package web
 
 import (
-	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/search"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -59,26 +59,20 @@ func Summary(r *gin.Engine) {
 		uid := c.Query("uid")
 		sklandId := c.Query("sklandId")
 		var boxSummary BoxSummary
-		var userAccount account.UserAccount
-		var skAccount skland.Account
-		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-		skAccount.Hypergryph.Token = userAccount.HypergryphToken
-		skAccount.Skland.Token = userAccount.SklandToken
-		skAccount.Skland.Cred = userAccount.SklandCred
-		playerData, _, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
+		playerData, userAccount, skAccount, err := player.GetPlayerData(userId, sklandId, uid)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 		playerCultivate, err := skland.GetPlayerCultivate(uid, skAccount, userAccount.ServerName)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 		var missingChars []MissingChar
-		operatorList := utils.GetOperators()
+		operatorList := search.GetOperators()
 		myOperators := make(map[string]Char)
 		charMap := playerData.CharInfoMap
 		boxSummary.AllCharCnt = fmt.Sprintf("%d/%d", len(myOperators), len(operatorList))

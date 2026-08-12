@@ -175,7 +175,8 @@ Calendar.prototype = {
         }
 
         var dayDate,
-            rows = 6,
+            // 根据当月天数和起始位置计算所需行数，5 行放得下就用 5 行，否则用 6 行
+            rows = Math.max(5, Math.ceil((firstDayOfMonthIndex - 1 + daysInMonth) / 7)),
             cols = 7,
             monthHTML = [],
             dayIndex = 0 + (this.attrs.firstDay - 1),

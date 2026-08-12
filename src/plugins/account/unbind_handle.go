@@ -1,8 +1,8 @@
 package account
 
 import (
-	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/config"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
@@ -12,10 +12,10 @@ func UnbindHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	userId := update.Message.From.ID
 	var players []UserPlayer
-	res := utils.GetPlayersByUserId(userId).Scan(&players)
+	res := repo.GetPlayersByUserId(userId).Scan(&players)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 	var buttons [][]tgbotapi.InlineKeyboardButton
@@ -29,6 +29,6 @@ func UnbindHandle(update tgbotapi.Update) error {
 	)
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要解绑的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	return nil
 }

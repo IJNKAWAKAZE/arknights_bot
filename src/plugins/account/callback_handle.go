@@ -1,8 +1,8 @@
 package account
 
 import (
-	bot "arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/config"
+	"arknights_bot/utils/repo"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"strings"
@@ -27,7 +27,7 @@ func ChooseServer(callBack tgbotapi.Update) error {
 	operType := d[2]
 
 	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	sendMessage.Text = "如何获取token\n\n" +
 		"国服：\n\n" +
 		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
@@ -36,7 +36,7 @@ func ChooseServer(callBack tgbotapi.Update) error {
 		"1\\.前往 [森空港](https://www.skport.com) 登录\n" +
 		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skport.com/cookie_store/account_token)\n\n"
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	tgbotapi.WaitMessage[chatId] = operType
 	callbackQuery.Message.Delete()
 	return nil
@@ -63,8 +63,8 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 
 	var userAccount UserAccount
 	var userPlayer UserPlayer
-	utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-	res := utils.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
+	repo.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
+	res := repo.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
 	if res.RowsAffected == 0 {
 		id, _ := gonanoid.New(32)
 		userPlayer = UserPlayer{
@@ -76,17 +76,17 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 			ServerName: serverName,
 			PlayerName: playerName,
 		}
-		bot.DBEngine.Table("user_player").Create(&userPlayer)
+		config.DBEngine.Table("user_player").Create(&userPlayer)
 	} else {
 		userPlayer.PlayerName = playerName
 		userPlayer.ServerName = serverName
-		bot.DBEngine.Table("user_player").Save(&userPlayer)
+		config.DBEngine.Table("user_player").Save(&userPlayer)
 		sendMessage := tgbotapi.NewMessage(chatId, "此角色已绑定，更新角色信息。")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 	sendMessage := tgbotapi.NewMessage(chatId, "角色绑定成功！")
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	delete(sklandIdMap, chatId)
 	return nil
 }
@@ -106,9 +106,9 @@ func UnbindPlayer(callBack tgbotapi.Update) error {
 	chatId := callbackQuery.Message.Chat.ID
 
 	uid := d[1]
-	bot.DBEngine.Exec("delete from user_player where user_number = ? and uid = ?", userId, uid)
+	config.DBEngine.Exec("delete from user_player where user_number = ? and uid = ?", userId, uid)
 	sendMessage := tgbotapi.NewMessage(chatId, "角色解绑成功！")
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	callbackQuery.Message.Delete()
 	return nil
 }

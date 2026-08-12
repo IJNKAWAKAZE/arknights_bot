@@ -1,9 +1,8 @@
 package web
 
 import (
-	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -13,25 +12,19 @@ import (
 func State(r *gin.Engine) {
 	r.GET("/state", func(c *gin.Context) {
 		r.LoadHTMLFiles("./template/State.tmpl")
-		var userAccount account.UserAccount
-		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		sklandId := c.Query("sklandId")
-		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-		skAccount.Hypergryph.Token = userAccount.HypergryphToken
-		skAccount.Skland.Token = userAccount.SklandToken
-		skAccount.Skland.Cred = userAccount.SklandCred
-		playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
+		playerData, userAccount, skAccount, err := player.GetPlayerData(userId, sklandId, uid)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 		playStatistic, _, err := skland.GetPlayerStatistic(uid, skAccount, userAccount.ServerName)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 

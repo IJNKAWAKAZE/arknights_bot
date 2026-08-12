@@ -3,7 +3,8 @@ package web
 import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/player"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
+	"arknights_bot/utils/search"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -63,7 +64,7 @@ func Gacha(r *gin.Engine) {
 		var PoolMap = make(map[string][]player.UserGacha)
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
-		res := utils.GetUserGacha(userId, uid).Scan(&userGacha)
+		res := repo.GetUserGacha(userId, uid).Scan(&userGacha)
 		if res.Error != nil {
 			log.Println(res.Error)
 			return
@@ -122,13 +123,13 @@ func Gacha(r *gin.Engine) {
 			gachaLog.Chars = gachaChars[:20]
 		}
 		for i := range gachaLog.Chars {
-			gachaLog.Chars[i].Avatar = utils.GetOperatorByName(gachaLog.Chars[i].CharName).Avatar
+			gachaLog.Chars[i].Avatar = search.GetOperatorByName(gachaLog.Chars[i].CharName).Avatar
 		}
 		gachaLog.BegTime = userGacha[len(userGacha)-1].Ts
 		gachaLog.EndTime = userGacha[0].Ts
 
 		var userPlayer account.UserPlayer
-		utils.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
+		repo.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
 		gachaLog.Name = userPlayer.PlayerName
 
 		count := 1
@@ -151,16 +152,18 @@ func Gacha(r *gin.Engine) {
 				}
 			}
 		}
-		utils.ReverseSlice(star6Info)
+		for i, j := 0, len(star6Info)-1; i < j; i, j = i+1, j-1 {
+			star6Info[i], star6Info[j] = star6Info[j], star6Info[i]
+		}
 		gachaLog.Star6Info = star6Info
 		if len(star6Info) > 20 {
 			gachaLog.Star6Info = star6Info[:20]
 		}
 		for i := range gachaLog.Star6Info {
-			gachaLog.Star6Info[i].Avatar = utils.GetOperatorByName(gachaLog.Star6Info[i].Name).Avatar
+			gachaLog.Star6Info[i].Avatar = search.GetOperatorByName(gachaLog.Star6Info[i].Name).Avatar
 		}
 
-		utils.GetUserPoolCount(userId, uid).Scan(&poolCount)
+		repo.GetUserPoolCount(userId, uid).Scan(&poolCount)
 		gachaLog.PoolCount = poolCount
 		if len(poolCount) > 10 {
 			gachaLog.PoolCount = poolCount[len(poolCount)-10:]

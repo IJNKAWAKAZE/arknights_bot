@@ -1,9 +1,8 @@
 package web
 
 import (
-	"arknights_bot/plugins/account"
+	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -146,19 +145,13 @@ func Base(r *gin.Engine) {
 	r.GET("/base", func(c *gin.Context) {
 		r.LoadHTMLFiles("./template/Base.tmpl")
 		var playerBase PlayerBase
-		var userAccount account.UserAccount
-		var skAccount skland.Account
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		uid := c.Query("uid")
 		sklandId := c.Query("sklandId")
-		utils.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
-		skAccount.Hypergryph.Token = userAccount.HypergryphToken
-		skAccount.Skland.Token = userAccount.SklandToken
-		skAccount.Skland.Cred = userAccount.SklandCred
-		playerData, skAccount, err := skland.GetPlayerInfo(uid, skAccount, userAccount.ServerName)
+		playerData, _, _, err := player.GetPlayerData(userId, sklandId, uid)
 		if err != nil {
 			log.Println(err)
-			utils.WebC <- err
+			renderError(c, err)
 			return
 		}
 
@@ -224,7 +217,7 @@ func Base(r *gin.Engine) {
 			manufacture.Current = m.Complete
 			manufacture.Total = m.Capacity / Weight[m.FormulaID]
 			manufacture.Item = Item[m.FormulaID]
-			manufacture.Speed = fmt.Sprintf("%d%s", m.Speed*100, "%")
+			manufacture.Speed = fmt.Sprintf("%.0f%s", m.Speed*100, "%")
 			manufactures = append(manufactures, manufacture)
 		}
 		playerBase.Manufactures = manufactures

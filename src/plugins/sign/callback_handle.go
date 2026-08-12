@@ -2,7 +2,7 @@ package sign
 
 import (
 	"arknights_bot/plugins/account"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"strconv"
 	"strings"
@@ -31,8 +31,8 @@ func SignPlayer(callBack tgbotapi.Update) error {
 	var userAccount account.UserAccount
 	var player account.UserPlayer
 
-	utils.GetAccountByUid(userId, uid).Scan(&userAccount)
-	utils.GetPlayerByUserId(userId, uid).Scan(&player)
+	repo.GetAccountByUid(userId, uid).Scan(&userAccount)
+	repo.GetPlayerByUserId(userId, uid).Scan(&player)
 
 	callbackQuery.Answer(false, "")
 	return Sign(player, userAccount, chatId)

@@ -1,7 +1,7 @@
 package system
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/datasource"
 	"arknights_bot/plugins/messagecleaner"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
@@ -18,27 +18,27 @@ func UpdateHandle(update tgbotapi.Update) error {
 	if owner == userId {
 		sendMessage := tgbotapi.NewMessage(chatId, "开始更新数据源")
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		datasource.UpdateDataSourceRunner()
 		sendMessage = tgbotapi.NewMessage(chatId, "数据源更新结束")
-		msg, err = bot.Arknights.Send(sendMessage)
+		msg, err = config.Arknights.Send(sendMessage)
 		if err != nil {
 			return err
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil
 	}
 
 	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
 	sendMessage.ReplyToMessageID = messageId
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		return err
 	}
-	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+	messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 	return nil
 }

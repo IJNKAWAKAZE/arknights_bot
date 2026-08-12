@@ -1,10 +1,10 @@
 package player
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
-	"arknights_bot/utils"
+	"arknights_bot/utils/media"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
@@ -21,28 +21,28 @@ func (_ PlayerOperationBox) Run(uid string, userAccount account.UserAccount, cha
 	messageId := message.MessageID
 	param := message.CommandArguments()
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	matched, _ := regexp.MatchString("^[1-6](,[1-6])*$", param)
 	if param != "" && param != "all" && !matched {
 		sendMessage := tgbotapi.NewMessage(chatId, "参数错误")
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 
 	port := viper.GetString("http.port")
-	pic, err := utils.Screenshot(fmt.Sprintf("http://localhost:%s/box?userId=%d&uid=%s&param=%s&sklandId=%s", port, userAccount.UserNumber, uid, param, userAccount.SklandId), 0, 1.5)
+	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/box?userId=%d&uid=%s&param=%s&sklandId=%s", port, userAccount.UserNumber, uid, param, userAccount.SklandId), 0, 1.5)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "box.jpg"})
 	sendDocument.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendDocument)
+	config.Arknights.Send(sendDocument)
 	return nil
 }

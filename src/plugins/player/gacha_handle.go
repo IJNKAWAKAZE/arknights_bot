@@ -1,11 +1,12 @@
 package player
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/media"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -40,7 +41,7 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 	if userAccount.ServerName == "国际服" {
 		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 	token := userAccount.HypergryphToken
@@ -51,13 +52,13 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return err
 	}
 
 	// 获取上次更新时间
 	var lastUpdate int64
-	bot.DBEngine.Raw("select ts from user_gacha where user_number = ? and uid = ? order by ts desc limit 1", userAccount.UserNumber, uid).Scan(&lastUpdate)
+	config.DBEngine.Raw("select ts from user_gacha where user_number = ? and uid = ? order by ts desc limit 1", userAccount.UserNumber, uid).Scan(&lastUpdate)
 
 	// 同步抽卡数据
 	for _, c := range chars {
@@ -75,33 +76,33 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 				Rarity:     c.Rarity,
 				Ts:         c.Ts,
 			}
-			bot.DBEngine.Table("user_gacha").Create(&userGacha)
+			config.DBEngine.Table("user_gacha").Create(&userGacha)
 		}
 	}
 
 	var userGacha []UserGacha
-	res := utils.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
+	res := repo.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
 	if res.RowsAffected == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "不存在抽卡记录。")
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 
 	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	port := viper.GetString("http.port")
-	pic, e := utils.Screenshot(fmt.Sprintf("http://localhost:%s/gacha?userId=%d&uid=%s", port, userAccount.UserNumber, uid), 3000, 1.5)
+	pic, e := media.Screenshot(fmt.Sprintf("http://localhost:%s/gacha?userId=%d&uid=%s", port, userAccount.UserNumber, uid), 3000, 1.5)
 	if e != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, e.Error())
 		sendMessage.ReplyToMessageID = messageId
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return nil
 	}
 
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "gacha.jpg"})
 	sendDocument.ReplyToMessageID = messageId
-	bot.Arknights.Send(sendDocument)
+	config.Arknights.Send(sendDocument)
 	return nil
 }

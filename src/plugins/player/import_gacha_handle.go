@@ -1,15 +1,16 @@
 package player
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
-	"arknights_bot/utils"
+	"arknights_bot/utils/media"
 	"encoding/json"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/tidwall/sjson"
 	"io"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -30,7 +31,12 @@ type PlayerOperationImportS1 struct {
 }
 
 func (o PlayerOperationImportS1) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
-	utils.SendMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。", true, nil)
+	tgMessage := tgbotapi.NewMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。")
+	tgMessage.ParseMode = tgbotapi.ModeMarkdownV2
+	sent, sendErr := config.Arknights.Send(tgMessage)
+	if sendErr != nil {
+		log.Printf("%v can not be send error : %v", sent, sendErr)
+	}
 	commandoperation.AddNextStep(chatId, *o.NextStepOperation(uid, userAccount, message.CommandArguments()), "importGacha")
 	return nil
 }
@@ -50,19 +56,19 @@ type PlayerOperationImportS2 struct {
 func (o PlayerOperationImportS2) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	var importGachaData ImportGachaData
 	var k = *message.Document
-	f, _ := utils.DownloadFile(k.FileID)
+	f, _ := media.DownloadFile(k.FileID)
 	data, _ := io.ReadAll(f)
 	j, _ := sjson.SetRaw("{}", "data", string(data))
 	err := json.Unmarshal([]byte(j), &importGachaData)
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "解析抽卡记录失败！")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return err
 	}
 
 	go addGacha(importGachaData, userAccount.UserNumber, uid, message.From.FullName())
 	sendMessage := tgbotapi.NewMessage(chatId, "抽卡记录导入成功！")
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	return nil
 }
 func (o PlayerOperationImportS2) CheckRequirementsAndPrepare(update tgbotapi.Update) bool {
@@ -80,7 +86,7 @@ func addGacha(importGachaData ImportGachaData, userNumber int64, uid string, nam
 		key, _ := strconv.ParseFloat(k, 64)
 		key *= 1000
 		var gacha UserGacha
-		res := bot.DBEngine.Raw("select * from user_gacha where user_number = ? and uid = ? and ts = ?", userNumber, uid, key).Scan(&gacha)
+		res := config.DBEngine.Raw("select * from user_gacha where user_number = ? and uid = ? and ts = ?", userNumber, uid, key).Scan(&gacha)
 		if res.RowsAffected == 0 {
 			// 同步抽卡数据
 			for _, c := range d.C {
@@ -99,7 +105,7 @@ func addGacha(importGachaData ImportGachaData, userNumber int64, uid string, nam
 					Rarity:     int64(c[1].(float64)),
 					Ts:         int64(key),
 				}
-				bot.DBEngine.Table("user_gacha").Create(&userGacha)
+				config.DBEngine.Table("user_gacha").Create(&userGacha)
 			}
 		}
 	}

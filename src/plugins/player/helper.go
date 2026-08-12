@@ -1,11 +1,12 @@
 package player
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
 	"arknights_bot/plugins/messagecleaner"
-	"arknights_bot/utils"
+	"arknights_bot/utils/hashutil"
+	"arknights_bot/utils/repo"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
@@ -35,12 +36,12 @@ func NO_REQUIREMENT(_ tgbotapi.Update) bool { return true }
 //
 // Return :
 //   - error : error if any
-func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, players []account.UserPlayer, operation commandoperation.OperationI, nameType string) error {
+func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, players []account.UserPlayer, operation commandoperation.Operation, nameType string) error {
 	chatId := update.Message.Chat.ID
 	callBackFunction := operation.GetCallBackFunctionOnMultiPlayer(update, userAccount, chatId, nameType)
-	functionHash := utils.RandStringBytesMaskImprSrcUnsafe(hashSize)
+	functionHash := hashutil.RandStringBytesMaskImprSrcUnsafe(hashSize)
 	//keep trying to make sure key not duplicate
-	for ; !commandoperation.AddCallback(functionHash, callBackFunction); functionHash = utils.RandStringBytesMaskImprSrcUnsafe(hashSize) {
+	for ; !commandoperation.AddCallback(functionHash, callBackFunction); functionHash = hashutil.RandStringBytesMaskImprSrcUnsafe(hashSize) {
 	}
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
@@ -54,12 +55,12 @@ func playerSelector(update tgbotapi.Update, userAccount account.UserAccount, pla
 	)
 	sendMessage := tgbotapi.NewMessage(chatId, operation.HintWordForPlayerSelection())
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	msg, err := bot.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.Send(sendMessage)
 	if err != nil {
 		log.Println("can not send massage ", err)
 		return nil
 	}
-	messagecleaner.AddDelQueueFuncHash(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay, functionHash)
+	messagecleaner.AddDelQueueFuncHash(msg.Chat.ID, msg.MessageID, config.MsgDelDelay, functionHash)
 	return nil
 }
 
@@ -76,7 +77,7 @@ func getAccount(update tgbotapi.Update) (*account.UserAccount, error) {
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 	var userAccount account.UserAccount
-	res := utils.GetAccountByUserId(userId).Scan(&userAccount)
+	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected != 0 {
 		if res.RowsAffected == -1 {
 			panic("SQL ERROR check your sql config")
@@ -87,13 +88,13 @@ func getAccount(update tgbotapi.Update) (*account.UserAccount, error) {
 		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
 		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
 		sendMessage.ReplyToMessageID = messageId
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			log.Println("can not send massage ", err)
 			return nil, nil
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil, nil
 	}
 
@@ -112,7 +113,7 @@ func getPlayers(update tgbotapi.Update) ([]account.UserPlayer, error) {
 	userId := update.Message.From.ID
 	messageId := update.Message.MessageID
 	var players []account.UserPlayer
-	res := utils.GetPlayersByUserId(userId).Scan(&players)
+	res := repo.GetPlayersByUserId(userId).Scan(&players)
 	if res.RowsAffected != 0 {
 		if res.RowsAffected == -1 {
 			panic("SQL ERROR check your sql config")
@@ -120,14 +121,14 @@ func getPlayers(update tgbotapi.Update) ([]account.UserPlayer, error) {
 		return players, nil
 	} else {
 		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		msg, err := bot.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.Send(sendMessage)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 
 		if err != nil {
 			log.Println("can not send massage ", err)
 			return nil, nil
 		}
-		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, bot.MsgDelDelay)
+		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return nil, nil
 	}
 

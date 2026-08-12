@@ -2,13 +2,14 @@ package datasource
 
 import (
 	"arknights_bot/config"
-	"arknights_bot/utils"
+	"arknights_bot/utils/cache"
+	"arknights_bot/utils/hashutil"
+	"arknights_bot/utils/model"
+	"arknights_bot/utils/search"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 	"github.com/starudream/go-lib/core/v2/codec/json"
-	"github.com/tidwall/gjson"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -40,12 +41,12 @@ func UpdateDataSource() {
 // UpdateDataSourceRunner 更新数据源
 func UpdateDataSourceRunner() {
 	log.Println("开始更新数据源...")
-	var operators []utils.Operator
+	var operators []model.Operator
 	api := viper.GetString("api.wiki")
 	response, _ := http.Get(api + "干员一览")
 	doc, _ := goquery.NewDocumentFromReader(response.Body)
 	doc.Find("#filter-data div").Each(func(i int, selection *goquery.Selection) {
-		var operator utils.Operator
+		var operator model.Operator
 		attrs := selection.Nodes[0].Attr
 		operator.Name = attrs[0].Val
 		operator.Profession = Profession[attrs[1].Val]
@@ -72,12 +73,12 @@ func UpdateDataSourceRunner() {
 		operator.ObtainMethod = attrs[21].Val
 		// 头像
 		paintingName := fmt.Sprintf("头像_%s.png", operator.Name)
-		m := utils.Md5(paintingName)
+		m := hashutil.Md5(paintingName)
 		path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 		operator.Avatar = path + paintingName + "?image_process=format,webp/quality,Q_90"
 		// 半身像
 		paintingName = fmt.Sprintf("半身像_%s_1.png", operator.Name)
-		m = utils.Md5(paintingName)
+		m = hashutil.Md5(paintingName)
 		path = "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 		operator.ThumbURL = path + paintingName + "?image_process=format,webp/quality,Q_90"
 		operators = append(operators, operator)
@@ -85,8 +86,8 @@ func UpdateDataSourceRunner() {
 
 	// 老干员map
 	var oldOperators = make(map[string]string)
-	var os []utils.Operator
-	operatorsJson := utils.RedisGet("operatorList")
+	var os []model.Operator
+	operatorsJson := cache.RedisGet("operatorList")
 	json.Unmarshal([]byte(operatorsJson), &os)
 	for _, o := range os {
 		oldOperators[o.Name] = o.Name
@@ -106,35 +107,35 @@ func UpdateDataSourceRunner() {
 		}
 	})
 
-	var birthdayMap = make(map[string][]utils.Operator)
+	var birthdayMap = make(map[string][]model.Operator)
 	for i, operator := range operators {
 		name := operator.Name
 		if name == "阿米娅" {
 			// 立绘
 			for e := 0; e < 2; e++ {
 				paintingName := fmt.Sprintf("立绘_%s_%d.png", name, e+1)
-				m := utils.Md5(paintingName)
+				m := hashutil.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				var skin utils.Skin
+				var skin model.Skin
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 			// 精1立绘
 			paintingName := fmt.Sprintf("立绘_%s_1+.png", name)
-			m := utils.Md5(paintingName)
+			m := hashutil.Md5(paintingName)
 			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-			var skin utils.Skin
+			var skin model.Skin
 			skin.Url = painting
 			operators[i].Skins = append(operators[i].Skins, skin)
 			// 皮肤
 			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, len(skinCount[name])-c)
-				m := utils.Md5(paintingName)
+				m := hashutil.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				var skin utils.Skin
+				var skin model.Skin
 				skin.Name = sk
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
@@ -142,19 +143,19 @@ func UpdateDataSourceRunner() {
 		} else if name == "阿米娅(近卫)" || name == "阿米娅(医疗)" {
 			// 立绘
 			paintingName := fmt.Sprintf("立绘_%s_2.png", name)
-			m := utils.Md5(paintingName)
+			m := hashutil.Md5(paintingName)
 			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-			var skin utils.Skin
+			var skin model.Skin
 			skin.Url = painting
 			operators[i].Skins = append(operators[i].Skins, skin)
 			// 皮肤
 			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, len(skinCount[name])-c)
-				m := utils.Md5(paintingName)
+				m := hashutil.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				var skin utils.Skin
+				var skin model.Skin
 				skin.Name = sk
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
@@ -163,19 +164,19 @@ func UpdateDataSourceRunner() {
 		if operator.Rarity < 3 {
 			// 立绘
 			paintingName := fmt.Sprintf("立绘_%s_1.png", name)
-			m := utils.Md5(paintingName)
+			m := hashutil.Md5(paintingName)
 			path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 			painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-			var skin utils.Skin
+			var skin model.Skin
 			skin.Url = painting
 			operators[i].Skins = append(operators[i].Skins, skin)
 			// 皮肤
 			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, len(skinCount[name])-c)
-				m := utils.Md5(paintingName)
+				m := hashutil.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				var skin utils.Skin
+				var skin model.Skin
 				skin.Name = sk
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
@@ -184,27 +185,30 @@ func UpdateDataSourceRunner() {
 			// 立绘
 			for e := 0; e < 2; e++ {
 				paintingName := fmt.Sprintf("立绘_%s_%d.png", name, e+1)
-				m := utils.Md5(paintingName)
+				m := hashutil.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				var skin utils.Skin
+				var skin model.Skin
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 			// 皮肤
 			for c, sk := range skinCount[name] {
 				paintingName := fmt.Sprintf("立绘_%s_skin%d.png", name, len(skinCount[name])-c)
-				m := utils.Md5(paintingName)
+				m := hashutil.Md5(paintingName)
 				path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 				painting := path + paintingName + "?image_process=format,webp/quality,Q_90"
-				var skin utils.Skin
+				var skin model.Skin
 				skin.Name = sk
 				skin.Url = painting
 				operators[i].Skins = append(operators[i].Skins, skin)
 			}
 		}
 		// 新增干员
-		if _, has := oldOperators[name]; !has && config.IgnoreBirthday[name] == "" {
+		config.DataMu.RLock()
+		_, ignoreBirthday := config.IgnoreBirthday[name]
+		config.DataMu.RUnlock()
+		if _, has := oldOperators[name]; !has && !ignoreBirthday {
 			response, _ := http.Get(api + name)
 			doc, _ := goquery.NewDocumentFromReader(response.Body)
 			doc.Find(".poem").Each(func(j int, selection *goquery.Selection) {
@@ -225,73 +229,12 @@ func UpdateDataSourceRunner() {
 	}
 
 	for k, v := range birthdayMap {
-		utils.RedisSet("birthday:"+k, json.MustMarshalString(v), 0)
+		cache.RedisSet("birthday:"+k, json.MustMarshalString(v), 0)
 	}
 
 	defer response.Body.Close()
 
-	utils.RedisSet("operatorList", json.MustMarshalString(operators), 0)
-	MaterialInfo()
+	cache.RedisSet("operatorList", json.MustMarshalString(operators), 0)
 	log.Println("数据源更新完毕")
-	utils.SetDataNeedUpdate()
-}
-
-func MaterialInfo() {
-	var itemMap = make(map[string]string)
-	var materialMap = make(map[string][]utils.Material)
-	res, err := http.Get(viper.GetString("api.item"))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	read, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer res.Body.Close()
-	j := gjson.ParseBytes(read)
-	for _, item := range j.Get("data").Array() {
-		itemMap[item.Get("itemId").String()] = item.Get("itemName").String()
-	}
-
-	res, err = http.Get(viper.GetString("api.stage_result"))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	read, err = io.ReadAll(res.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer res.Body.Close()
-	j = gjson.ParseBytes(read)
-	for _, d := range j.Get("data.recommendedStageList").Array() {
-		for _, item := range d.Get("stageResultList").Array() {
-			var material utils.Material
-			material.ZoneName = item.Get("zoneName").String()
-			material.Code = item.Get("stageCode").String()
-			material.Name = item.Get("itemName").String()
-			// 图标
-			paintingName := fmt.Sprintf("道具_带框_%s.png", material.Name)
-			m := utils.Md5(paintingName)
-			path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
-			pic := path + paintingName + "/75px-" + paintingName
-			material.Icon = pic
-			material.ApExpect = fmt.Sprintf("%.1f", item.Get("apExpect").Float())
-			material.KnockRating = fmt.Sprintf("%.1f%%", item.Get("knockRating").Float()*100)
-			material.SecondaryItem = itemMap[item.Get("secondaryItemId").String()]
-			if material.SecondaryItem != "" {
-				paintingName := fmt.Sprintf("道具_带框_%s.png", material.SecondaryItem)
-				m := utils.Md5(paintingName)
-				path := "https://media.prts.wiki/thumb" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
-				pic := path + paintingName + "/75px-" + paintingName
-				material.SecondaryItemIcon = pic
-			}
-			material.StageEfficiency = fmt.Sprintf("%.1f%%", item.Get("stageEfficiency").Float()*100)
-			materialMap[material.Name] = append(materialMap[material.Name], material)
-		}
-	}
-	utils.RedisSet("materialMap", json.MustMarshalString(materialMap), 0)
+	search.SetDataNeedUpdate()
 }

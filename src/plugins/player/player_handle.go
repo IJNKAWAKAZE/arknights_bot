@@ -1,9 +1,10 @@
 package player
 
 import (
+	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 )
@@ -20,7 +21,7 @@ func PlayerHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	var userAccount account.UserAccount
 	var players []account.UserPlayer
-	var operationP *commandoperation.OperationI
+	var operationP *commandoperation.Operation
 	userAccountP, playersP, err := getAccountAndPlayers(update)
 	if err != nil || userAccountP == nil || playersP == nil {
 		return err
@@ -44,12 +45,20 @@ func PlayerHandle(update tgbotapi.Update) error {
 	}
 	if !operation.CheckRequirementsAndPrepare(update) {
 		msg, isMarkDown := operation.HintOnRequirementsFailed()
-		utils.SendMessage(chatId, msg, isMarkDown, &messageId)
+		tgMessage := tgbotapi.NewMessage(chatId, msg)
+		tgMessage.ReplyToMessageID = messageId
+		if isMarkDown {
+			tgMessage.ParseMode = tgbotapi.ModeMarkdownV2
+		}
+		sent, sendErr := config.Arknights.Send(tgMessage)
+		if sendErr != nil {
+			log.Printf("%v can not be send error : %v", sent, sendErr)
+		}
 		return nil
 	}
 	if len(players) > 1 {
 		return playerSelector(update, userAccount, players, operation, command)
 	}
-	utils.GetAccountByUid(userAccount.UserNumber, players[0].Uid).Scan(&userAccount)
+	repo.GetAccountByUid(userAccount.UserNumber, players[0].Uid).Scan(&userAccount)
 	return operation.Run(players[0].Uid, userAccount, chatId, update.Message)
 }

@@ -1,9 +1,9 @@
 package account
 
 import (
-	bot "arknights_bot/config"
+	"arknights_bot/config"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils"
+	"arknights_bot/utils/repo"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
@@ -23,7 +23,7 @@ func BindHandle(update tgbotapi.Update) error {
 	)
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的服务器")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	return nil
 }
 
@@ -35,7 +35,7 @@ func SetToken(update tgbotapi.Update) error {
 	token := message.Text
 
 	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	bot.Arknights.Send(sendAction)
+	config.Arknights.Send(sendAction)
 
 	var userToken UserToken
 	err := json.Unmarshal([]byte(token), &userToken)
@@ -45,18 +45,18 @@ func SetToken(update tgbotapi.Update) error {
 	account, err := skland.Login(token, serverNameMap[chatId])
 	if err != nil {
 		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return err
 	}
 	// 查询账户是否存在
 	var userAccount UserAccount
-	res := utils.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
+	res := repo.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
 		userAccount.SklandToken = account.Skland.Token
 		userAccount.SklandCred = account.Skland.Cred
-		bot.DBEngine.Table("user_account").Save(&userAccount)
+		config.DBEngine.Table("user_account").Save(&userAccount)
 	} else {
 		// 不存在 新增账户
 		id, _ := gonanoid.New(32)
@@ -70,14 +70,14 @@ func SetToken(update tgbotapi.Update) error {
 			SklandId:        account.UserId,
 			ServerName:      serverNameMap[chatId],
 		}
-		bot.DBEngine.Table("user_account").Create(&userAccount)
+		config.DBEngine.Table("user_account").Create(&userAccount)
 	}
 	delete(tgbotapi.WaitMessage, chatId)
 	// 获取角色列表
 	players, err := skland.ArknightsPlayers(account.Skland, userAccount.ServerName)
 	if err != nil || len(players) == 0 {
 		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定角色！")
-		bot.Arknights.Send(sendMessage)
+		config.Arknights.Send(sendMessage)
 		return err
 	}
 
@@ -93,7 +93,7 @@ func SetToken(update tgbotapi.Update) error {
 	)
 	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的角色")
 	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	return nil
 }
 
@@ -102,6 +102,6 @@ func CancelHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	delete(tgbotapi.WaitMessage, chatId)
 	sendMessage := tgbotapi.NewMessage(chatId, "已取消操作")
-	bot.Arknights.Send(sendMessage)
+	config.Arknights.Send(sendMessage)
 	return nil
 }
