@@ -17,6 +17,7 @@ import (
 func VerifyRequestMember(update tgbotapi.Update) {
 	chatId := update.ChatJoinRequest.Chat.ID
 	userId := update.ChatJoinRequest.From.ID
+	name := update.ChatJoinRequest.From.FullName()
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("入群验证协程异常：%v\n%s", r, debug.Stack())
@@ -27,11 +28,18 @@ func VerifyRequestMember(update tgbotapi.Update) {
 	if verifySet.checkExist(userId, chatId) {
 		return
 	}
+	// 昵称广告词检查
+	if hasAdWord(name) {
+		log.Printf("入群验证：用户 %d 昵称含广告词，拒绝申请", userId)
+		auditJoin(chatId, userId, name, "拒绝", "昵称含广告词")
+		config.Arknights.DeclineChatJoinRequest(chatId, userId)
+		return
+	}
 	// bio 广告词检查
 	chat, err := config.Arknights.GetChatInfo(userId)
 	if err == nil && hasAdWord(chat.Bio) {
 		log.Printf("入群验证：用户 %d bio 含广告词，拒绝申请", userId)
-		auditJoin(chatId, userId, update.ChatJoinRequest.From.FullName(), "拒绝", "bio 含广告词")
+		auditJoin(chatId, userId, name, "拒绝", "bio 含广告词")
 		config.Arknights.DeclineChatJoinRequest(chatId, userId)
 		return
 	}
@@ -101,16 +109,16 @@ func VerifyRequestMember(update tgbotapi.Update) {
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
-	go requestVerify(chatId, userId, photo.MessageID)
+	go requestVerify(chatId, userId, photo.MessageID, name)
 }
 
-func requestVerify(chatId int64, userId int64, messageId int) {
+func requestVerify(chatId int64, userId int64, messageId int, name string) {
 	time.Sleep(time.Minute)
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}
 	log.Printf("入群验证：拒绝用户 %d 加入群 %d，原因：验证超时", userId, chatId)
-	auditJoin(chatId, userId, "", "拒绝", "验证超时")
+	auditJoin(chatId, userId, name, "拒绝", "验证超时")
 	config.Arknights.DeclineChatJoinRequest(chatId, userId)
 	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(userId, messageId)

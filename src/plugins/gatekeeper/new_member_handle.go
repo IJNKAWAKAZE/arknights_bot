@@ -29,6 +29,15 @@ func NewMemberHandle(update tgbotapi.Update) error {
 		if member.ID == message.From.ID { // 自己加入群组
 			verifySet.add(userId, chatId, "")
 			auditJoin(chatId, userId, member.FullName(), "自行进群", "进入人工验证流程")
+			// 昵称广告词检查
+			if hasAdWord(member.FullName()) {
+				log.Printf("入群验证：用户 %d 昵称含广告词，踢出", userId)
+				auditJoin(chatId, userId, member.FullName(), "踢出", "昵称含广告词")
+				message.Delete()
+				config.Arknights.BanChatMember(chatId, userId)
+				verifySet.checkExistAndRemove(userId, chatId)
+				return nil
+			}
 			chat, err := config.Arknights.GetChatInfo(member.ID)
 			if err != nil {
 				log.Println("获取用户信息失败", err)
