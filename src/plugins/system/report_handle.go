@@ -24,8 +24,7 @@ func ReportHandle(update tgbotapi.Update) error {
 		name := replyToMessage.From.FullName()
 
 		if config.Arknights.IsAdmin(chatId, target) {
-			sendMessage := tgbotapi.NewMessage(chatId, "无法举报管理员！")
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.SendText(chatId, "无法举报管理员！")
 			if err != nil {
 				return err
 			}

@@ -117,7 +117,7 @@ func unban(chatId, userId int64) {
 	config.Arknights.UnbanChatMember(chatId, userId)
 }
 
-func verify(chatId int64, userId int64, messageId int, joinMessageId int, name string) {
+func verify(chatId int64, userId int64, messageId int64, joinMessageId int64, name string) {
 	time.Sleep(time.Minute)
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return

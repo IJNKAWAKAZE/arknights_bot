@@ -14,8 +14,7 @@ func UnbindHandle(update tgbotapi.Update) error {
 	var players []UserPlayer
 	res := repo.GetPlayersByUserId(userId).Scan(&players)
 	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "您还未绑定任何角色！")
 		return nil
 	}
 	var buttons [][]tgbotapi.InlineKeyboardButton

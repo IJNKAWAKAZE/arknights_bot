@@ -4,7 +4,6 @@ import (
 	"arknights_bot/config"
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/commandoperation"
-	"arknights_bot/utils/media"
 	"encoding/json"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -31,9 +30,7 @@ type PlayerOperationImportS1 struct {
 }
 
 func (o PlayerOperationImportS1) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
-	tgMessage := tgbotapi.NewMessage(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。")
-	tgMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	sent, sendErr := config.Arknights.Send(tgMessage)
+	sent, sendErr := config.Arknights.SendMarkdownV2(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。")
 	if sendErr != nil {
 		log.Printf("%v can not be send error : %v", sent, sendErr)
 	}
@@ -56,19 +53,22 @@ type PlayerOperationImportS2 struct {
 func (o PlayerOperationImportS2) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	var importGachaData ImportGachaData
 	var k = *message.Document
-	f, _ := media.DownloadFile(k.FileID)
+	f, _, err := config.Arknights.DownloadFile(k.FileID)
+	if err != nil {
+		config.Arknights.SendText(chatId, "下载文件失败！")
+		return err
+	}
+	defer f.Close()
 	data, _ := io.ReadAll(f)
 	j, _ := sjson.SetRaw("{}", "data", string(data))
-	err := json.Unmarshal([]byte(j), &importGachaData)
+	err = json.Unmarshal([]byte(j), &importGachaData)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "解析抽卡记录失败！")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "解析抽卡记录失败！")
 		return err
 	}
 
 	go addGacha(importGachaData, userAccount.UserNumber, uid, message.From.FullName())
-	sendMessage := tgbotapi.NewMessage(chatId, "抽卡记录导入成功！")
-	config.Arknights.Send(sendMessage)
+	config.Arknights.SendText(chatId, "抽卡记录导入成功！")
 	return nil
 }
 func (o PlayerOperationImportS2) CheckRequirementsAndPrepare(update tgbotapi.Update) bool {

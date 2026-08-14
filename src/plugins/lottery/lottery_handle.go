@@ -27,9 +27,7 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
 	if !config.Arknights.IsAdminWithPermissions(chatId, userId, tgbotapi.AdminCanRestrictMembers) {
-		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 		if err != nil {
 			return err
 		}
@@ -41,9 +39,7 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 	if param != "" {
 		t, err := time.ParseInLocation("2006-01-02 15:04:05", param, time.Local)
 		if err != nil {
-			sendMessage := tgbotapi.NewMessage(chatId, "参数格式错误！请输入 YYYY-MM-DD HH:MM:SS 格式")
-			sendMessage.ReplyToMessageID = messageId
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.ReplyText(chatId, messageId, "参数格式错误！请输入 YYYY-MM-DD HH:MM:SS 格式")
 			if err != nil {
 				return err
 			}
@@ -61,9 +57,7 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 	var lottery model.GroupLottery
 	repo.GetGroupLottery(chatId).Scan(&lottery)
 	if lottery.Id != "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "已有正在进行的抽奖活动，请先结束当前抽奖！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "已有正在进行的抽奖活动，请先结束当前抽奖！")
 		if err != nil {
 			return err
 		}
@@ -82,10 +76,7 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 	}
 	res := config.DBEngine.Table("group_lottery").Create(&groupLottery)
 	log.Println(res.Error)
-	sendMessage := tgbotapi.NewMessage(chatId, tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, fmt.Sprintf("🎉 *抽奖活动已开启*\n\n📅 *报名截止时间*：%s\n\n📝 *指令说明*：\n🔹 参与选号：`/join_lottery [1-100]`\n🔹 查看详情：`/lottery_detail`\n\n⚙️ *管理指令*：\n🔸 停止报名：`/stop_lottery`\n🔸 进行抽奖：`/lottery`\n🔸 结束抽奖：`/end_lottery`", endTime.Format("2006-01-02 15:04:05"))))
-	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	sendMessage.ReplyToMessageID = messageId
-	config.Arknights.Send(sendMessage)
+	config.Arknights.SendMarkdownV2(chatId, tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, fmt.Sprintf("🎉 *抽奖活动已开启*\n\n📅 *报名截止时间*：%s\n\n📝 *指令说明*：\n🔹 参与选号：`/join_lottery [1-100]`\n🔹 查看详情：`/lottery_detail`\n\n⚙️ *管理指令*：\n🔸 停止报名：`/stop_lottery`\n🔸 进行抽奖：`/lottery`\n🔸 结束抽奖：`/end_lottery`", endTime.Format("2006-01-02 15:04:05"))), messageId)
 	return nil
 }
 
@@ -96,9 +87,7 @@ func StopLotteryHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 	if !config.Arknights.IsAdminWithPermissions(chatId, userId, tgbotapi.AdminCanRestrictMembers) {
-		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 		if err != nil {
 			return err
 		}
@@ -108,9 +97,7 @@ func StopLotteryHandle(update tgbotapi.Update) error {
 	var lottery model.GroupLottery
 	repo.GetGroupLottery(chatId).Scan(&lottery)
 	if lottery.Id == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "当前群组暂无正在进行的抽奖活动！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
 			return err
 		}
@@ -118,9 +105,7 @@ func StopLotteryHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	if lottery.Status == 2 {
-		sendMessage := tgbotapi.NewMessage(chatId, "抽奖活动已停止报名，请勿重复操作！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "抽奖活动已停止报名，请勿重复操作！")
 		if err != nil {
 			return err
 		}
@@ -129,9 +114,7 @@ func StopLotteryHandle(update tgbotapi.Update) error {
 	}
 	lottery.Status = 2
 	config.DBEngine.Table("group_lottery").Save(&lottery)
-	sendMessage := tgbotapi.NewMessage(chatId, "抽奖活动已停止报名！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "抽奖活动已停止报名！")
 	if err != nil {
 		return err
 	}
@@ -146,9 +129,7 @@ func EndLotteryHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 	if !config.Arknights.IsAdminWithPermissions(chatId, userId, tgbotapi.AdminCanRestrictMembers) {
-		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 		if err != nil {
 			return err
 		}
@@ -158,9 +139,7 @@ func EndLotteryHandle(update tgbotapi.Update) error {
 	var lottery model.GroupLottery
 	repo.GetGroupLottery(chatId).Scan(&lottery)
 	if lottery.Id == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "当前群组暂无抽奖活动！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无抽奖活动！")
 		if err != nil {
 			return err
 		}
@@ -169,9 +148,7 @@ func EndLotteryHandle(update tgbotapi.Update) error {
 	}
 	lottery.Status = 0
 	config.DBEngine.Table("group_lottery").Save(&lottery)
-	sendMessage := tgbotapi.NewMessage(chatId, "抽奖活动已结束！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "抽奖活动已结束！")
 	if err != nil {
 		return err
 	}
@@ -191,9 +168,7 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 	var lottery model.GroupLottery
 	repo.GetGroupLottery(chatId).Scan(&lottery)
 	if lottery.Id == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "当前群组暂无正在进行的抽奖活动！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
 			return err
 		}
@@ -202,9 +177,7 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 	}
 
 	if lottery.Status == 2 {
-		sendMessage := tgbotapi.NewMessage(chatId, "抽奖活动已停止报名！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "抽奖活动已停止报名！")
 		if err != nil {
 			return err
 		}
@@ -215,9 +188,7 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 	// 检查用户输入的数字是否合法 (1-100)
 	lotteryNum, err := strconv.Atoi(param)
 	if err != nil || lotteryNum < 1 || lotteryNum > 100 {
-		sendMessage := tgbotapi.NewMessage(chatId, "输入的数字不合法，请输入 1-100 之间的整数！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "输入的数字不合法，请输入 1-100 之间的整数！")
 		if err != nil {
 			return err
 		}
@@ -229,9 +200,7 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 	var detail model.GroupLotteryDetail
 	config.DBEngine.Raw("select * from group_lottery_detail where lottery_id = ? and user_number = ?", lottery.Id, userId).Scan(&detail)
 	if detail.Id != "" {
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("您已参加过本次抽奖，选择的数字是：%d", detail.LotteryNumber))
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("您已参加过本次抽奖，选择的数字是：%d", detail.LotteryNumber))
 		if err != nil {
 			return err
 		}
@@ -243,9 +212,7 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 	var otherDetail model.GroupLotteryDetail
 	repo.GetLotteryDetail(lottery.Id, lotteryNum).Scan(&otherDetail)
 	if otherDetail.Id != "" {
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("数字 %d 已被其他用户选择，请尝试其他数字！", lotteryNum))
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("数字 %d 已被其他用户选择，请尝试其他数字！", lotteryNum))
 		if err != nil {
 			return err
 		}
@@ -265,9 +232,7 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 	}
 	config.DBEngine.Table("group_lottery_detail").Create(&groupLotteryDetail)
 
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("参与成功！您选择的数字是：%d", lotteryNum))
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("参与成功！您选择的数字是：%d", lotteryNum))
 	if err != nil {
 		return err
 	}
@@ -285,9 +250,7 @@ func LotteryDetailHandle(update tgbotapi.Update) error {
 	var lottery model.GroupLottery
 	repo.GetGroupLottery(chatId).Scan(&lottery)
 	if lottery.Id == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "当前群组暂无正在进行的抽奖活动！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
 			return err
 		}
@@ -295,16 +258,13 @@ func LotteryDetailHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 
 	port := viper.GetString("http.port")
 	url := fmt.Sprintf("http://localhost:%s/lotteryDetail?lotteryId=%s", port, lottery.Id)
 	pic, err := media.Screenshot(url, 0, 1.5)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成详情图片失败，请稍后再试！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "生成详情图片失败，请稍后再试！")
 		if err != nil {
 			return err
 		}
@@ -330,9 +290,7 @@ func LotteryHandle(update tgbotapi.Update) error {
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
 	if !config.Arknights.IsAdminWithPermissions(chatId, userId, tgbotapi.AdminCanRestrictMembers) {
-		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 		if err != nil {
 			return err
 		}
@@ -344,9 +302,7 @@ func LotteryHandle(update tgbotapi.Update) error {
 	var lottery model.GroupLottery
 	repo.GetGroupLottery(chatId).Scan(&lottery)
 	if lottery.Id == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "当前群组暂无正在进行的抽奖活动！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
 			return err
 		}
@@ -391,10 +347,7 @@ func LotteryHandle(update tgbotapi.Update) error {
 		msgText += "\n\n很遗憾，本次无人中奖 🌚"
 	}
 
-	sendMessage := tgbotapi.NewMessage(chatId, msgText)
-	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	sendMessage.ReplyToMessageID = messageId
-	config.Arknights.Send(sendMessage)
+	config.Arknights.SendMarkdownV2(chatId, msgText, messageId)
 	return nil
 }
 

@@ -7,7 +7,6 @@ import (
 	"arknights_bot/utils/repo"
 	"crypto/rand"
 	"fmt"
-	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
 	"math/big"
 	"strconv"
@@ -53,8 +52,7 @@ func sign(user UserSign) {
 				if err != nil {
 					// 签到失败 - notify_mode: 0(全部通知) 或 1(仅失败通知) 时发送
 					if user.NotifyMode == 0 || user.NotifyMode == 1 {
-						sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err.Error()))
-						config.Arknights.Send(sendMessage)
+						config.Arknights.SendText(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err.Error()))
 					}
 					log.Println(player.PlayerName, err)
 					return
@@ -62,15 +60,13 @@ func sign(user UserSign) {
 				// 今日已完成签到 - notify_mode: 0(全部通知) 时发送
 				if hasSigned {
 					if user.NotifyMode == 0 {
-						sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
-						config.Arknights.Send(sendMessage)
+						config.Arknights.SendText(user.UserNumber, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
 					}
 					return
 				}
 				// 签到成功 - notify_mode: 0(全部通知) 或 2(仅成功通知) 时发送
 				if user.NotifyMode == 0 || user.NotifyMode == 2 {
-					sendMessage := tgbotapi.NewMessage(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, award))
-					config.Arknights.Send(sendMessage)
+					config.Arknights.SendText(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, award))
 				}
 			}
 		}

@@ -29,38 +29,28 @@ func (_ PlayerOperationRedeem) HintWordForPlayerSelection() string {
 func (_ PlayerOperationRedeem) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	if userAccount.ServerName == "国际服" {
-		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, "国际服暂不可用")
 		return nil
 	}
 	cdk := message.CommandArguments()
 	cdk = strings.ToUpper(cdk)
 	if cache.RedisIsExists("risk_control") {
-		SendMessage := tgbotapi.NewMessage(chatId, "触发风控，请等待解除后再进行兑换！")
-		SendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(SendMessage)
+		config.Arknights.ReplyText(chatId, messageId, "触发风控，请等待解除后再进行兑换！")
 		return nil
 	}
 	token := userAccount.HypergryphToken
 	result, err := skland.GetPlayerRedeem(token, cdk, uid)
 	if err != nil {
-		SendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		SendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(SendMessage)
+		config.Arknights.ReplyText(chatId, messageId, err.Error())
 		return err
 	}
 	if result != "" {
 		if result == "需要验证" {
 			cache.RedisSet("risk_control", "1", time.Hour)
 		}
-		SendMessage := tgbotapi.NewMessage(chatId, result)
-		SendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(SendMessage)
+		config.Arknights.ReplyText(chatId, messageId, result)
 		return fmt.Errorf(result)
 	}
-	SendMessage := tgbotapi.NewMessage(chatId, "CDK兑换成功，请进入游戏领取奖励。")
-	SendMessage.ReplyToMessageID = messageId
-	config.Arknights.Send(SendMessage)
+	config.Arknights.ReplyText(chatId, messageId, "CDK兑换成功，请进入游戏领取奖励。")
 	return nil
 }

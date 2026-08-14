@@ -21,8 +21,7 @@ func WelcomeHandle(update tgbotapi.Update) error {
 			repo.GetJoinedByChatId(chatId).Scan(&joined)
 			joined.Welcome = text
 			config.DBEngine.Table("group_joined").Save(&joined)
-			sendMessage := tgbotapi.NewMessage(chatId, "设置入群欢迎信息成功")
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.SendText(chatId, "设置入群欢迎信息成功")
 			if err != nil {
 				return err
 			}
@@ -31,9 +30,7 @@ func WelcomeHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 	if err != nil {
 		return err
 	}

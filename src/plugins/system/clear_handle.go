@@ -17,9 +17,7 @@ func ClearHandle(update tgbotapi.Update) error {
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
 	if param == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "参数不能为空")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "参数不能为空")
 		if err != nil {
 			return err
 		}
@@ -31,9 +29,7 @@ func ClearHandle(update tgbotapi.Update) error {
 		for res.Next(ctx) {
 			cache.RedisDel(res.Val())
 		}
-		sendMessage := tgbotapi.NewMessage(chatId, "清理成功")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "清理成功")
 		if err != nil {
 			return err
 		}
@@ -41,9 +37,7 @@ func ClearHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 	if err != nil {
 		return err
 	}

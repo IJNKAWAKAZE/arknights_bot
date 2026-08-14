@@ -15,16 +15,13 @@ func SignAllHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 	if owner == userId {
-		sendMessage := tgbotapi.NewMessage(chatId, "签到全部账号开始")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "签到全部账号开始")
 		if err != nil {
 			return err
 		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		AutoSign()
-		sendMessage = tgbotapi.NewMessage(chatId, "签到全部账号结束")
-		msg, err = config.Arknights.Send(sendMessage)
+		msg, err = config.Arknights.SendText(chatId, "签到全部账号结束")
 		if err != nil {
 			return err
 		}
@@ -32,9 +29,7 @@ func SignAllHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 	if err != nil {
 		return err
 	}

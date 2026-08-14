@@ -28,9 +28,15 @@ func ReplyRecruitHandle(update tgbotapi.Update) error {
 	return recruit(chatId, messageId, param, photos[len(photos)-1].FileID)
 }
 
-func recruit(chatId int64, messageId int, param, fileId string) error {
+func recruit(chatId int64, messageId int64, param, fileId string) error {
 	var tags []string
-	file, _ := media.DownloadFile(fileId)
+	file, _, err := config.Arknights.DownloadFile(fileId)
+	if err != nil {
+		log.Println("下载文件失败:", err)
+		config.Arknights.SendText(chatId, "下载文件失败，请稍后再试")
+		return err
+	}
+	defer file.Close()
 	lang, engine, sep := "chs", "2", "\n"
 	if param == "jp" {
 		lang, engine, sep = "jpn", "1", "\r\n"
@@ -38,8 +44,7 @@ func recruit(chatId int64, messageId int, param, fileId string) error {
 
 	results, err := media.OCR(file, lang, engine, sep)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "识别失败请稍后再试")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "识别失败请稍后再试")
 	}
 	if results == nil {
 		log.Println("图片识别失败")
@@ -55,23 +60,18 @@ func recruit(chatId int64, messageId int, param, fileId string) error {
 		}
 	}
 	if len(tags) != 5 {
-		sendMessage := tgbotapi.NewMessage(chatId, "标签数量错误，请更换图片。")
-		sendMessage.ReplyToMessageID = messageId
-		_, err := config.Arknights.Send(sendMessage)
+		_, err := config.Arknights.ReplyText(chatId, messageId, "标签数量错误，请更换图片。")
 		if err != nil {
 			return err
 		}
 		return nil
 	}
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/recruit?tags=%s&client=%s", port, strings.Join(tags, " "), param), 0, 1.5)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ReplyToMessageID = messageId
-		_, err := config.Arknights.Send(sendMessage)
+		_, err := config.Arknights.ReplyText(chatId, messageId, err.Error())
 		if err != nil {
 			return err
 		}

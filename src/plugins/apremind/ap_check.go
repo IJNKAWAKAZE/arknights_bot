@@ -10,8 +10,6 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils/repo"
-
-	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 )
 
 const apRecoverySeconds = 360 // 1 AP per 6 minutes
@@ -345,11 +343,10 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 		if currentAp >= thresholdAp {
 			// ── AP at or above threshold ──
 			if uc.ApNotified == 0 {
-				msg := tgbotapi.NewMessage(uc.UserNumber, fmt.Sprintf(
+				config.Arknights.SendText(uc.UserNumber, fmt.Sprintf(
 					"⚡ 理智提醒\n角色 %s 当前理智：%d/%d (%d%%)\n已达到设定阈值 %d%%",
 					player.PlayerName, currentAp, maxAp, apPercent, threshold,
 				))
-				config.Arknights.Send(msg)
 				uc.ApNotified = 1
 				config.DBEngine.Exec("update user_ap_remind set ap_notified = 1 where user_number = ?", uc.UserNumber)
 				log.Printf("理智提醒：用户 %d 角色 %s 理智已达阈值，已通知", uc.UserNumber, player.PlayerName)

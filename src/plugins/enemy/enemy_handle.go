@@ -45,9 +45,7 @@ func EnemyHandle(update tgbotapi.Update) error {
 	}
 	enemy := ParseEnemy(name)
 	if enemy.Name == "" {
-		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "未查询到此敌人，请输入正确的敌人名称。")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(update.Message.Chat.ID, messageId, "未查询到此敌人，请输入正确的敌人名称。")
 		messagecleaner.AddDelQueue(chatId, messageId, config.MsgDelDelay)
 		if err != nil {
 			return err
@@ -56,8 +54,7 @@ func EnemyHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 
 	link := viper.GetString("api.wiki") + url.PathEscape(name)
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
@@ -86,9 +83,7 @@ func EnemyHandle(update tgbotapi.Update) error {
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/enemy?name=%s", port, name), 0, 1.5)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, err.Error())
 		return nil
 	}
 	sendDocument := tgbotapi.NewDocument(chatId, tgbotapi.FileBytes{Bytes: pic, Name: "enemy.jpg"})

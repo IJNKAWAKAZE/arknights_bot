@@ -23,21 +23,35 @@ func ChooseServer(callBack tgbotapi.Update) error {
 	}
 
 	chatId := callbackQuery.Message.Chat.ID
+	userId := callbackQuery.From.ID
 	serverNameMap[chatId] = d[1]
 	operType := d[2]
 
-	sendMessage := tgbotapi.NewMessage(chatId, "请输入token或使用 /cancel 指令取消操作。")
-	config.Arknights.Send(sendMessage)
-	sendMessage.Text = "如何获取token\n\n" +
-		"国服：\n\n" +
-		"1\\.前往 [森空岛](https://www.skland.com) 登录\n" +
-		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skland.com/account/info/hg)\n" +
-		"国际服：\n\n" +
-		"1\\.前往 [森空港](https://www.skport.com) 登录\n" +
-		"2\\.打开网址复制content中的 token  [获取token](https://web-api.skport.com/cookie_store/account_token)\n\n"
+	sendMessage := tgbotapi.NewMessage(chatId,
+		"🔑 *如何获取 Token*\n\n"+
+			"🌏 *国服*\n"+
+			"1️⃣ 前往森空岛登录\n"+
+			"2️⃣ 打开下方「获取国服 Token」按钮\n"+
+			"3️⃣ 复制 `content` 中的 token\n\n"+
+			"🌍 *国际服*\n"+
+			"1️⃣ 前往森空港登录\n"+
+			"2️⃣ 打开下方「获取国际服 Token」按钮\n"+
+			"3️⃣ 复制 `content` 中的 token\n\n"+
+			"请直接发送 token，或使用 `/cancel` 取消",
+	)
 	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
+	sendMessage.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("🌏 森空岛登录", "https://www.skland.com"),
+			tgbotapi.NewInlineKeyboardButtonURL("🔑 获取国服 Token", "https://web-api.skland.com/account/info/hg"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("🌍 森空港登录", "https://www.skport.com"),
+			tgbotapi.NewInlineKeyboardButtonURL("🔑 获取国际服 Token", "https://web-api.skport.com/cookie_store/account_token"),
+		),
+	)
 	config.Arknights.Send(sendMessage)
-	tgbotapi.WaitMessage[chatId] = operType
+	config.Arknights.SetWaitMessage(userId, operType)
 	callbackQuery.Message.Delete()
 	return nil
 }
@@ -81,12 +95,10 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 		userPlayer.PlayerName = playerName
 		userPlayer.ServerName = serverName
 		config.DBEngine.Table("user_player").Save(&userPlayer)
-		sendMessage := tgbotapi.NewMessage(chatId, "此角色已绑定，更新角色信息。")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "此角色已绑定，更新角色信息。")
 		return nil
 	}
-	sendMessage := tgbotapi.NewMessage(chatId, "角色绑定成功！")
-	config.Arknights.Send(sendMessage)
+	config.Arknights.SendText(chatId, "角色绑定成功！")
 	delete(sklandIdMap, chatId)
 	return nil
 }
@@ -107,8 +119,7 @@ func UnbindPlayer(callBack tgbotapi.Update) error {
 
 	uid := d[1]
 	config.DBEngine.Exec("delete from user_player where user_number = ? and uid = ?", userId, uid)
-	sendMessage := tgbotapi.NewMessage(chatId, "角色解绑成功！")
-	config.Arknights.Send(sendMessage)
+	config.Arknights.SendText(chatId, "角色解绑成功！")
 	callbackQuery.Message.Delete()
 	return nil
 }

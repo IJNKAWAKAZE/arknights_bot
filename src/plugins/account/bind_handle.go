@@ -34,8 +34,7 @@ func SetToken(update tgbotapi.Update) error {
 	userId := message.From.ID
 	token := message.Text
 
-	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "typing")
 
 	var userToken UserToken
 	err := json.Unmarshal([]byte(token), &userToken)
@@ -44,8 +43,7 @@ func SetToken(update tgbotapi.Update) error {
 	}
 	account, err := skland.Login(token, serverNameMap[chatId])
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "登录失败！请检查token是否正确。")
 		return err
 	}
 	// 查询账户是否存在
@@ -72,12 +70,11 @@ func SetToken(update tgbotapi.Update) error {
 		}
 		config.DBEngine.Table("user_account").Create(&userAccount)
 	}
-	delete(tgbotapi.WaitMessage, chatId)
+	config.Arknights.ClearWaitMessage(userId)
 	// 获取角色列表
 	players, err := skland.ArknightsPlayers(account.Skland, userAccount.ServerName)
 	if err != nil || len(players) == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定角色！")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "未查询到绑定角色！")
 		return err
 	}
 
@@ -100,8 +97,8 @@ func SetToken(update tgbotapi.Update) error {
 // CancelHandle 取消操作
 func CancelHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
-	delete(tgbotapi.WaitMessage, chatId)
-	sendMessage := tgbotapi.NewMessage(chatId, "已取消操作")
-	config.Arknights.Send(sendMessage)
+	userId := update.Message.From.ID
+	config.Arknights.ClearWaitMessage(userId)
+	config.Arknights.SendText(chatId, "已取消操作")
 	return nil
 }

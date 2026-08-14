@@ -41,9 +41,7 @@ func RegulationHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 	if err != nil {
 		return err
 	}

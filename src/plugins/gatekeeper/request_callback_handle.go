@@ -51,9 +51,7 @@ func RequestCallBackData(callBack tgbotapi.Update) error {
 					text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/c/%s/%d)", strings.ReplaceAll(strconv.FormatInt(chat.ID, 10), "-100", ""), joined.Reg)
 				}
 			}
-			sendMessage := tgbotapi.NewMessage(chatId, text)
-			sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.SendMarkdownV2(chatId, text)
 			if err != nil {
 				return err
 			}

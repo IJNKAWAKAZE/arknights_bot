@@ -39,9 +39,7 @@ func OperatorHandle(update tgbotapi.Update) error {
 	}
 	operator := ParseOperator(name)
 	if operator.OP.Name == "" {
-		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "查无此人，请输入正确的干员名称。")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(update.Message.Chat.ID, messageId, "查无此人，请输入正确的干员名称。")
 		messagecleaner.AddDelQueue(chatId, messageId, config.MsgDelDelay)
 		if err != nil {
 			return err
@@ -50,8 +48,7 @@ func OperatorHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	name = operator.OP.Name
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 
 	url := viper.GetString("api.wiki") + name
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
@@ -80,9 +77,7 @@ func OperatorHandle(update tgbotapi.Update) error {
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/operator?name=%s", port, name), 0, 1.5)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, err.Error())
 		return nil
 	}
 	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})

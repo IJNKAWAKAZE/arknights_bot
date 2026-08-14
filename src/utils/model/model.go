@@ -53,7 +53,7 @@ type GroupJoined struct {
 	GroupName   string    `json:"groupName"`
 	GroupNumber int64     `json:"groupNumber"`
 	News        int64     `json:"news"`
-	Reg         int       `json:"reg"`
+	Reg         int64     `json:"reg"`
 	Welcome     string    `json:"welcome"`
 	Birthday    int64     `json:"birthday"`
 	RequestMode int64     `json:"requestMode"`

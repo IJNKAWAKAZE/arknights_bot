@@ -14,14 +14,11 @@ func CalendarHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
 
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/calendar", port), 0, 1.5)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ReplyToMessageID = messageId
-		msg, _ := config.Arknights.Send(sendMessage)
+		msg, _ := config.Arknights.ReplyText(chatId, messageId, err.Error())
 		messagecleaner.AddDelQueue(chatId, msg.MessageID, 5)
 		return nil
 	}

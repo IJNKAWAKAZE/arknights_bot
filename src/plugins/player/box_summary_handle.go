@@ -19,21 +19,15 @@ type PlayerOperationBoxSummary struct {
 func (_ PlayerOperationBoxSummary) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	if userAccount.ServerName == "国际服" {
-		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, "国际服暂不可用")
 		return nil
 	}
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_document")
 
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/boxSummary?userId=%d&uid=%s&sklandId=%s", port, userAccount.UserNumber, uid, userAccount.SklandId), 0, 1.5)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendMarkdownV2(chatId, err.Error(), messageId)
 		return nil
 	}
 

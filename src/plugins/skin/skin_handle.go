@@ -37,9 +37,7 @@ func SkinHandle(update tgbotapi.Update) error {
 	}
 	operator := search.GetOperatorByName(name)
 	if operator.Name == "" {
-		sendMessage := tgbotapi.NewMessage(update.Message.Chat.ID, "查无此人，请输入正确的干员名称。")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(update.Message.Chat.ID, messageId, "查无此人，请输入正确的干员名称。")
 		messagecleaner.AddDelQueue(chatId, messageId, config.MsgDelDelay)
 		if err != nil {
 			return err
@@ -48,8 +46,7 @@ func SkinHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "typing")
 
 	content := "[]"
 	for _, skin := range operator.Skins {
@@ -63,9 +60,6 @@ func SkinHandle(update tgbotapi.Update) error {
 		content, _ = sjson.SetRaw(content, "-1", attrs)
 	}
 	skinUrl := media.CreateTelegraphPage(content, name+"的皮肤")
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("[%s的皮肤](%s)", name, skinUrl))
-	sendMessage.ReplyToMessageID = messageId
-	sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-	config.Arknights.Send(sendMessage)
+	config.Arknights.SendMarkdownV2(chatId, fmt.Sprintf("[%s的皮肤](%s)", name, skinUrl), messageId)
 	return nil
 }

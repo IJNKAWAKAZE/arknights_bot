@@ -26,10 +26,7 @@ func SignHandle(update tgbotapi.Update) error {
 	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected == 0 {
 		// 未绑定账号
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendMarkdownV2(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")), messageId)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			return err
@@ -41,8 +38,7 @@ func SignHandle(update tgbotapi.Update) error {
 	// 获取绑定角色
 	res = repo.GetPlayersByUserId(userId).Scan(&players)
 	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendText(chatId, "您还未绑定任何角色！")
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			return err
@@ -113,14 +109,12 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	skAccount.Skland.Token = account.SklandToken
 	skAccount.Skland.Cred = account.SklandCred
 
-	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "typing")
 
 	award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount, account.ServerName)
 	if err != nil {
 		log.Println(playerName, err)
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到失败！\n失败原因:%s", playerName, err.Error()))
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendText(chatId, fmt.Sprintf("角色 %s 签到失败！\n失败原因:%s", playerName, err.Error()))
 		if err != nil {
 			return err
 		}
@@ -129,13 +123,11 @@ func Sign(player account.UserPlayer, account account.UserAccount, chatId int64) 
 	}
 	// 今日已完成签到
 	if hasSigned {
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", playerName))
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, fmt.Sprintf("角色 %s 今天已经签到过了", playerName))
 		return nil
 	}
 	// 签到成功
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, award))
-	config.Arknights.Send(sendMessage)
+	config.Arknights.SendText(chatId, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", playerName, award))
 	return nil
 }
 
@@ -148,9 +140,7 @@ func autoSign(update tgbotapi.Update) {
 	var userSign UserSign
 	res := repo.GetAutoSignByUserId(userId).Scan(&userSign)
 	if res.RowsAffected > 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "已开启自动签到！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "已开启自动签到！")
 		if err != nil {
 			return
 		}
@@ -167,9 +157,7 @@ func autoSign(update tgbotapi.Update) {
 
 	config.DBEngine.Table("user_sign").Create(&userSign)
 
-	sendMessage := tgbotapi.NewMessage(chatId, "开启自动签到成功！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "开启自动签到成功！")
 	if err != nil {
 		return
 	}
@@ -185,9 +173,7 @@ func stopSign(update tgbotapi.Update) {
 
 	config.DBEngine.Exec("delete from user_sign where user_number = ?", userId)
 
-	sendMessage := tgbotapi.NewMessage(chatId, "已关闭自动签到！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "已关闭自动签到！")
 	if err != nil {
 		return
 	}
@@ -204,9 +190,7 @@ func setNotifyMode(update tgbotapi.Update, mode int) {
 	var userSign UserSign
 	res := repo.GetAutoSignByUserId(userId).Scan(&userSign)
 	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "请先开启自动签到！(/sign auto)")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "请先开启自动签到！(/sign auto)")
 		if err != nil {
 			return
 		}
@@ -226,9 +210,7 @@ func setNotifyMode(update tgbotapi.Update, mode int) {
 		modeText = "仅成功时通知"
 	}
 
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("签到通知模式已设置为：%s", modeText))
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("签到通知模式已设置为：%s", modeText))
 	if err != nil {
 		return
 	}

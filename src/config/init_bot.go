@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-var Arknights *tgbotapi.BotAPI
+var Arknights *tgbotapi.Bot
 
 func Bot() error {
 	token := viper.GetString("bot.token")
@@ -15,7 +15,8 @@ func Bot() error {
 		log.Println(err)
 		return err
 	}
-	Arknights = bot
+	Arknights = bot.AddHandle()
+	Arknights.SetOwnerID(viper.GetInt64("bot.owner"))
 	log.Println("机器人初始化完成")
 	return nil
 }

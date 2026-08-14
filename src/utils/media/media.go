@@ -1,7 +1,6 @@
 package media
 
 import (
-	"arknights_bot/config"
 	"bytes"
 	"fmt"
 	"github.com/playwright-community/playwright-go"
@@ -20,15 +19,6 @@ import (
 )
 
 var browser playwright.Browser
-
-// DownloadFile 下载tg文件
-func DownloadFile(fileId string) (io.ReadCloser, string) {
-	fileUrl, _ := config.Arknights.GetFileDirectURL(fileId)
-	fileType := fileUrl[strings.LastIndex(fileUrl, ".")+1:]
-	response, _ := http.Get(fileUrl)
-	body := response.Body
-	return body, fileType
-}
 
 // Screenshot 屏幕截图
 func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {

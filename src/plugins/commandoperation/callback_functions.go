@@ -11,7 +11,7 @@ var callBackMap = make(map[string]MultiuserCallBackFunction)
 var nextStepMap = make(map[int64]NextStepOperation)
 
 func AddNextStep(chatID int64, operation NextStepOperation, cmd string) bool {
-	tgbotapi.WaitMessage[chatID] = cmd
+	config.Arknights.SetWaitMessage(chatID, cmd)
 	_, hasKey := nextStepMap[chatID]
 	if hasKey {
 		return false
@@ -22,7 +22,7 @@ func AddNextStep(chatID int64, operation NextStepOperation, cmd string) bool {
 }
 func HaveNextStep(chatID int64) bool {
 	_, hasKey := nextStepMap[chatID]
-	_, hasMainKey := tgbotapi.WaitMessage[chatID]
+	hasMainKey := config.Arknights.HasWaitMessage(chatID)
 	if hasKey && !hasMainKey {
 		delete(nextStepMap, chatID)
 		hasKey = false
@@ -79,9 +79,7 @@ func (op NextStepOperation) Run(update tgbotapi.Update) error {
 
 		err = op.NextOperation.Run(op.PlayerID, op.Account, chatId, update.Message)
 		if err != nil {
-			tgMessage := tgbotapi.NewMessage(chatId, "未知错误，请重试。")
-			tgMessage.ReplyToMessageID = messageID
-			sent, sendErr := config.Arknights.Send(tgMessage)
+			sent, sendErr := config.Arknights.ReplyText(chatId, messageID, "未知错误，请重试。")
 			if sendErr != nil {
 				log.Printf("%v can not be send error : %v", sent, sendErr)
 			}

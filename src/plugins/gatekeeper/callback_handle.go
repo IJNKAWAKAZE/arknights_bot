@@ -22,7 +22,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 
 	userId, _ := strconv.ParseInt(d[1], 10, 64)
 	chatId := callbackQuery.Message.Chat.ID
-	joinMessageId, _ := strconv.Atoi(d[3])
+	joinMessageId, _ := strconv.ParseInt(d[3], 10, 64)
 
 	if d[2] == "PASS" || d[2] == "BAN" {
 
@@ -90,9 +90,7 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 				text += fmt.Sprintf("建议阅读群公约：[点击阅读](https://t.me/c/%s/%d)", strings.ReplaceAll(strconv.FormatInt(callbackQuery.Message.Chat.ID, 10), "-100", ""), joined.Reg)
 			}
 		}
-		sendMessage := tgbotapi.NewMessage(chatId, text)
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendMarkdownV2(chatId, text)
 		if err != nil {
 			return err
 		}
@@ -102,7 +100,7 @@ func pass(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, adm
 	return nil
 }
 
-func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, joinMessageId int) {
+func ban(chatId int64, userId int64, callbackQuery *tgbotapi.CallbackQuery, joinMessageId int64) {
 	config.Arknights.BanChatMember(chatId, userId)
 	callbackQuery.Delete()
 	delJoinMessage := tgbotapi.NewDeleteMessage(chatId, joinMessageId)

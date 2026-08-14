@@ -19,9 +19,9 @@ import (
 // Serve TG机器人阻塞监听
 func Serve() {
 	log.Println("机器人启动成功")
-	b := config.Arknights.AddHandle()
-	config.Arknights.Debug = viper.GetBool("bot.debug")
-	config.Arknights.IgnoreChannelCMD = true
+	b := config.Arknights
+	b.Debug = viper.GetBool("bot.debug")
+	b.IgnoreChannelCMD = true
 	b.JoinRequestProcessor(gatekeeper.JoinRequestHandle)
 	b.NewMemberProcessor(gatekeeper.NewMemberHandle)
 	b.LeftMemberProcessor(gatekeeper.LeftMemberHandle)
@@ -86,21 +86,21 @@ func Serve() {
 	//回复
 	b.NewReplyMessageProcessor("/recruit", system.ReplyRecruitHandle)
 
-	// 权限
-	b.NewCommandProcessor("news", system.NewsHandle)
-	b.NewCommandProcessor("birthday", system.BirthdayHandle)
-	b.NewCommandProcessor("request_mode", system.RequestModeHandle)
-	b.NewCommandProcessor("reg", system.RegulationHandle)
-	b.NewCommandProcessor("welcome", system.WelcomeHandle)
-	b.NewCommandProcessor("clear", system.ClearHandle)
-	b.NewCommandProcessor("start_lottery", lottery.StartLotteryHandle)
-	b.NewCommandProcessor("stop_lottery", lottery.StopLotteryHandle)
-	b.NewCommandProcessor("end_lottery", lottery.EndLotteryHandle)
-	b.NewCommandProcessor("lottery", lottery.LotteryHandle)
+	// 管理员
+	b.NewAdminCommandProcessor("news", system.NewsHandle)
+	b.NewAdminCommandProcessor("birthday", system.BirthdayHandle)
+	b.NewAdminCommandProcessor("request_mode", system.RequestModeHandle)
+	b.NewAdminCommandProcessor("reg", system.RegulationHandle)
+	b.NewAdminCommandProcessor("welcome", system.WelcomeHandle)
+	b.NewAdminCommandProcessor("start_lottery", lottery.StartLotteryHandle)
+	b.NewAdminCommandProcessor("stop_lottery", lottery.StopLotteryHandle)
+	b.NewAdminCommandProcessor("end_lottery", lottery.EndLotteryHandle)
+	b.NewAdminCommandProcessor("lottery", lottery.LotteryHandle)
 
 	// 仅拥有者
-	b.NewCommandProcessor("update", system.UpdateHandle)
-	b.NewCommandProcessor("sign_all", sign.SignAllHandle)
-	b.NewCommandProcessor("kill", system.KillHandle)
+	b.NewOwnerCommandProcessor("update", system.UpdateHandle)
+	b.NewOwnerCommandProcessor("sign_all", sign.SignAllHandle)
+	b.NewOwnerCommandProcessor("clear", system.ClearHandle)
+	b.NewOwnerCommandProcessor("kill", system.KillHandle)
 	b.Run()
 }

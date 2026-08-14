@@ -19,8 +19,7 @@ func SetTokenHandle(update tgbotapi.Update) error {
 	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected == 0 {
 		// 未绑定账号
-		sendMessage := tgbotapi.NewMessage(chatId, "未查询到绑定账号，请先进行绑定。")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "未查询到绑定账号，请先进行绑定。")
 		return nil
 	}
 	var buttons [][]tgbotapi.InlineKeyboardButton
@@ -44,8 +43,7 @@ func ResetToken(update tgbotapi.Update) error {
 	userId := message.From.ID
 	token := message.Text
 
-	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "typing")
 
 	var userToken UserToken
 	err := json.Unmarshal([]byte(token), &userToken)
@@ -54,8 +52,7 @@ func ResetToken(update tgbotapi.Update) error {
 	}
 	account, err := skland.Login(token, serverNameMap[chatId])
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "登录失败！请检查token是否正确。")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "登录失败！请检查token是否正确。")
 		return err
 	}
 	// 查查询账户信息
@@ -67,9 +64,8 @@ func ResetToken(update tgbotapi.Update) error {
 		userAccount.SklandToken = account.Skland.Token
 		userAccount.SklandCred = account.Skland.Cred
 		config.DBEngine.Table("user_account").Save(&userAccount)
-		sendMessage := tgbotapi.NewMessage(chatId, "重设token成功！")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "重设token成功！")
 	}
-	delete(tgbotapi.WaitMessage, chatId)
+	config.Arknights.ClearWaitMessage(userId)
 	return nil
 }

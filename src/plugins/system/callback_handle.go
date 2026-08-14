@@ -21,7 +21,7 @@ func Report(callBack tgbotapi.Update) error {
 	userId := callbackQuery.From.ID
 	chatId := callbackQuery.Message.Chat.ID
 	target, _ := strconv.ParseInt(d[2], 10, 64)
-	targetMessageId, _ := strconv.Atoi(d[3])
+	targetMessageId, _ := strconv.ParseInt(d[3], 10, 64)
 
 	if !config.Arknights.IsAdminWithPermissions(chatId, userId, tgbotapi.AdminCanRestrictMembers) {
 		callbackQuery.Answer(true, "无使用权限！")

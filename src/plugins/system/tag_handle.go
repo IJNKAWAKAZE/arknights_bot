@@ -13,9 +13,7 @@ func TagHandle(update tgbotapi.Update) error {
 	messageId := update.Message.MessageID
 	messagecleaner.AddDelQueue(chatId, messageId, config.MsgDelDelay)
 	if config.Arknights.IsAdmin(chatId, userId) {
-		sendMessage := tgbotapi.NewMessage(chatId, "此指令仅普通成员可使用！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "此指令仅普通成员可使用！")
 		if err != nil {
 			return err
 		}
@@ -23,9 +21,7 @@ func TagHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	if param == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "请输入要设置的标签！")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "请输入要设置的标签！")
 		if err != nil {
 			return err
 		}
@@ -34,18 +30,14 @@ func TagHandle(update tgbotapi.Update) error {
 	}
 	_, err := config.Arknights.SetMemberTag(chatId, userId, param)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, err.Error())
 		if err != nil {
 			return err
 		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		return err
 	}
-	sendMessage := tgbotapi.NewMessage(chatId, "自定义标签成功！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "自定义标签成功！")
 	if err != nil {
 		return err
 	}

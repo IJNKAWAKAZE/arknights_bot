@@ -25,13 +25,11 @@ func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, 
 	var userGacha []UserGacha
 	res := repo.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
 	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "不存在抽卡记录！")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "不存在抽卡记录！")
 		return nil
 	}
 
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_document")
 
 	f := excelize.NewFile()
 	// 设置单元格的值
@@ -43,8 +41,7 @@ func (_ PlayerOperationExport) Run(uid string, userAccount account.UserAccount, 
 	fileName := time.Now().Format("2006-01-02") + ".xlsx"
 	// 根据指定路径保存文件
 	if err := f.SaveAs(fileName); err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, "生成文件失败！")
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendText(chatId, "生成文件失败！")
 	}
 
 	file, _ := os.Open(fileName)

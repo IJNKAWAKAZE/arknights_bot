@@ -39,8 +39,7 @@ func BilibiliNews() {
 	groups := repo.GetNewsGroups()
 	if pics == nil {
 		for _, group := range groups {
-			sendMessage := tgbotapi.NewMessage(group, text)
-			config.Arknights.Send(sendMessage)
+			config.Arknights.SendText(group, text)
 		}
 		return
 	}

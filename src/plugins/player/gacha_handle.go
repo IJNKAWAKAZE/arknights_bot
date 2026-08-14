@@ -39,9 +39,7 @@ type UserGacha struct {
 func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	if userAccount.ServerName == "国际服" {
-		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, "国际服暂不可用")
 		return nil
 	}
 	token := userAccount.HypergryphToken
@@ -49,10 +47,7 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 	chars, err := skland.GetPlayerGacha(token, uid)
 	if err != nil {
 		log.Println(err)
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendMarkdownV2(chatId, err.Error(), messageId)
 		return err
 	}
 
@@ -83,21 +78,16 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 	var userGacha []UserGacha
 	res := repo.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
 	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "不存在抽卡记录。")
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, "不存在抽卡记录。")
 		return nil
 	}
 
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 
 	port := viper.GetString("http.port")
 	pic, e := media.Screenshot(fmt.Sprintf("http://localhost:%s/gacha?userId=%d&uid=%s", port, userAccount.UserNumber, uid), 3000, 1.5)
 	if e != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, e.Error())
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, e.Error())
 		return nil
 	}
 

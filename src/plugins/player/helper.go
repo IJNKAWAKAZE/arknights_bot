@@ -85,10 +85,7 @@ func getAccount(update tgbotapi.Update) (*account.UserAccount, error) {
 		return &userAccount, nil
 	} else {
 		// 未绑定账号
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendMarkdownV2(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")), messageId)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			log.Println("can not send massage ", err)
@@ -120,8 +117,7 @@ func getPlayers(update tgbotapi.Update) ([]account.UserPlayer, error) {
 		}
 		return players, nil
 	} else {
-		sendMessage := tgbotapi.NewMessage(chatId, "您还未绑定任何角色！")
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendText(chatId, "您还未绑定任何角色！")
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 
 		if err != nil {

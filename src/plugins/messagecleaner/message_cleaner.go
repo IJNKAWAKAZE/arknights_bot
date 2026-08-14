@@ -12,7 +12,7 @@ import (
 
 type MsgObject struct {
 	ChatId       int64     `json:"chatId"`
-	MessageId    int       `json:"messageId"`
+	MessageId    int64     `json:"messageId"`
 	CreateTime   time.Time `json:"createTime"`
 	DelTime      float64   `json:"delTime"`
 	FunctionHash string    `json:"functionHash"`
@@ -43,10 +43,10 @@ func DelMsg() {
 }
 
 // AddDelQueue 添加到删除队列
-func AddDelQueue(chatId int64, messageId int, delTime float64) {
+func AddDelQueue(chatId int64, messageId int64, delTime float64) {
 	AddDelQueueFuncHash(chatId, messageId, delTime, "None")
 }
-func AddDelQueueFuncHash(chatId int64, messageId int, delTime float64, hash string) {
+func AddDelQueueFuncHash(chatId int64, messageId int64, delTime float64, hash string) {
 	var msgObject = MsgObject{
 		ChatId:       chatId,
 		MessageId:    messageId,

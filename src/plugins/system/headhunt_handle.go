@@ -21,8 +21,7 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 
 	if param == "" {
 		if cache.RedisIsExists(headhuntKey) && cache.RedisGet(headhuntKey) == "off" {
-			sendMessage := tgbotapi.NewMessage(chatId, "模拟寻访功能已关闭！")
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.SendText(chatId, "模拟寻访功能已关闭！")
 			if err != nil {
 				return err
 			}
@@ -41,16 +40,14 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 				cache.RedisSet(headhuntKey, "off", 0)
 				text = "模拟寻访已关闭！"
 			}
-			sendMessage := tgbotapi.NewMessage(chatId, text)
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.SendText(chatId, text)
 			if err != nil {
 				return err
 			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 			return nil
 		}
-		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendText(chatId, "无使用权限！")
 		if err != nil {
 			return err
 		}
@@ -67,9 +64,7 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 			headhuntTimes := config.HeadhuntTimes
 			if times == headhuntTimes {
 				messagecleaner.AddDelQueue(chatId, messageId, 60)
-				sendMessage := tgbotapi.NewMessage(chatId, "已达到每日次数限制！")
-				sendMessage.ReplyToMessageID = messageId
-				msg, err := config.Arknights.Send(sendMessage)
+				msg, err := config.Arknights.ReplyText(chatId, messageId, "已达到每日次数限制！")
 				if err != nil {
 					return err
 				}
@@ -80,14 +75,11 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 		}
 	}
 
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/headhunt?userId=%d", port, userId), 0, 1)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, err.Error())
 		times, _ := strconv.Atoi(cache.RedisGet(key))
 		cache.RedisSet(key, strconv.Itoa(times-1), 0)
 		if err != nil {

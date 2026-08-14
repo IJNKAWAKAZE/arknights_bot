@@ -29,8 +29,7 @@ func QuizHandle(update tgbotapi.Update) error {
 
 	if param == "" {
 		if cache.RedisIsExists(key) && cache.RedisGet(key) == "off" {
-			sendMessage := tgbotapi.NewMessage(chatId, "云玩家检测功能已关闭！")
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.SendText(chatId, "云玩家检测功能已关闭！")
 			if err != nil {
 				return err
 			}
@@ -49,16 +48,14 @@ func QuizHandle(update tgbotapi.Update) error {
 				cache.RedisSet(key, "off", 0)
 				text = "云玩家检测已关闭！"
 			}
-			sendMessage := tgbotapi.NewMessage(chatId, text)
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.SendText(chatId, text)
 			if err != nil {
 				return err
 			}
 			messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 			return nil
 		}
-		sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendText(chatId, "无使用权限！")
 		if err != nil {
 			return err
 		}
@@ -66,8 +63,7 @@ func QuizHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendAction := tgbotapi.NewChatAction(chatId, "typing")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "typing")
 
 	operatorsPool := search.GetOperators()
 	var randNumMap = make(map[int64]struct{})
@@ -103,21 +99,25 @@ func QuizHandle(update tgbotapi.Update) error {
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(len(options))))
 	correct := options[r.Int64()]
 
-	sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: media.GetImg(correct.ThumbURL)})
 	pollText := "请选择上图干员的正确名字"
-	if param == "h" {
-		pic := media.ImgConvert(correct.ThumbURL)
-		if pic == nil {
+
+	var pollMedia *tgbotapi.InputPollMedia
+	if param != "vc" && param != "vj" {
+		var pic []byte
+		switch param {
+		case "h":
+			pic = media.ImgConvert(correct.ThumbURL)
+		case "ex":
+			pic = media.CutImg(correct.ThumbURL)
+		default:
+			pic = media.GetImg(correct.ThumbURL)
+		}
+		if len(pic) == 0 {
 			return nil
 		}
-		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
-	}
-	if param == "ex" {
-		pic := media.CutImg(correct.ThumbURL)
-		if pic == nil {
-			return nil
+		pollMedia = &tgbotapi.InputPollMedia{
+			Value: tgbotapi.NewInputMediaPhoto(tgbotapi.FileBytes{Bytes: pic}),
 		}
-		sendPhoto = tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})
 	}
 	if param == "vc" || param == "vj" {
 		var voiceList []string
@@ -153,18 +153,12 @@ func QuizHandle(update tgbotapi.Update) error {
 		}
 		messagecleaner.AddDelQueue(chatId, v.MessageID, 300)
 		pollText = "听语音选择干员的正确名字"
-	} else {
-		photo, err := config.Arknights.Send(sendPhoto)
-		if err != nil {
-			log.Printf("发送图片失败：%s，原因：%s", correct.ThumbURL, err.Error())
-			return nil
-		}
-		messagecleaner.AddDelQueue(chatId, photo.MessageID, 300)
 	}
 	poll := tgbotapi.NewPoll(chatId, pollText)
 	poll.IsAnonymous = false
 	poll.Type = "quiz"
 	poll.CorrectOptionID = r.Int64()
+	poll.Media = pollMedia
 	var pollOptions []string
 	for _, v := range options {
 		pollOptions = append(pollOptions, v.Name)

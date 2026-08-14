@@ -16,16 +16,13 @@ func UpdateHandle(update tgbotapi.Update) error {
 	messagecleaner.AddDelQueue(chatId, messageId, 5)
 
 	if owner == userId {
-		sendMessage := tgbotapi.NewMessage(chatId, "开始更新数据源")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "开始更新数据源")
 		if err != nil {
 			return err
 		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
 		datasource.UpdateDataSourceRunner()
-		sendMessage = tgbotapi.NewMessage(chatId, "数据源更新结束")
-		msg, err = config.Arknights.Send(sendMessage)
+		msg, err = config.Arknights.SendText(chatId, "数据源更新结束")
 		if err != nil {
 			return err
 		}
@@ -33,9 +30,7 @@ func UpdateHandle(update tgbotapi.Update) error {
 		return nil
 	}
 
-	sendMessage := tgbotapi.NewMessage(chatId, "无使用权限！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "无使用权限！")
 	if err != nil {
 		return err
 	}

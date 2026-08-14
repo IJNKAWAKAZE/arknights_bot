@@ -25,10 +25,7 @@ func ApHandle(update tgbotapi.Update) error {
 	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
 	if res.RowsAffected == 0 {
 		// 未绑定账号
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")))
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.SendMarkdownV2(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")), messageId)
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
 		if err != nil {
 			return err
@@ -38,9 +35,7 @@ func ApHandle(update tgbotapi.Update) error {
 	}
 
 	if param == "" {
-		sendMessage := tgbotapi.NewMessage(chatId, "请指定理智提醒参数，使用 /help 查看使用说明。")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "请指定理智提醒参数，使用 /help 查看使用说明。")
 		if err != nil {
 			return err
 		}
@@ -61,9 +56,7 @@ func ApHandle(update tgbotapi.Update) error {
 			thresholdStr := strings.TrimPrefix(param, "thr ")
 			threshold, err := strconv.Atoi(thresholdStr)
 			if err != nil || threshold < 1 || threshold > 100 {
-				sendMessage := tgbotapi.NewMessage(chatId, "理智提醒阈值请输入1-100之间的整数！")
-				sendMessage.ReplyToMessageID = messageId
-				msg, err := config.Arknights.Send(sendMessage)
+				msg, err := config.Arknights.ReplyText(chatId, messageId, "理智提醒阈值请输入1-100之间的整数！")
 				if err != nil {
 					return err
 				}
@@ -72,9 +65,7 @@ func ApHandle(update tgbotapi.Update) error {
 			}
 			apSetThreshold(update, threshold)
 		} else {
-			sendMessage := tgbotapi.NewMessage(chatId, "未知的理智提醒参数，请使用 /help 查看使用说明。")
-			sendMessage.ReplyToMessageID = messageId
-			msg, err := config.Arknights.Send(sendMessage)
+			msg, err := config.Arknights.ReplyText(chatId, messageId, "未知的理智提醒参数，请使用 /help 查看使用说明。")
 			if err != nil {
 				return err
 			}
@@ -98,9 +89,7 @@ func apRemindOn(update tgbotapi.Update) {
 		if displayThreshold == 0 {
 			displayThreshold = defaultApThreshold
 		}
-		sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("已开启理智提醒！当前阈值 %d%%。", displayThreshold))
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("已开启理智提醒！当前阈值 %d%%。", displayThreshold))
 		if err != nil {
 			return
 		}
@@ -121,9 +110,7 @@ func apRemindOn(update tgbotapi.Update) {
 
 	ScheduleNextApCheck(userId)
 
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("理智提醒已开启！当理智恢复到 %d%% 时将发送通知。", defaultApThreshold))
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("理智提醒已开启！当理智恢复到 %d%% 时将发送通知。", defaultApThreshold))
 	if err != nil {
 		return
 	}
@@ -140,9 +127,7 @@ func apRemindOff(update tgbotapi.Update) {
 	CancelApCheck(userId)
 	config.DBEngine.Exec("delete from user_ap_remind where user_number = ?", userId)
 
-	sendMessage := tgbotapi.NewMessage(chatId, "理智提醒已关闭！")
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, "理智提醒已关闭！")
 	if err != nil {
 		return
 	}
@@ -159,9 +144,7 @@ func apSetThreshold(update tgbotapi.Update, threshold int) {
 	var userApRemind UserApRemind
 	res := repo.GetApRemindByUserId(userId).Scan(&userApRemind)
 	if res.RowsAffected == 0 {
-		sendMessage := tgbotapi.NewMessage(chatId, "请先开启理智提醒！(/ap on)")
-		sendMessage.ReplyToMessageID = messageId
-		msg, err := config.Arknights.Send(sendMessage)
+		msg, err := config.Arknights.ReplyText(chatId, messageId, "请先开启理智提醒！(/ap on)")
 		if err != nil {
 			return
 		}
@@ -174,9 +157,7 @@ func apSetThreshold(update tgbotapi.Update, threshold int) {
 	// Reschedule so the new threshold is used for the next check.
 	ScheduleNextApCheck(userId)
 
-	sendMessage := tgbotapi.NewMessage(chatId, fmt.Sprintf("理智提醒阈值已设置为 %d%%", threshold))
-	sendMessage.ReplyToMessageID = messageId
-	msg, err := config.Arknights.Send(sendMessage)
+	msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("理智提醒阈值已设置为 %d%%", threshold))
 	if err != nil {
 		return
 	}

@@ -15,16 +15,13 @@ func HelpHandle(update tgbotapi.Update) error {
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
 
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_photo")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 
 	if fileId == "" {
 		port := viper.GetString("http.port")
 		pic, err := media.Screenshot("http://localhost:"+port+"/help", 0, 1.5)
 		if err != nil {
-			sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-			sendMessage.ReplyToMessageID = messageId
-			config.Arknights.Send(sendMessage)
+			config.Arknights.ReplyText(chatId, messageId, err.Error())
 			return nil
 		}
 		sendPhoto := tgbotapi.NewPhoto(chatId, tgbotapi.FileBytes{Bytes: pic})

@@ -19,29 +19,21 @@ type PlayerOperationMissing struct {
 func (_ PlayerOperationMissing) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
 	messageId := message.MessageID
 	if userAccount.ServerName == "国际服" {
-		sendMessage := tgbotapi.NewMessage(chatId, "国际服暂不可用")
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, "国际服暂不可用")
 		return nil
 	}
-	sendAction := tgbotapi.NewChatAction(chatId, "upload_document")
-	config.Arknights.Send(sendAction)
+	_, _ = config.Arknights.SendChatAction(chatId, "upload_document")
 	param := message.CommandArguments()
 	matched, _ := regexp.MatchString("^[1-6](,[1-6])*$", param)
 	if param != "" && param != "all" && !matched {
-		sendMessage := tgbotapi.NewMessage(chatId, "参数错误")
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.ReplyText(chatId, messageId, "参数错误")
 		return nil
 	}
 
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/missing?userId=%d&uid=%s&param=%s&sklandId=%s", port, userAccount.UserNumber, uid, param, userAccount.SklandId), 0, 1.5)
 	if err != nil {
-		sendMessage := tgbotapi.NewMessage(chatId, err.Error())
-		sendMessage.ParseMode = tgbotapi.ModeMarkdownV2
-		sendMessage.ReplyToMessageID = messageId
-		config.Arknights.Send(sendMessage)
+		config.Arknights.SendMarkdownV2(chatId, err.Error(), messageId)
 		return nil
 	}
 
