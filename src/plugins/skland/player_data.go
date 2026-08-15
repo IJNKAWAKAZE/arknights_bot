@@ -285,7 +285,7 @@ type PlayerData struct {
 				Ap            int    `json:"ap"`
 				LastApAddTime int    `json:"lastApAddTime"`
 			} `json:"trainer"`
-			RemainPoint    int     `json:"remainPoint"`
+			RemainPoint    float64 `json:"remainPoint"`
 			Speed          float64 `json:"speed"`
 			LastUpdateTime int     `json:"lastUpdateTime"`
 			RemainSecs     int     `json:"remainSecs"`

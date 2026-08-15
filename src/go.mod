@@ -10,12 +10,12 @@ require (
 	github.com/ijnkawakaze/telegram-bot-api v1.1.1
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/mozillazg/go-pinyin v0.20.0
-	github.com/playwright-community/playwright-go v0.2000.1
+	github.com/mxschmitt/playwright-go v0.6201.0
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/spf13/viper v1.14.0
 	github.com/starudream/go-lib/core/v2 v2.0.15
 	github.com/starudream/go-lib/resty/v2 v2.0.8
-	github.com/tidwall/gjson v1.14.4
+	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/sjson v1.2.5
 	github.com/u2takey/ffmpeg-go v0.5.0
 	github.com/xuri/excelize/v2 v2.8.0
@@ -30,11 +30,12 @@ require (
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
-	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
+	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
@@ -80,16 +81,14 @@ require (
 	github.com/xuri/efp v0.0.0-20230802181842-ad255f2331ca // indirect
 	github.com/xuri/nfp v0.0.0-20230819163627-dc951e3ffe1a // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611 // indirect
 	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

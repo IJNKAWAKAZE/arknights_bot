@@ -3,7 +3,7 @@ package media
 import (
 	"bytes"
 	"fmt"
-	"github.com/playwright-community/playwright-go"
+	"github.com/mxschmitt/playwright-go"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"golang.org/x/image/webp"
@@ -29,7 +29,7 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 		pw, err := playwright.Run()
 		if err != nil {
 			log.Println("未检测到playwright，开始自动安装...")
-			if installErr := playwright.Install(); installErr != nil {
+			if installErr := playwright.Install(&playwright.RunOptions{Browsers: []string{"chromium"}}); installErr != nil {
 				return nil, fmt.Errorf("playwright安装失败: %w", installErr)
 			}
 			pw, err = playwright.Run()
@@ -43,7 +43,7 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 			return nil, fmt.Errorf("playwright启动失败: %w", err)
 		}
 	}
-	page, err := browser.NewPage(playwright.BrowserNewContextOptions{DeviceScaleFactor: &scale})
+	page, err := browser.NewPage(playwright.BrowserNewPageOptions{DeviceScaleFactor: &scale})
 	if err != nil {
 		return nil, fmt.Errorf("创建页面失败: %w", err)
 	}
@@ -62,14 +62,11 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 		return nil, fmt.Errorf("页面加载失败，状态码：%d", resp.Status())
 	}
 	// 等待所有图片和字体加载完成，避免远程图片资源还没加载完就截图
-	if _, err := page.WaitForFunction(`() => document.fonts.ready.then(() => Array.from(document.images).every(img => img.complete))`, nil, playwright.FrameWaitForFunctionOptions{Timeout: playwright.Float(10000)}); err != nil {
+	if _, err := page.WaitForFunction(`() => document.fonts.ready.then(() => Array.from(document.images).every(img => img.complete))`, nil, playwright.PageWaitForFunctionOptions{Timeout: playwright.Float(10000)}); err != nil {
 		log.Println("等待图片加载超时，继续截图:", err)
 	}
 	page.WaitForTimeout(waitTime)
-	locator, err := page.Locator("#main")
-	if err != nil {
-		return nil, fmt.Errorf("获取页面元素失败: %w", err)
-	}
+	locator := page.Locator("#main")
 	if v, err := locator.IsVisible(); err != nil || !v {
 		log.Println("元素未加载取消截图操作")
 		return nil, fmt.Errorf("元素未加载")
