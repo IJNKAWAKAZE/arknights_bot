@@ -53,7 +53,7 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 	}()
 	log.Println("开始进行截图...")
 	resp, err := page.Goto(url, playwright.PageGotoOptions{
-		WaitUntil: playwright.WaitUntilStateNetworkidle,
+		WaitUntil: playwright.WaitUntilStateDomcontentloaded,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("页面加载失败: %w", err)
@@ -61,9 +61,54 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 	if resp != nil && resp.Status() >= 400 {
 		return nil, fmt.Errorf("页面加载失败，状态码：%d", resp.Status())
 	}
-	// 等待所有图片和字体加载完成，避免远程图片资源还没加载完就截图
-	if _, err := page.WaitForFunction(`() => document.fonts.ready.then(() => Array.from(document.images).every(img => img.complete))`, nil, playwright.PageWaitForFunctionOptions{Timeout: playwright.Float(10000)}); err != nil {
-		log.Println("等待图片加载超时，继续截图:", err)
+	// 只等待截图需要的字体和图片，避免无关的持续请求阻塞截图。
+	if _, err := page.WaitForFunction(`async () => {
+    const fallback = new URL("/assets/common/amiya.png", window.location.href).href;
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const waitForImage = (image) => {
+        if (image.complete) return Promise.resolve();
+        return new Promise(resolve => {
+            const done = () => {
+                image.removeEventListener("load", done);
+                image.removeEventListener("error", done);
+                resolve();
+            };
+            image.addEventListener("load", done, { once: true });
+            image.addEventListener("error", done, { once: true });
+            if (image.complete) done();
+        });
+    };
+    const images = Array.from(document.images);
+    const resources = (async () => {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        await Promise.all(images.map(waitForImage));
+        return false;
+    })();
+    const timedOut = await Promise.race([resources, delay(8000).then(() => true)]);
+    const failedImages = images.filter(image => !image.complete || image.naturalWidth === 0);
+
+    if (timedOut || failedImages.length > 0) {
+        failedImages.forEach(image => {
+            if (image.src !== fallback) {
+                image.onerror = null;
+                image.src = fallback;
+            }
+        });
+        await Promise.all(failedImages.map(waitForImage));
+    }
+
+    await Promise.all(images.map(async image => {
+        if (image.complete && image.naturalWidth > 0 && image.decode) {
+            try {
+                await image.decode();
+            } catch (_) {
+                // The image has settled; the fallback above handles failed loads.
+            }
+        }
+    }));
+    return true;
+}`, nil, playwright.PageWaitForFunctionOptions{Timeout: playwright.Float(12000)}); err != nil {
+		log.Println("等待图片和字体加载超时，继续截图:", err)
 	}
 	page.WaitForTimeout(waitTime)
 	locator := page.Locator("#main")
