@@ -78,7 +78,7 @@ func ParseOperator(name string) Operator {
 		// 职业分支
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "特性" {
-				selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
+				selection.Parent().NextFilteredUntil(".wikitable", ".mw-heading").Each(func(j int, selection *goquery.Selection) {
 					tds := selection.Find("td")
 					operator.ProfessionBranch.Name = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
 					paintingName := fmt.Sprintf("职业分支图标_%s.png", operator.ProfessionBranch.Name)
@@ -121,7 +121,7 @@ func ParseOperator(name string) Operator {
 		// 潜能
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "潜能提升" {
-				selection.NextFilteredUntil(".nomobile", "h2").Each(func(j int, selection *goquery.Selection) {
+				selection.Parent().NextFilteredUntil(".nomobile", ".nodesktop").Each(func(j int, selection *goquery.Selection) {
 					selection.Find("td").Each(func(k int, selection *goquery.Selection) {
 						var potential Potential
 						potential.Rank = k + 1
@@ -135,7 +135,7 @@ func ParseOperator(name string) Operator {
 		var talents []Talent
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "天赋" {
-				selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
+				selection.Parent().NextFilteredUntil(".wikitable", ".nodesktop").Each(func(j int, selection *goquery.Selection) {
 					selection.Find("td").Each(func(k int, selection *goquery.Selection) {
 						if k%3 == 0 {
 							if selection.Nodes[0].FirstChild.Data == "ul" {
@@ -165,7 +165,7 @@ func ParseOperator(name string) Operator {
 		var buildingSkills []BuildingSkill
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "后勤技能" {
-				selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
+				selection.Parent().NextFilteredUntil(".wikitable", ".mw-heading").Each(func(j int, selection *goquery.Selection) {
 					selection.Find("td").Each(func(k int, selection *goquery.Selection) {
 						var buildingSkill BuildingSkill
 						if k%5 == 0 {
@@ -188,7 +188,7 @@ func ParseOperator(name string) Operator {
 		var skills []Skill
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "技能" {
-				selection.NextFilteredUntil(".nomobile ", "h2").Each(func(j int, selection *goquery.Selection) {
+				selection.Parent().NextFilteredUntil(".nomobile ", ".mw-heading").Each(func(j int, selection *goquery.Selection) {
 					var skill Skill
 					selection.Find("tr").Eq(0).Find("td").Each(func(k int, selection *goquery.Selection) {
 						if k == 0 {
@@ -239,7 +239,7 @@ func ParseOperator(name string) Operator {
 		// 攻击范围
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "攻击范围" {
-				selection.NextFilteredUntil(".nomobile ", "h2").Each(func(j int, selection *goquery.Selection) {
+				selection.Parent().NextFilteredUntil(".nomobile ", ".nodesktop").Each(func(j int, selection *goquery.Selection) {
 					if j == 0 {
 						tds := selection.Find("td")
 						td := tds.Eq(len(tds.Nodes) - 1)

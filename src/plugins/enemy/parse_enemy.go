@@ -74,7 +74,7 @@ func ParseEnemy(name string) Enemy {
 	doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 		if selection.Text() == "级别0" || selection.Text() == "级别B" {
 			var level Level
-			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
+			selection.Parent().NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
 					trs := selection.Find("tr")
 					td3 := trs.Eq(3).Find("td")
@@ -135,7 +135,7 @@ func ParseEnemy(name string) Enemy {
 		}
 		if selection.Text() == "级别1" || selection.Text() == "级别A" {
 			var level Level
-			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
+			selection.Parent().NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
 					trs := selection.Find("tr")
 					td3 := trs.Eq(3).Find("td")
@@ -196,7 +196,7 @@ func ParseEnemy(name string) Enemy {
 		}
 		if selection.Text() == "级别2" || selection.Text() == "级别S" {
 			var level Level
-			selection.NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
+			selection.Parent().NextFilteredUntil(".wikitable", "h2").Each(func(j int, selection *goquery.Selection) {
 				if j == 0 {
 					trs := selection.Find("tr")
 					td3 := trs.Eq(3).Find("td")
