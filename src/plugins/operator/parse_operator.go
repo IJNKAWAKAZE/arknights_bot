@@ -170,7 +170,7 @@ func ParseOperator(name string) Operator {
 						var buildingSkill BuildingSkill
 						if k%5 == 0 {
 							buildingSkill.Evolve = selection.Text()
-							img, _ := selection.Next().Children().Attr("data-src")
+							img, _ := selection.Next().Children().Attr("src")
 							if img != "" {
 								buildingSkill.Icon = "https:" + img
 							}
