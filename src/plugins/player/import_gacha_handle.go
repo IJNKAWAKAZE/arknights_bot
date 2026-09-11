@@ -30,11 +30,11 @@ type PlayerOperationImportS1 struct {
 }
 
 func (o PlayerOperationImportS1) Run(uid string, userAccount account.UserAccount, chatId int64, message *tgbotapi.Message) error {
+	commandoperation.AddNextStep(chatId, *o.NextStepOperation(uid, userAccount, message.CommandArguments()), "importGacha")
 	sent, sendErr := config.Arknights.SendMarkdownV2(chatId, "请将[网站](https://arkgacha.kwer.top/)导出的json文件发送给机器人或使用 /cancel 指令取消操作。")
 	if sendErr != nil {
 		log.Printf("%v can not be send error : %v", sent, sendErr)
 	}
-	commandoperation.AddNextStep(chatId, *o.NextStepOperation(uid, userAccount, message.CommandArguments()), "importGacha")
 	return nil
 }
 func (_ PlayerOperationImportS1) NextStepOperation(playerUID string, userAccount account.UserAccount, param string) *commandoperation.NextStepOperation {

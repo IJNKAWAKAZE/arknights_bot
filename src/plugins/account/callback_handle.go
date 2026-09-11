@@ -6,10 +6,41 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"strings"
+	"sync"
 )
 
-var sklandIdMap = make(map[int64]string)
-var serverNameMap = make(map[int64]string)
+// 指令并发执行后，这两个 map 会被多个 goroutine 访问，需要加锁保护。
+var (
+	accountMapMu  sync.Mutex
+	sklandIdMap   = make(map[int64]string)
+	serverNameMap = make(map[int64]string)
+)
+
+func setServerName(chatId int64, name string) {
+	accountMapMu.Lock()
+	serverNameMap[chatId] = name
+	accountMapMu.Unlock()
+}
+func getServerName(chatId int64) string {
+	accountMapMu.Lock()
+	defer accountMapMu.Unlock()
+	return serverNameMap[chatId]
+}
+func setSklandId(chatId int64, id string) {
+	accountMapMu.Lock()
+	sklandIdMap[chatId] = id
+	accountMapMu.Unlock()
+}
+func getSklandId(chatId int64) string {
+	accountMapMu.Lock()
+	defer accountMapMu.Unlock()
+	return sklandIdMap[chatId]
+}
+func delSklandId(chatId int64) {
+	accountMapMu.Lock()
+	delete(sklandIdMap, chatId)
+	accountMapMu.Unlock()
+}
 
 // ChooseServer 选择服务器
 func ChooseServer(callBack tgbotapi.Update) error {
@@ -24,7 +55,7 @@ func ChooseServer(callBack tgbotapi.Update) error {
 
 	chatId := callbackQuery.Message.Chat.ID
 	userId := callbackQuery.From.ID
-	serverNameMap[chatId] = d[1]
+	setServerName(chatId, d[1])
 	operType := d[2]
 
 	sendMessage := tgbotapi.NewMessage(chatId,
@@ -50,8 +81,8 @@ func ChooseServer(callBack tgbotapi.Update) error {
 			tgbotapi.NewInlineKeyboardButtonURL("🔑 获取国际服 Token", "https://web-api.skport.com/cookie_store/account_token"),
 		),
 	)
-	config.Arknights.Send(sendMessage)
 	config.Arknights.SetWaitMessage(userId, operType)
+	config.Arknights.Send(sendMessage)
 	callbackQuery.Message.Delete()
 	return nil
 }
@@ -73,7 +104,7 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 	uid := d[1]
 	serverName := d[2]
 	playerName := d[3]
-	sklandId := sklandIdMap[chatId]
+	sklandId := getSklandId(chatId)
 
 	var userAccount UserAccount
 	var userPlayer UserPlayer
@@ -99,7 +130,7 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 		return nil
 	}
 	config.Arknights.SendText(chatId, "角色绑定成功！")
-	delete(sklandIdMap, chatId)
+	delSklandId(chatId)
 	return nil
 }
 

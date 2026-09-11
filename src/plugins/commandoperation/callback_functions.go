@@ -5,24 +5,33 @@ import (
 	"arknights_bot/plugins/account"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
+	"sync"
 )
 
-var callBackMap = make(map[string]MultiuserCallBackFunction)
-var nextStepMap = make(map[int64]NextStepOperation)
+// 指令现在由 async 调度并发执行，这两个 map 会被多个 goroutine 访问，必须加锁。
+var (
+	mu          sync.Mutex
+	callBackMap = make(map[string]MultiuserCallBackFunction)
+	nextStepMap = make(map[int64]NextStepOperation)
+)
 
 func AddNextStep(chatID int64, operation NextStepOperation, cmd string) bool {
-	config.Arknights.SetWaitMessage(chatID, cmd)
+	mu.Lock()
 	_, hasKey := nextStepMap[chatID]
-	if hasKey {
-		return false
-	} else {
+	if !hasKey {
 		nextStepMap[chatID] = operation
-		return true
 	}
+	mu.Unlock()
+	// 必须先登记等待状态再让调用方发送提示：
+	// 否则用户看到提示立刻回复时，回复可能在状态写入前就被路由，导致下一步丢失。
+	config.Arknights.SetWaitMessage(chatID, cmd)
+	return !hasKey
 }
 func HaveNextStep(chatID int64) bool {
-	_, hasKey := nextStepMap[chatID]
 	hasMainKey := config.Arknights.HasWaitMessage(chatID)
+	mu.Lock()
+	defer mu.Unlock()
+	_, hasKey := nextStepMap[chatID]
 	if hasKey && !hasMainKey {
 		delete(nextStepMap, chatID)
 		hasKey = false
@@ -30,6 +39,8 @@ func HaveNextStep(chatID int64) bool {
 	return hasKey
 }
 func GetStep(chatID int64) *NextStepOperation {
+	mu.Lock()
+	defer mu.Unlock()
 	operation, hasKey := nextStepMap[chatID]
 	if hasKey {
 		return &operation
@@ -38,26 +49,32 @@ func GetStep(chatID int64) *NextStepOperation {
 	}
 }
 func RemoveNextStep(chatID int64) {
+	mu.Lock()
+	defer mu.Unlock()
 	delete(nextStepMap, chatID)
 }
 func RemoveCallBack(callBackHash string) {
+	mu.Lock()
+	defer mu.Unlock()
 	delete(callBackMap, callBackHash)
 }
 func GetCallback(callBackHash string) (MultiuserCallBackFunction, bool) {
+	mu.Lock()
+	defer mu.Unlock()
 	callback, ok := callBackMap[callBackHash]
 	if ok {
-		RemoveCallBack(callBackHash)
+		delete(callBackMap, callBackHash)
 	}
 	return callback, ok
 }
 func AddCallback(callBackHash string, function MultiuserCallBackFunction) bool {
-	_, hasKey := callBackMap[callBackHash]
-	if hasKey {
+	mu.Lock()
+	defer mu.Unlock()
+	if _, hasKey := callBackMap[callBackHash]; hasKey {
 		return false
-	} else {
-		callBackMap[callBackHash] = function
-		return true
 	}
+	callBackMap[callBackHash] = function
+	return true
 }
 
 type MultiuserCallBackFunction struct {

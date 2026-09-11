@@ -39,6 +39,31 @@ func RedisIsExists(key string) bool {
 	return true
 }
 
+// RedisIncr 原子自增，返回自增后的值；失败返回 -1
+func RedisIncr(key string) int64 {
+	return RedisIncrBy(key, 1)
+}
+
+// RedisIncrBy 原子增加指定值，返回增加后的值；失败返回 -1
+func RedisIncrBy(key string, value int64) int64 {
+	val, err := config.GoRedis.IncrBy(ctx, key, value).Result()
+	if err != nil {
+		log.Println(err)
+		return -1
+	}
+	return val
+}
+
+// RedisDecrBy 原子减少指定值，返回减少后的值；失败返回 -1
+func RedisDecrBy(key string, value int64) int64 {
+	return RedisIncrBy(key, -value)
+}
+
+// RedisDecr 原子自减，返回自减后的值；失败返回 -1
+func RedisDecr(key string) int64 {
+	return RedisIncrBy(key, -1)
+}
+
 // RedisDel redis根据key删除
 func RedisDel(key string) {
 	err := config.GoRedis.Del(ctx, key).Err()

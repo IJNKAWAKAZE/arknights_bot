@@ -7,16 +7,14 @@ import (
 	"arknights_bot/utils/repo"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"log"
+	"sync"
 )
 
-var inited = false
+var initOnce sync.Once
 
 // PlayerHandle 角色信息查询
 func PlayerHandle(update tgbotapi.Update) error {
-	if !inited {
-		initFactory()
-		inited = true
-	}
+	initOnce.Do(initFactory)
 	chatId := update.Message.Chat.ID
 	messageId := update.Message.MessageID
 	var userAccount account.UserAccount

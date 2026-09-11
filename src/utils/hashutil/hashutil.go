@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"math/rand"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -17,7 +18,10 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-var src = rand.NewSource(time.Now().UnixNano())
+var (
+	src   = rand.NewSource(time.Now().UnixNano())
+	srcMu sync.Mutex
+)
 
 func Md5(str string) string {
 	m5 := md5.Sum([]byte(str))
@@ -27,6 +31,8 @@ func Md5(str string) string {
 
 func RandStringBytesMaskImprSrcUnsafe(n int) string {
 	b := make([]byte, n)
+	srcMu.Lock()
+	defer srcMu.Unlock()
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
 	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {

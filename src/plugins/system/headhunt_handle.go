@@ -8,7 +8,6 @@ import (
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
-	"strconv"
 )
 
 // HeadhuntHandle 寻访模拟
@@ -56,22 +55,18 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	}
 
 	key := fmt.Sprintf("headhuntTimes:%d", userId)
-	if !update.Message.Chat.IsPrivate() {
-		if !cache.RedisIsExists(key) {
-			cache.RedisSet(key, "1", 0)
-		} else {
-			times, _ := strconv.Atoi(cache.RedisGet(key))
-			headhuntTimes := config.HeadhuntTimes
-			if times == headhuntTimes {
-				messagecleaner.AddDelQueue(chatId, messageId, 60)
-				msg, err := config.Arknights.ReplyText(chatId, messageId, "已达到每日次数限制！")
-				if err != nil {
-					return err
-				}
-				messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
-				return nil
+	inGroup := !update.Message.Chat.IsPrivate()
+	if inGroup {
+		// 用原子自增代替“读-改-写”，避免同一用户在不同会话并发时丢失计数或突破每日上限。
+		if cache.RedisIncr(key) > int64(config.HeadhuntTimes) {
+			cache.RedisDecr(key)
+			messagecleaner.AddDelQueue(chatId, messageId, 60)
+			msg, err := config.Arknights.ReplyText(chatId, messageId, "已达到每日次数限制！")
+			if err != nil {
+				return err
 			}
-			cache.RedisSet(key, strconv.Itoa(times+1), 0)
+			messagecleaner.AddDelQueue(chatId, msg.MessageID, 60)
+			return nil
 		}
 	}
 
@@ -79,9 +74,10 @@ func HeadhuntHandle(update tgbotapi.Update) error {
 	port := viper.GetString("http.port")
 	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/headhunt?userId=%d", port, userId), 0, 1)
 	if err != nil {
+		if inGroup {
+			cache.RedisDecr(key)
+		}
 		msg, err := config.Arknights.ReplyText(chatId, messageId, err.Error())
-		times, _ := strconv.Atoi(cache.RedisGet(key))
-		cache.RedisSet(key, strconv.Itoa(times-1), 0)
 		if err != nil {
 			return err
 		}

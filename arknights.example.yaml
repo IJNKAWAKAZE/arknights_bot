@@ -41,6 +41,11 @@ http:
   host: 127.0.0.1
   port: 23333
 
+# 截图时等待远程图片加载的最长秒数（默认 10）。
+# 数值越大越不容易出现占位图，但单张截图耗时更久；指令已改为异步执行，不会阻塞其他会话。
+screenshot:
+  image_timeout: 10
+
 telegraph :
   token: d3b25feccb89e508a9114afb82aa421fe2a9712b963b387cc5ad71e58722
 

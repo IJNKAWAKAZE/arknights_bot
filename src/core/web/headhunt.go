@@ -27,8 +27,9 @@ func Headhunt(r *gin.Engine) {
 		times := 0
 		userId, _ := strconv.ParseInt(c.Query("userId"), 10, 64)
 		key := fmt.Sprintf("headhunt:%d", userId)
-		if cache.RedisIsExists(key) {
-			times, _ = strconv.Atoi(cache.RedisGet(key))
+		// 先原子占位 10 次，再以自增前的值作为保底计数，避免并发下发时读-改-写丢失计数。
+		if total := cache.RedisIncrBy(key, 10); total >= 10 {
+			times = int(total - 10)
 		}
 		var operators []model.Operator
 		for i := 0; i < 10; i++ {
@@ -42,7 +43,6 @@ func Headhunt(r *gin.Engine) {
 			operators = append(operators, operator)
 			times++
 		}
-		cache.RedisSet(key, strconv.Itoa(times), 0)
 		c.HTML(http.StatusOK, "Headhunt.tmpl", operators)
 	})
 }

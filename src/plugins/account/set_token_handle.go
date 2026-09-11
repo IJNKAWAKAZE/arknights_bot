@@ -50,7 +50,7 @@ func ResetToken(update tgbotapi.Update) error {
 	if err == nil {
 		token = userToken.Data.Content
 	}
-	account, err := skland.Login(token, serverNameMap[chatId])
+	account, err := skland.Login(token, getServerName(chatId))
 	if err != nil {
 		config.Arknights.SendText(chatId, "登录失败！请检查token是否正确。")
 		return err
