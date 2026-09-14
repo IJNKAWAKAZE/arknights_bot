@@ -4,255 +4,208 @@
     <title>干员信息</title>
     <link rel="stylesheet" href="/assets/css/common.css" />
     <style>
+        :root {
+            --bg: #1B1B20;
+            --panel: #2A2A32;
+            --panel-2: #2E2E37;
+            --line: rgba(255, 255, 255, .24);
+            --line-strong: rgba(255, 255, 255, .42);
+            --ink: #FFFFFF;
+            --muted: #9A9AA6;
+            --accent: #FFD426;
+            --class: #7ED9A2;
+        }
+        /* 职业色：技能条与特性标签取干员所属职业 */
+        .p-PIONEER { --class: #4FA8E0; }
+        .p-WARRIOR { --class: #E4605A; }
+        .p-TANK { --class: #E9A94F; }
+        .p-SNIPER { --class: #7ED9A2; }
+        .p-CASTER { --class: #B48BE8; }
+        .p-MEDIC { --class: #6FD6C4; }
+        .p-SUPPORT { --class: #6FD3E8; }
+        .p-SPECIAL { --class: #C6C6D2; }
+        /* 职业色：技能条与特性标签取干员所属职业 */
+        .p-PIONEER { --class: #4FA8E0; }
+        .p-WARRIOR { --class: #E4605A; }
+        .p-TANK { --class: #E9A94F; }
+        .p-SNIPER { --class: #7ED9A2; }
+        .p-CASTER { --class: #B48BE8; }
+        .p-MEDIC { --class: #6FD6C4; }
+        .p-SUPPORT { --class: #6FD3E8; }
+        .p-SPECIAL { --class: #C6C6D2; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'NotoSansHans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
         #main {
-            background-image: url("assets/operator/bg.png");
+            position: relative;
             width: 1200px;
-            min-height: 800px;
-            height: auto;
-            position: absolute;
-            background-size: cover;
+            height: 675px;
+            overflow: hidden;
+            background: url("/assets/operator/card_bg.png") center center / 1200px 675px no-repeat, var(--bg);
         }
-        #painting {
-            position: absolute;
-            height: 650px;
-            bottom: 0;
-            left: 5%;
-            z-index: 0;
+        .accent-bar { position: absolute; left: 0; top: 0; width: 6px; height: 104px; background: var(--accent); }
+        .panel {
+            position: absolute; left: 0; top: 0; width: 748px; height: 675px;
+            background: rgba(0, 0, 0, .1);
+            clip-path: polygon(0 0, 748px 0, 748px 612px, 726px 634px, 0 634px);
         }
-        #attr {
-            margin-top: 20px;
-            border-spacing: 0;
+        .panel-inner { position: absolute; left: 0; top: 0; width: 748px; height: 634px; padding: 30px 40px 0 40px; }
+        /* ── 立绘 ───────────────────────── */
+        .art-window { position: absolute; left: 748px; right: 0; top: 0; height: 675px; overflow: hidden; }
+        .art-window .art { position: absolute; right: -40px; bottom: 36px; height: 600px; }
+        .art-window .ring { position: absolute; right: -30px; bottom: 120px; width: 540px; height: 540px; opacity: .55; mix-blend-mode: screen; }
+        .art-fade {
+            position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+            background:
+                linear-gradient(90deg, rgba(31, 31, 36, 1) 0%, rgba(31, 31, 36, .88) 7%, rgba(31, 31, 36, .44) 18%, rgba(31, 31, 36, .12) 30%, rgba(31, 31, 36, 0) 40%),
+                linear-gradient(0deg, rgba(27, 27, 32, .82) 0%, rgba(27, 27, 32, 0) 22%);
         }
-        .b {
-            background-color: black;
-            color: white;
-            width: 100px;
-            opacity: 0.8;
+
+        /* ── 头部 ───────────────────────── */
+        .head { display: flex; align-items: flex-start; gap: 22px; }
+        .prof {
+            width: 66px; height: 66px; flex: 0 0 66px; background: var(--panel-2); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .36);
+            clip-path: polygon(10px 0, 66px 0, 66px 56px, 56px 66px, 0 66px, 0 10px);
+            display: flex; align-items: center; justify-content: center;
         }
-        .w {
-            background-color: #efeeef;
-            color: black;
-            width: 70px;
-            opacity: 0.8;
+        .prof img { width: 46px; height: 46px; object-fit: contain; mix-blend-mode: screen; opacity: .95; }
+        .title { flex: 1 1 auto; min-width: 0; }
+        .name-row { display: flex; align-items: baseline; }
+        .name { font-size: 44px; line-height: 1; letter-spacing: 2px; white-space: nowrap; }
+        .name-en { margin-top: 8px; font-size: 13px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; white-space: nowrap; }
+        .meta-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+        .rarity { height: 19px; opacity: .95; }
+        .chip {
+            font-size: 12px; letter-spacing: 1px; padding: 3px 10px;
+            border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .04);
+            clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
         }
-        #potential {
-            margin-top: 20px;
-            background-color: rgba(239,238,239,0.4);
+        .chip-accent { color: #FFE066; border-color: rgba(255, 212, 38, .5); background: rgba(255, 212, 38, .12); }
+
+        /* ── 职业分支 / 特性（长文本两行截断，版式统一）── */
+        .branch { margin-top: 22px; }
+        .branch-name { font-size: 19px; letter-spacing: 1px; }
+        .trait { margin-top: 10px; max-height: 38px; overflow: hidden; font-size: 13px; line-height: 1.45; color: var(--muted); letter-spacing: .5px; }
+        .trait .t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .trait b { color: var(--class); font-weight: normal; margin-right: 8px; letter-spacing: 1px; }
+        /* ── 属性 ───────────────────────── */
+        .stats {
+            margin-top: 14px; display: grid; grid-template-columns: repeat(4, 1fr);
+            border-top: 1px solid var(--line); border-left: 1px solid var(--line);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .36);
         }
-        .potential {
-            width: 20px;
-        }
-        #pb {
-            width: 300px;
-            margin-bottom: 5%;
-            background-color: rgba(239,238,239,0.4);
-        }
-        #names {
-            background-color: rgba(239,238,239,0.4);
-        }
-        #names table {
-            white-space: nowrap;
-        }
-        #code {
-            background-color: black;
-            color: white;
-        }
-        #talent {
-            position: relative;
-            z-index: 9999;
-            width: 600px;
-            margin-top: 20px;
-            border-spacing: 0;
-        }
-        #talent td {
-            font-size: 12px;
-            background-color: rgba(176,177,177,0.7);
-        }
-        #talent span {
-            color: black !important;
-        }
-        #bsk {
-            position: relative;
-            z-index: 9999;
-            width: 600px;
-            border-spacing: 0;
-        }
-        #bsk td {
-            font-size: 12px;
-            background-color: rgba(176,177,177,0.7);
-        }
-        #skill {
-            position: relative;
-            z-index: 9999;
-            width: 600px;
-            border-spacing: 0;
-        }
-        #skill td {
-            font-size: 12px;
-            color: white;
-            background-color: rgba(63,63,62,0.99);
-        }
-        #skill .term {
-            color: white !important;
-        }
-        #skill mark {
-            color: white;
-        }
-        mark {
-            background-color: transparent !important;
-        }
-        sup {
-            display: none;
-        }
+        .stat { padding: 10px 16px 9px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+        .stat .k { font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+        .stat .v { color: #FFFFFF; font-family: 'Consolas', 'DejaVu Sans Mono', 'Liberation Mono', monospace; font-size: 30px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+        .stat.is-accent .v { color: var(--accent); }
+
+        /* ── 技能 ───────────────────────── */
+        .sec-label { margin-top: 12px; font-size: 11px; letter-spacing: 3px; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+        .sec-label::after { content: ''; flex: 1 1 auto; height: 1px; background: rgba(255, 255, 255, .28); }
+        .skills { margin-top: 12px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; }
         .skill {
-            width: 50px;
+            min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+            background: var(--panel-2); border-left: 3px solid var(--class);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%);
         }
+        .skill .ico {
+            width: 34px; height: 34px; flex: 0 0 34px; background: #383842; display: flex; align-items: center; justify-content: center;
+            clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+        }
+        .skill .ico img { width: 30px; height: 30px; object-fit: contain; }
+        .skill .txt { min-width: 0; }
+        .skill .sn { font-size: 14px; letter-spacing: .5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .skill .sp { font-family: 'Consolas', 'DejaVu Sans Mono', 'Liberation Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .skill .sp b { color: var(--accent); font-weight: normal; }
+
+        /* ── 攻击范围 ───────────────────── */
+        .bottom { margin-top: 12px; }
+        .range-box { margin-top: 12px; height: 88px; overflow: hidden; }
+        .range-frame { width: 100%; height: 88px; border: 0; display: block; background: transparent; }
+
+        /* ── 底部条 ─────────────────────── */
+        .footer {
+            position: absolute; left: 0; bottom: 0; width: 1200px; height: 36px;
+            background: rgba(0, 0, 0, .3); border-top: 1px solid rgba(255, 255, 255, .3);
+            display: flex; align-items: center; justify-content: flex-end; padding-left: 40px;
+        }
+        .footer .src { font-size: 11px; letter-spacing: 1.5px; color: #5E5E6A; }
+        .code-band {
+            display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 40px 0 18px;
+            background: var(--panel-2); border-left: 2px solid var(--accent);
+            clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%);
+        }
+        .code-band .code { font-family: 'Consolas', 'DejaVu Sans Mono', 'Liberation Mono', monospace; font-size: 16px; letter-spacing: 3px; }
+        .code-band .faction { font-size: 11px; letter-spacing: 2px; color: var(--muted); }
     </style>
-</head>
-<body>
-<div id="main">
-    <img id="painting" src="{{.Painting}}"/>
-    <div style="position: absolute;">
-        <table id="attr">
-            <tr>
-                <td class="b">最大生命值</td>
-                <td class="w">{{html .OP.HP}}</td>
-                <td class="b">攻击力</td>
-                <td class="w">{{.OP.ATK}}</td>
-                <td class="b">防御力</td>
-                <td class="w">{{.OP.DEF}}</td>
-            </tr>
-            <tr>
-                <td class="b">法抗</td>
-                <td class="w">{{.OP.Res}}</td>
-                <td class="b">攻击间隔</td>
-                <td class="w">{{.OP.Interval}}</td>
-                <td class="b">再部署时间</td>
-                <td class="w">{{.OP.ReDeploy}}</td>
-            </tr>
-            <tr>
-                <td class="b">阻挡数</td>
-                <td class="w">{{.OP.Block}}</td>
-                <td class="b">部署费用</td>
-                <td class="w">{{.OP.Cost}}</td>
-                <td class="b">所属</td>
-                <td class="w">{{.OP.Logo}}</td>
-            </tr>
-        </table>
-        <table id="potential">
-            <tr>
-                <td colspan="2" style="background-color: black;color: white;opacity: 0.8;">潜能提升</td>
-            </tr>
-            {{range .Potentials}}
-            <tr>
-                <td><img class="potential" src="/assets/box/Potential_{{.Rank}}.png"/></td>
-                <td>{{.Desc}}</td>
-            </tr>
-            {{end}}
-        </table>
-    </div>
-    <div style="position: absolute;bottom: 5%;left: 10px;">
-        <table id="pb">
-            <tr>
-                <td style="width: 75px" rowspan="2">
-                    <img src="/assets/box/{{.OP.Profession}}.png"/>
-                </td>
-                <td><img src="/assets/box/Rarity_{{.OP.Rarity}}.png"/></td>
-            </tr>
-            <tr>
-                <td><h3>{{.ProfessionBranch.Name}}</h3></td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    {{.OP.Tags}}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2"><h5>{{.ProfessionBranch.Desc}}</h5></td>
-            </tr>
-        </table>
-        <div id="names">
-            <table>
-                <tr>
-                    <td>
-                        <h1>{{.OP.Name}}</h1>
-                    </td>
-                    <td>
-                        {{.AttackRange}}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <h3 id="code" style="display: inline">{{.OP.Code}}</h3>
-                    </td>
-                    <td>
-                        <h3 style="display: inline">{{.OP.NameEn}}</h3>
-                    </td>
-                </tr>
-            </table>
+</head><body>
+<div id="main" class="p-{{.OP.Profession}}">
+    <div class="accent-bar"></div>
+
+    <div class="panel"><div class="panel-inner">
+
+        <div class="head">
+            <div class="prof"><img src="/assets/box/{{.OP.Profession}}.png" /></div>
+            <div class="title">
+                <div class="name-row">
+                    <span class="name">{{.OP.Name}}</span>
+                </div>
+                <div class="name-en">{{.OP.NameEn}}</div>
+                <div class="meta-row">
+                    <img class="rarity" src="/assets/box/Rarity_{{.OP.Rarity}}.png" />
+                    <span class="chip chip-accent">{{.OP.ProfessionZH}}</span>
+                    <span class="chip">{{.OP.Tags}}</span>
+                </div>
+            </div>
         </div>
-    </div>
-    <div style="float: right">
-        <table id="talent">
-            <tr>
-                <td colspan="3" style="background-color: black;color: white;opacity: 0.8;width: 100px">天赋</td>
-            </tr>
-            {{range .Talents}}
-                {{if .Evolve}}
-                <tr>
-                    <td style="white-space: nowrap">{{.Evolve}}</td>
-                    <td style="white-space: nowrap">{{.Name}}</td>
-                    <td>{{.Desc}}</td>
-                </tr>
-                {{else}}
-                <tr>
-                    <td colspan="3">{{.Name}}</td>
-                </tr>
-                {{end}}
-            {{end}}
-        </table>
-        <table id="bsk">
-            <tr>
-                <td colspan="4" style="background-color: black;color: white;opacity: 0.8;width: 100px">基建技能</td>
-            </tr>
-            {{range .BuildingSkills}}
-            <tr>
-                {{if .Desc}}
-                <td style="white-space: nowrap">{{.Evolve}}</td>
-                <td><img src="{{.Icon}}"/></td>
-                <td style="white-space: nowrap">{{.Name}}</td>
-                <td>{{.Desc}}</td>
-                {{else}}
-                <td colspan="4">{{.Evolve}}</td>
-                {{end}}
-            </tr>
-            {{end}}
-        </table>
-        <table id="skill">
+
+        <div class="branch"><span class="branch-name">{{.ProfessionBranch.Name}}</span></div>
+        <div class="trait"><span class="t"><b>特性</b>{{.ProfessionBranch.Desc}}</span></div>
+
+        <div class="stats">
+            <div class="stat"><div class="k">生命上限</div><div class="v">{{.OP.HP}}</div></div>
+            <div class="stat"><div class="k">攻击力</div><div class="v">{{.OP.ATK}}</div></div>
+            <div class="stat"><div class="k">防御力</div><div class="v">{{.OP.DEF}}</div></div>
+            <div class="stat"><div class="k">法术抗性</div><div class="v">{{.OP.Res}}</div></div>
+            <div class="stat"><div class="k">攻击间隔</div><div class="v">{{.OP.Interval}}</div></div>
+            <div class="stat"><div class="k">再部署</div><div class="v">{{.OP.ReDeploy}}</div></div>
+            <div class="stat"><div class="k">阻挡数</div><div class="v">{{.OP.Block}}</div></div>
+            <div class="stat is-accent"><div class="k">部署费用</div><div class="v">{{.OP.Cost}}</div></div>
+        </div>
+        {{if .Skills}}<div class="sec-label">技能</div>
+        <div class="skills">
             {{range .Skills}}
-            <tr>
-                <td style="text-align: center" rowspan="2">
-                    <img class="skill" src="{{.Icon}}" onerror="this.src='assets/common/amiya.png'"/>
-                </td>
-                <td style="text-align: center">
-                    {{range .SpType}}
-                    {{.}}
-                    {{end}}
-                    <span style="cursor: help;margin-left:5px;padding-left:5px;padding-right:5px;background-color:#808080;border-radius:3px;color:#FFF;">技力{{.SpInit}}/{{.SpCost}}</span>
-                    {{if .Duration}}
-                    <span style="cursor: help;margin-left:5px;padding-left:5px;padding-right:5px;background-color:#808080;border-radius:3px;color:#FFF;">持续时间{{.Duration}}s</span>
-                    {{end}}
-                </td>
-                <td style="text-align: center" rowspan="3">{{.SkillRange}}</td>
-            </tr>
-            <tr>
-                <td style="padding-left: 10px" rowspan="2">{{.Desc}}</td>
-            </tr>
-            <tr style="text-align: center">
-                <td style="white-space: nowrap;vertical-align: top">{{.Name}}</td>
-            </tr>
+            <div class="skill">
+                <div class="ico"><img src="{{.Icon}}" /></div>
+                <div class="txt">
+                    <div class="sn">{{.Name}}</div>
+                    <div class="sp">SP <b>{{.SpInit}}</b>/{{.SpCost}}{{if .Duration}} · {{.Duration}}{{end}}</div>
+                </div>
+            </div>
             {{end}}
-        </table>
+        </div>
+        {{end}}
+
+        {{if .AttackRange}}<div class="bottom">
+            <div class="sec-label" style="margin-top:0">攻击范围</div>
+            <div class="range-box"><iframe class="range-frame" srcdoc="{{.AttackRange}}"></iframe></div>
+        </div>{{end}}
+
+    </div></div>
+
+    <div class="art-window">
+        <img class="ring" src="/assets/operator/ring.png" />
+        <img class="art" src="{{.Painting}}" />
+        <div class="art-fade"></div>
+    </div>
+
+    <div class="footer">
+        <span class="code-band"><span class="code">{{.OP.Code}}</span><span class="faction">{{.OP.Logo}}</span></span>
     </div>
 </div>
 </body>

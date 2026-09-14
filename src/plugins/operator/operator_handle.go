@@ -7,6 +7,7 @@ import (
 	"arknights_bot/utils/media"
 	"fmt"
 	"log"
+	"net/url"
 
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
@@ -50,12 +51,12 @@ func OperatorHandle(update tgbotapi.Update) error {
 	name = operator.OP.Name
 	_, _ = config.Arknights.SendChatAction(chatId, "upload_photo")
 
-	url := viper.GetString("api.wiki") + name
+	wikiURL := viper.GetString("api.wiki") + name
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.InlineKeyboardButton{
 				Text: "查看详情",
-				URL:  &url,
+				URL:  &wikiURL,
 			},
 		),
 	)
@@ -75,7 +76,7 @@ func OperatorHandle(update tgbotapi.Update) error {
 	}
 
 	port := viper.GetString("http.port")
-	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/operator?name=%s", port, name), 0, 1.5)
+	pic, err := media.Screenshot(fmt.Sprintf("http://localhost:%s/operator?name=%s", port, url.QueryEscape(name)), 0, 1.5)
 	if err != nil {
 		config.Arknights.ReplyText(chatId, messageId, err.Error())
 		return nil

@@ -9,13 +9,14 @@ import (
 	"github.com/spf13/viper"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
 type Operator struct {
 	OP               model.Operator   `json:"op"`               // 基本信息
 	Painting         string           `json:"painting"`         // 立绘
-	AttackRange      template.HTML    `json:"attackRange"`      // 攻击范围
+	AttackRange      string           `json:"attackRange"`      // 攻击范围
 	ProfessionBranch ProfessionBranch `json:"professionBranch"` // 职业分支
 	Potentials       []Potential      `json:"potentials"`       // 潜能
 	Talents          []Talent         `json:"talents"`          // 天赋
@@ -79,17 +80,15 @@ func ParseOperator(name string) Operator {
 		doc.Find("h2").Each(func(i int, selection *goquery.Selection) {
 			if selection.Text() == "特性" {
 				selection.Parent().NextFilteredUntil(".wikitable", ".mw-heading").Each(func(j int, selection *goquery.Selection) {
+					// 剔除 wiki 的“术语: xxx”悬浮说明（隐藏节点），避免特性描述里混入大段注释
+					selection.Find(".mc-tooltips span[data-append-to]").Remove()
 					tds := selection.Find("td")
 					operator.ProfessionBranch.Name = strings.ReplaceAll(tds.Eq(0).Text(), "\n", "")
 					paintingName := fmt.Sprintf("职业分支图标_%s.png", operator.ProfessionBranch.Name)
 					m := hashutil.Md5(paintingName)
 					path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
 					operator.ProfessionBranch.Pic = path + paintingName
-					tds.Each(func(j int, selection *goquery.Selection) {
-						if _, b := selection.Attr("style"); !b {
-							operator.ProfessionBranch.Desc = strings.ReplaceAll(selection.Text(), "\n", "")
-						}
-					})
+					operator.ProfessionBranch.Desc = strings.ReplaceAll(tds.Eq(1).Text(), "\n", "")
 				})
 			}
 		})
@@ -225,7 +224,7 @@ func ParseOperator(name string) Operator {
 									skill.SpCost = text
 								}
 								if j == 4 {
-									skill.Duration = text
+									skill.Duration = formatDuration(text)
 								}
 							})
 						}
@@ -244,11 +243,36 @@ func ParseOperator(name string) Operator {
 						tds := selection.Find("td")
 						td := tds.Eq(len(tds.Nodes) - 1)
 						attackRange, _ := td.Children().Html()
-						operator.AttackRange = template.HTML(attackRange)
+						operator.AttackRange = buildRangeDoc(attackRange)
 					}
 				})
 			}
 		})
 	}
 	return operator
+}
+
+// formatDuration 持续时间统一处理：纯数字补上秒单位，非数字（如“无限”）原样展示
+func formatDuration(text string) string {
+	d := strings.TrimSpace(text)
+	if d == "" {
+		return ""
+	}
+	if _, err := strconv.ParseFloat(d, 64); err == nil {
+		return d + "s"
+	}
+	return d
+}
+
+// rangeDocStyle 攻击范围片段在 iframe 内使用的样式
+const rangeDocStyle = `html,body{margin:0;padding:0;background:transparent;overflow:hidden;}` +
+	`table{border-collapse:separate;border-spacing:3px;margin:0;}` +
+	`td{width:20px;height:20px;padding:0;background:rgba(255,255,255,.12);text-align:center;vertical-align:middle;line-height:0;}` +
+	`td img{width:16px;height:16px;object-fit:contain;filter:brightness(0) invert(1);opacity:.9;}` +
+	`img{max-width:24px;max-height:24px;object-fit:contain;}`
+
+// buildRangeDoc wiki 的攻击范围片段结构不可控（可能带闭合标签、嵌套表格、外链图片），
+// 放进 iframe 的 srcdoc 里渲染：既能统一外观，又不会破坏卡片本身的布局。
+func buildRangeDoc(fragment string) string {
+	return `<html><head><meta charset="utf-8" /><style>` + rangeDocStyle + `</style></head><body>` + fragment + `</body></html>`
 }
