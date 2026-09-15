@@ -61,13 +61,65 @@ func browserContext(scale float64) (playwright.BrowserContext, error) {
 	if err != nil {
 		return nil, fmt.Errorf("创建浏览器上下文失败: %w", err)
 	}
+	// 注入图片兜底脚本，页面里第一次加载失败先重试，避免直接显示占位图
+	if err := ctx.AddInitScript(playwright.Script{Content: playwright.String(pageInitScript)}); err != nil {
+		log.Println("注入图片重试脚本失败:", err)
+	}
 	contexts[scale] = ctx
 	return ctx, nil
 }
 
+// pageInitScript 在页面脚本执行之前注入，统一接管图片加载失败的处理：
+// 模板里的 inline onerror 会在图片第一次失败时（网络抖动、图床偶发 5xx 都算）就换成占位图，
+// 而且换完就不会再重试，所以偶发失败会一直显示占位图。
+// 这里拦下这个事件，先带缓存参数重试一次，确认还是失败才用占位图兜底。
+const pageInitScript = `(() => {
+    const PLACEHOLDER = new URL("/assets/common/amiya.png", window.location.href).href;
+    const retried = new WeakSet();
+
+    const retry = (img) => {
+        const src = (img.getAttribute("src") || img.src).split("_retry=")[0];
+        if (!src) {
+            img.src = PLACEHOLDER;
+            return;
+        }
+        img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "_retry=" + Date.now();
+    };
+
+    window.addEventListener("error", (event) => {
+        const img = event.target;
+        if (!img || img.tagName !== "IMG") {
+            return;
+        }
+        // 拦掉模板里 inline onerror 的"立刻换占位图"
+        event.stopImmediatePropagation();
+        if (retried.has(img)) {
+            if (img.src !== PLACEHOLDER) {
+                img.src = PLACEHOLDER;
+            }
+            return;
+        }
+        retried.add(img);
+        retry(img);
+    }, true);
+
+    // src 为空的图片会让浏览器去请求页面本身，直接换成占位图
+    document.addEventListener("DOMContentLoaded", () => {
+        for (const img of Array.from(document.images)) {
+            const raw = img.getAttribute("src");
+            if (!raw || raw.trim() === "") {
+                img.src = PLACEHOLDER;
+            }
+        }
+    });
+})()`
+
 // waitForResources 等待页面上的字体与图片加载完成。
-// 加载失败的图片会先重试一次，只有确认失败才用占位图兜底，并锁定渲染尺寸避免撑开布局。
-const waitForResources = `async (timeoutMs) => {
+// 分两段等待：先用 waitMs 等待正常加载（加载失败的图片重试一次），
+// 如果还有图片在传输中，再用 graceMs 宽限一段时间，避免"只是慢"的图片被直接判成失败换成占位图。
+const waitForResources = `async (opts) => {
+    const waitMs = (opts && opts.waitMs) || 10000;
+    const graceMs = (opts && opts.graceMs) || 0;
     const FALLBACK = new URL("/assets/common/amiya.png", window.location.href).href;
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const isLoaded = (img) => img.complete && img.naturalWidth > 0;
@@ -87,29 +139,38 @@ const waitForResources = `async (timeoutMs) => {
     const retried = new WeakSet();
     const settled = (img) => isLoaded(img) || img.src === FALLBACK || (isFailed(img) && retried.has(img));
 
+    // 确认加载失败（naturalWidth 为 0）的图片带缓存参数重试一次，瞬时错误大多能救回来。
+    const retryFailed = () => {
+        for (const img of images) {
+            if (isFailed(img) && !retried.has(img) && img.src !== FALLBACK) {
+                retried.add(img);
+                const src = (img.getAttribute("src") || img.src).split("_retry=")[0];
+                img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "_retry=" + Date.now();
+            }
+        }
+    };
+
     let fontsReady = !(document.fonts && document.fonts.ready);
     if (!fontsReady) {
         document.fonts.ready.then(() => { fontsReady = true; }, () => { fontsReady = true; });
     }
 
-    // 等待所有图片真正加载完成；失败的先重试一次，只有确认失败才用占位图兜底。
-    const deadline = Date.now() + timeoutMs;
+    // 第一段：等待所有图片真正加载完成。
+    const deadline = Date.now() + waitMs;
     while (Date.now() < deadline) {
-        for (const img of images) {
-            if (isFailed(img) && !retried.has(img) && img.src !== FALLBACK) {
-                retried.add(img);
-                const src = img.src || img.getAttribute("src");
-                if (src) {
-                    img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "_retry=" + Date.now();
-                }
-            }
-        }
+        retryFailed();
         if (fontsReady && images.every(settled)) {
             break;
         }
         await sleep(150);
     }
 
+    // 第二段：仍在传输中的图片再给一段宽限时间，只有确认失败或宽限到期才用占位图兜底。
+    const graceDeadline = Date.now() + graceMs;
+    while (Date.now() < graceDeadline && images.some((img) => !isLoaded(img) && !isFailed(img) && img.src !== FALLBACK)) {
+        retryFailed();
+        await sleep(150);
+    }
     // 仍然不可用的图片用占位图兜底，并锁定当前渲染尺寸，避免大占位图撑开布局。
     const broken = images.filter((img) => !isLoaded(img));
     for (const img of broken) {
@@ -150,6 +211,17 @@ func imageTimeoutMs() int {
 	return seconds * 1000
 }
 
+// imageGraceMs 第一段等待结束后，还在下载中的图片额外获得的宽限时间（毫秒）。
+// 只对"确实还没下载完"的图片生效，因此不会把占位图拖得更久。
+// 可配置项：screenshot.image_grace（秒），默认 6 秒。
+func imageGraceMs() int {
+	seconds := viper.GetInt("screenshot.image_grace")
+	if seconds <= 0 {
+		seconds = 6
+	}
+	return seconds * 1000
+}
+
 // Screenshot 屏幕截图
 func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 	context, err := browserContext(scale)
@@ -177,7 +249,10 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 	// 等待字体与图片加载完成，加载失败的图片重试后再用占位图兜底。
 	// 等待时长可配置：值越大越完整，代价是这张截图占用更久。
 	timeoutMs := imageTimeoutMs()
-	if _, err := page.WaitForFunction(waitForResources, timeoutMs, playwright.PageWaitForFunctionOptions{Timeout: playwright.Float(float64(timeoutMs + 8000))}); err != nil {
+	graceMs := imageGraceMs()
+	// 注意：playwright-go 序列化 map 参数时只认 map[string]interface{}，传 map[string]int 会 panic
+	waitOpts := map[string]interface{}{"waitMs": timeoutMs, "graceMs": graceMs}
+	if _, err := page.WaitForFunction(waitForResources, waitOpts, playwright.PageWaitForFunctionOptions{Timeout: playwright.Float(float64(timeoutMs + graceMs + 8000))}); err != nil {
 		log.Println("等待图片和字体加载超时，继续截图:", err)
 	}
 	page.WaitForTimeout(waitTime)
