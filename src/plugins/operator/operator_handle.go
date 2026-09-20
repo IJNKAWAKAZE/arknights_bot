@@ -62,7 +62,8 @@ func OperatorHandle(update tgbotapi.Update) error {
 	)
 
 	fileId := ""
-	key := "operator:" + name
+	// 缓存键带版本号：卡片样式调整后需要重新出图，改这里即可让旧缓存失效
+	key := "operator:v2:" + name
 	if cache.RedisIsExists(key) {
 		fileId = cache.RedisGet(key)
 	}

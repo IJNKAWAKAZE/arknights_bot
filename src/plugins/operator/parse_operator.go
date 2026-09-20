@@ -8,7 +8,9 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 	"html/template"
+	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -16,7 +18,7 @@ import (
 type Operator struct {
 	OP               model.Operator   `json:"op"`               // 基本信息
 	Painting         string           `json:"painting"`         // 立绘
-	AttackRange      string           `json:"attackRange"`      // 攻击范围
+	AttackRanges     []RangeGroup     `json:"attackRanges"`     // 攻击范围（按精英化阶段）
 	ProfessionBranch ProfessionBranch `json:"professionBranch"` // 职业分支
 	Potentials       []Potential      `json:"potentials"`       // 潜能
 	Talents          []Talent         `json:"talents"`          // 天赋
@@ -240,10 +242,7 @@ func ParseOperator(name string) Operator {
 			if selection.Text() == "攻击范围" {
 				selection.Parent().NextFilteredUntil(".nomobile ", ".nodesktop").Each(func(j int, selection *goquery.Selection) {
 					if j == 0 {
-						tds := selection.Find("td")
-						td := tds.Eq(len(tds.Nodes) - 1)
-						attackRange, _ := td.Children().Html()
-						operator.AttackRange = buildRangeDoc(attackRange)
+						operator.AttackRanges = parseAttackRanges(selection)
 					}
 				})
 			}
@@ -264,15 +263,105 @@ func formatDuration(text string) string {
 	return d
 }
 
-// rangeDocStyle 攻击范围片段在 iframe 内使用的样式
-const rangeDocStyle = `html,body{margin:0;padding:0;background:transparent;overflow:hidden;}` +
-	`table{border-collapse:separate;border-spacing:3px;margin:0;}` +
-	`td{width:20px;height:20px;padding:0;background:rgba(255,255,255,.12);text-align:center;vertical-align:middle;line-height:0;}` +
-	`td img{width:16px;height:16px;object-fit:contain;filter:brightness(0) invert(1);opacity:.9;}` +
-	`img{max-width:24px;max-height:24px;object-fit:contain;}`
+// 攻击范围 SVG 的坐标步长：22px 的格子在 viewBox 里占 26 个单位（含 4 单位间隔）。
+const (
+	rangeCellUnit = 26.0  // viewBox 中一个格子的步长
+	rangeCellSize = 18.0  // 卡片上格子的显示边长
+	rangeMaxSide  = 108.0 // 单张范围图的最大边长，兜底防止异常大的范围撑破卡片
+)
 
-// buildRangeDoc wiki 的攻击范围片段结构不可控（可能带闭合标签、嵌套表格、外链图片），
-// 放进 iframe 的 srcdoc 里渲染：既能统一外观，又不会破坏卡片本身的布局。
-func buildRangeDoc(fragment string) string {
-	return `<html><head><meta charset="utf-8" /><style>` + rangeDocStyle + `</style></head><body>` + fragment + `</body></html>`
+var (
+	svgTagPattern    = regexp.MustCompile(`(?is)<svg\b[^>]*>`)
+	viewBoxPattern   = regexp.MustCompile(`(?i)viewbox\s*=\s*"([^"]*)"`)
+	styleAttrPattern = regexp.MustCompile(`(?is)\sstyle\s*=\s*"([^"]*)"`)
+)
+
+// RangeGroup 攻击范围按精英化阶段分组，精英0/精英1/精英2 各一张范围图
+type RangeGroup struct {
+	Label string        `json:"label"` // 精英化阶段
+	Grid  template.HTML `json:"grid"`  // 范围图（已按卡片尺寸缩放）
+}
+
+// parseAttackRanges wiki 的范围表格里标签与范围图是分开排布的
+// （桌面版一行表头加一行范围图，移动版每行一组），按出现顺序配对即可兼容两种版式。
+func parseAttackRanges(table *goquery.Selection) []RangeGroup {
+	if table == nil {
+		return nil
+	}
+	var labels []string
+	table.Find("th").Each(func(_ int, th *goquery.Selection) {
+		label := strings.Join(strings.Fields(th.Text()), "")
+		span, err := strconv.Atoi(th.AttrOr("colspan", "1"))
+		if err != nil || span < 1 {
+			span = 1
+		}
+		for i := 0; i < span; i++ {
+			labels = append(labels, label)
+		}
+	})
+
+	var groups []RangeGroup
+	table.Find("svg,img").Each(func(i int, grid *goquery.Selection) {
+		html, err := goquery.OuterHtml(grid)
+		if err != nil {
+			return
+		}
+		group := RangeGroup{Grid: template.HTML(scaleRangeGrid(html))}
+		if i < len(labels) {
+			group.Label = labels[i]
+		}
+		groups = append(groups, group)
+	})
+	return groups
+}
+
+// scaleRangeGrid wiki 给的范围图带 130px 的固定宽高，精英2 这类大范围会超出卡片被裁掉；
+// 这里统一缩放到固定格子大小，不同大小的范围格子一致，也不会再出现截断。
+func scaleRangeGrid(html string) string {
+	return svgTagPattern.ReplaceAllStringFunc(html, func(tag string) string {
+		width, height := svgViewBoxSize(tag)
+		if width <= 0 || height <= 0 {
+			return tag
+		}
+		maxSide := math.Max(width, height)
+		scale := rangeCellSize / rangeCellUnit
+		if side := maxSide * scale; side > rangeMaxSide {
+			scale = rangeMaxSide / maxSide
+		}
+		return setInlineSize(tag, width*scale, height*scale)
+	})
+}
+
+// svgViewBoxSize 读取 svg 的 viewBox 宽高，用于推算格子数量与缩放比例
+func svgViewBoxSize(tag string) (float64, float64) {
+	match := viewBoxPattern.FindStringSubmatch(tag)
+	if match == nil {
+		return 0, 0
+	}
+	fields := strings.FieldsFunc(match[1], func(r rune) bool {
+		return r == ' ' || r == ',' || r == '\t' || r == '\n' || r == '\r'
+	})
+	if len(fields) != 4 {
+		return 0, 0
+	}
+	width, errW := strconv.ParseFloat(fields[2], 64)
+	height, errH := strconv.ParseFloat(fields[3], 64)
+	if errW != nil || errH != nil || width <= 0 || height <= 0 {
+		return 0, 0
+	}
+	return width, height
+}
+
+// setInlineSize 把尺寸追加进 style（写在原有声明之后，覆盖 wiki 自带的固定宽高）
+func setInlineSize(tag string, width, height float64) string {
+	size := fmt.Sprintf("width:%.1fpx;height:%.1fpx;", width, height)
+	if loc := styleAttrPattern.FindStringSubmatchIndex(tag); loc != nil {
+		// wiki 的样式以 width:!important 这种半截声明结尾，直接拼接会和前面的声明粘在一起被整条丢弃
+		sep := ";"
+		if existing := strings.TrimSpace(tag[loc[2]:loc[3]]); existing == "" || strings.HasSuffix(existing, ";") {
+			sep = ""
+		}
+		return tag[:loc[3]] + sep + size + tag[loc[3]:]
+	}
+	return strings.TrimSuffix(tag, ">") + ` style="` + size + `">`
 }

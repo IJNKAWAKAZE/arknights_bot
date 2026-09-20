@@ -125,8 +125,12 @@
 
         /* ── 攻击范围 ───────────────────── */
         .bottom { margin-top: 12px; }
-        .range-box { margin-top: 12px; height: 88px; overflow: hidden; }
-        .range-frame { width: 100%; height: 88px; border: 0; display: block; background: transparent; }
+        .ranges { margin-top: 10px; display: flex; align-items: flex-start; gap: 24px; }
+        .range-item { display: flex; flex-direction: column; gap: 6px; }
+        .range-label { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); }
+        .range-grid { line-height: 0; }
+        .range-grid svg { display: block; vertical-align: top; }
+        .range-grid img { max-height: 96px; max-width: 108px; }
 
         /* ── 底部条 ─────────────────────── */
         .footer {
@@ -191,9 +195,16 @@
         </div>
         {{end}}
 
-        {{if .AttackRange}}<div class="bottom">
+        {{if .AttackRanges}}<div class="bottom">
             <div class="sec-label" style="margin-top:0">攻击范围</div>
-            <div class="range-box"><iframe class="range-frame" srcdoc="{{.AttackRange}}"></iframe></div>
+            <div class="ranges">
+                {{range .AttackRanges}}
+                <div class="range-item">
+                    {{if .Label}}<div class="range-label">{{.Label}}</div>{{end}}
+                    <div class="range-grid">{{.Grid}}</div>
+                </div>
+                {{end}}
+            </div>
         </div>{{end}}
 
     </div></div>
