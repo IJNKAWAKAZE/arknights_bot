@@ -1,10 +1,10 @@
 package enemy
 
 import (
+	"arknights_bot/utils/httpx"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 	"html/template"
-	"net/http"
 	"net/url"
 	"strings"
 )
@@ -53,8 +53,7 @@ type Skill struct {
 func ParseEnemy(name string) Enemy {
 	var enemy Enemy
 	api := viper.GetString("api.wiki")
-	resp, _ := http.Get(api + url.PathEscape(name))
-	doc, _ := goquery.NewDocumentFromReader(resp.Body)
+	doc, _ := goquery.NewDocumentFromReader(httpx.Body(api + url.PathEscape(name)))
 	// 基本属性
 	trs := doc.Find(".hlist").First().Find("tr")
 	enemy.Name = strings.ReplaceAll(trs.Eq(0).Text(), "\n", "")

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"arknights_bot/utils/localassets"
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -14,6 +15,8 @@ var httpServer *http.Server
 func Start() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	// 本地素材缓存：开启后页面里的图床地址会改写成同源的 /local-assets 地址
+	localassets.Register(r)
 	r.Static("/assets", "./assets")
 	r.Static("/template/js", "./template/js")
 	Help(r)

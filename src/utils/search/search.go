@@ -3,15 +3,14 @@ package search
 import (
 	"arknights_bot/utils/cache"
 	"arknights_bot/utils/hashutil"
+	"arknights_bot/utils/httpx"
+	"arknights_bot/utils/localassets"
 	"arknights_bot/utils/model"
 	"arknights_bot/utils/pinyin"
 	"arknights_bot/utils/suffixtree"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 
@@ -35,6 +34,22 @@ func SetDataNeedUpdate() {
 	dataMu.Lock()
 	DataNeedUpdate = true
 	dataMu.Unlock()
+}
+
+// EnemyAvatarURLs 返回已经加载的敌人头像地址（数据未就绪时返回空，不触发重新加载）
+func EnemyAvatarURLs() []string {
+	dataMu.RLock()
+	defer dataMu.RUnlock()
+	if DataNeedUpdate {
+		return nil
+	}
+	urls := make([]string, 0, len(enemyArray))
+	for _, enemy := range enemyArray {
+		if url, ok := enemy.b.(string); ok {
+			urls = append(urls, url)
+		}
+	}
+	return urls
 }
 
 // ensureData 数据就绪检查，仅在需要重建时获取写锁（double-check）
@@ -114,16 +129,14 @@ func updateData() {
 		}
 	}
 	//enemy
-	func() {
-		resultArray, resultTree := fetchEnemiesData()
+	resultArray, resultTree, err := fetchEnemiesData()
+	if err != nil {
+		// 敌人数据拿不到时保留上次的数据，避免把已有索引清空
+		log.Println("敌人数据加载失败:", err)
+	} else {
 		enemyArray = resultArray
 		enemyTree = resultTree
-		defer func() {
-			if err := recover(); err != nil {
-				log.Fatal("Can not update enemy")
-			}
-		}()
-	}()
+	}
 
 	//set flag
 	DataNeedUpdate = false
@@ -134,26 +147,27 @@ type pair struct {
 	a, b interface{}
 }
 
-func fetchEnemiesData() ([]pair, suffixtree.GST) {
+func fetchEnemiesData() ([]pair, suffixtree.GST, error) {
 	makeurl := func(n string) string {
 		paintingName := fmt.Sprintf("头像_敌人_%s.png", n)
 		m := hashutil.Md5(paintingName)
 		path := "https://media.prts.wiki" + fmt.Sprintf("/%s/%s/", m[:1], m[:2])
-		return path + url.PathEscape(paintingName)
+		return path + localassets.EscapePath(paintingName)
 	}
 	emeryTree := suffixtree.NewGeneralizedSuffixTree()
 	var newEnemyArray []pair
 	api := viper.GetString("api.enemy")
-	response, _ := http.Get(api)
-	e, _ := io.ReadAll(response.Body)
-	defer response.Body.Close()
+	e, err := httpx.Get(api)
+	if err != nil {
+		return nil, emeryTree, err
+	}
 	enemyJson := gjson.ParseBytes(e)
 	for index, en := range enemyJson.Array() {
 		n := en.Get("name").String()
 		newEnemyArray = append(newEnemyArray, pair{n, makeurl(n)})
 		emeryTree.Put(strings.ToLower(n), index)
 	}
-	return newEnemyArray, emeryTree
+	return newEnemyArray, emeryTree, nil
 }
 
 var isTesting = false

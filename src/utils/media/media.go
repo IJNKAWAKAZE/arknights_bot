@@ -1,6 +1,7 @@
 package media
 
 import (
+	"arknights_bot/utils/localassets"
 	"bytes"
 	"fmt"
 	"github.com/mxschmitt/playwright-go"
@@ -278,6 +279,10 @@ func Screenshot(url string, waitTime float64, scale float64) ([]byte, error) {
 var imgClient = &http.Client{Timeout: 15 * time.Second}
 
 func GetImg(url string) []byte {
+	// 优先使用本地素材缓存，图床抖动时也能取到图
+	if data, _, ok := localassets.Read(url); ok {
+		return data
+	}
 	var pic []byte
 	times := 0
 	for times < 3 {
@@ -306,12 +311,13 @@ func GetImg(url string) []byte {
 }
 
 func ImgConvert(url string) []byte {
-	pic, err := http.Get(url)
+	content, _, err := imageSource(url)
 	if err != nil {
 		log.Println("获取图片失败", err)
 		return nil
 	}
-	m, err := webp.Decode(pic.Body)
+	defer content.Close()
+	m, err := webp.Decode(content)
 	if err != nil {
 		log.Println("解析图片失败", err)
 		return nil
@@ -355,15 +361,16 @@ o:
 
 // CutImg 图片裁剪
 func CutImg(url string) []byte {
-	pic, err := http.Get(url)
+	content, contentType, err := imageSource(url)
 	if err != nil {
 		log.Println("获取图片失败", err)
 		return nil
 	}
+	defer content.Close()
 
 	var subImage image.Image
-	if pic.Header.Get("Content-Type") == "image/webp" {
-		m, err := webp.Decode(pic.Body)
+	if strings.HasPrefix(contentType, "image/webp") {
+		m, err := webp.Decode(content)
 		if err != nil {
 			log.Println("解析图片失败", err)
 			return nil
@@ -371,7 +378,7 @@ func CutImg(url string) []byte {
 		rgba := m.(*image.NYCbCrA)
 		subImage = rgba.SubImage(image.Rect(0, m.Bounds().Dy(), m.Bounds().Dx(), int(float64(m.Bounds().Dy())/1.5))).(*image.NYCbCrA)
 	} else {
-		m, _, err := image.Decode(pic.Body)
+		m, _, err := image.Decode(content)
 		if err != nil {
 			log.Println("解析图片失败", err)
 			return nil
@@ -382,6 +389,22 @@ func CutImg(url string) []byte {
 	buf := new(bytes.Buffer)
 	png.Encode(buf, subImage)
 	return buf.Bytes()
+}
+
+// imageSource 返回图片内容与类型：优先读本地素材缓存，缓存里没有才回退远程图床
+func imageSource(url string) (io.ReadCloser, string, error) {
+	if data, contentType, ok := localassets.Read(url); ok {
+		return io.NopCloser(bytes.NewReader(data)), contentType, nil
+	}
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, "", err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, "", fmt.Errorf("状态码 %d", resp.StatusCode)
+	}
+	return resp.Body, resp.Header.Get("Content-Type"), nil
 }
 
 func overtime(f *bool) {

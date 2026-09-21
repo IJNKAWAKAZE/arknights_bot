@@ -4,12 +4,12 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/player"
 	"arknights_bot/plugins/skland"
+	"arknights_bot/utils/httpx"
 	"arknights_bot/utils/repo"
 	"arknights_bot/utils/search"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -221,14 +221,11 @@ func getSkinUrl(secretaryName, skinId string) (string, string, error) {
 		return skinUrl, enName, nil
 	}
 
-	resp, err := http.Get(viper.GetString("api.skin_table"))
+	dataByte, err := httpx.Get(viper.GetString("api.skin_table"))
 	if err != nil {
-		log.Println(err)
 		return skinUrl, enName, err
 	}
-	dataByte, _ := io.ReadAll(resp.Body)
 	skinTable := gjson.ParseBytes(dataByte)
-	defer resp.Body.Close()
 
 	for _, skin := range skinTable.Get("charSkins").Array() {
 		skin.ForEach(func(key, value gjson.Result) bool {
@@ -276,8 +273,7 @@ func getNationList(playerData *skland.PlayerData) []Nation {
 	for _, char := range playerData.Chars {
 		charInfoMap[char.CharID] = char.CharID
 	}
-	resp, _ := http.Get(viper.GetString("api.nation_table"))
-	r, _ := io.ReadAll(resp.Body)
+	r, _ := httpx.Get(viper.GetString("api.nation_table"))
 	gjson.ParseBytes(r).Get("groupList").ForEach(func(key, value gjson.Result) bool {
 		forceDataList := value.Get("forceDataList").Array()
 		for _, f := range forceDataList {
@@ -290,7 +286,6 @@ func getNationList(playerData *skland.PlayerData) []Nation {
 		}
 		return true
 	})
-	defer resp.Body.Close()
 	for i, nation := range nationList {
 		count := 0
 		key := nation.Name
