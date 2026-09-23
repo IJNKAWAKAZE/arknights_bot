@@ -6,6 +6,9 @@ import (
 	"arknights_bot/core/cron"
 	"arknights_bot/core/shutdown"
 	"arknights_bot/core/web"
+	"arknights_bot/plugins/gatekeeper"
+	"arknights_bot/utils/media"
+	"context"
 	"flag"
 	"log"
 	"os"
@@ -43,9 +46,13 @@ func Launch() {
 		panic(err)
 	}
 	//注册优雅退出清理
+	shutdown.Register(func(context.Context) error { bot.StopAdmission(); return nil })
 	shutdown.Register(cron.Stop)
+	shutdown.Register(gatekeeper.Stop)
+	shutdown.Register(bot.Drain)
 	shutdown.Register(web.Shutdown)
-	shutdown.Register(config.Close)
+	shutdown.Register(func(context.Context) error { return media.Close() })
+	shutdown.Register(func(context.Context) error { config.Close(); return nil })
 	//开启http服务
 	go web.Start()
 	//监听退出信号

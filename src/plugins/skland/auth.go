@@ -61,8 +61,10 @@ func RefreshToken(account Account, serverName string) (Account, error) {
 			return account, err
 		}
 		// 更新 token
-		config.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?",
-			account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId)
+		if err := config.DBEngine.Exec("update user_account set hypergryph_token = ?, skland_token = ?, skland_cred = ? where skland_id = ?",
+			account.Hypergryph.Token, account.Skland.Token, account.Skland.Cred, account.UserId).Error; err != nil {
+			return account, fmt.Errorf("保存账号凭据失败: %w", err)
+		}
 	}
 	return account, nil
 }

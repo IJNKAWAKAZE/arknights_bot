@@ -49,12 +49,17 @@ func SetToken(update tgbotapi.Update) error {
 	// 查询账户是否存在
 	var userAccount UserAccount
 	res := repo.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
 		userAccount.SklandToken = account.Skland.Token
 		userAccount.SklandCred = account.Skland.Cred
-		config.DBEngine.Table("user_account").Save(&userAccount)
+		if err := repo.CheckDB(config.DBEngine.Table("user_account").Save(&userAccount), chatId); err != nil {
+			return err
+		}
 	} else {
 		// 不存在 新增账户
 		id, _ := gonanoid.New(32)
@@ -68,7 +73,9 @@ func SetToken(update tgbotapi.Update) error {
 			SklandId:        account.UserId,
 			ServerName:      getServerName(chatId),
 		}
-		config.DBEngine.Table("user_account").Create(&userAccount)
+		if err := repo.CheckDB(config.DBEngine.Table("user_account").Create(&userAccount), chatId); err != nil {
+			return err
+		}
 	}
 	config.Arknights.ClearWaitMessage(userId)
 	// 获取角色列表

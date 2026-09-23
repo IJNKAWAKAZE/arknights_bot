@@ -4,6 +4,7 @@ import (
 	"arknights_bot/config"
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/utils/cache"
+	"arknights_bot/utils/httpx"
 	"arknights_bot/utils/media"
 	"arknights_bot/utils/model"
 	"arknights_bot/utils/search"
@@ -14,7 +15,6 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"math/big"
-	"net/http"
 	"strings"
 )
 
@@ -121,10 +121,11 @@ func QuizHandle(update tgbotapi.Update) error {
 	}
 	if param == "vc" || param == "vj" {
 		var voiceList []string
-		resp, err := http.Get(viper.GetString("api.wiki") + correct.Name + "/语音记录")
+		resp, err := httpx.Open(viper.GetString("api.wiki") + correct.Name + "/语音记录")
 		if err != nil {
 			return err
 		}
+		defer resp.Body.Close()
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			return err

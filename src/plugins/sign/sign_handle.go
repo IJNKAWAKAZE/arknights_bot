@@ -24,6 +24,9 @@ func SignHandle(update tgbotapi.Update) error {
 	var players []account.UserPlayer
 
 	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		msg, err := config.Arknights.SendMarkdownV2(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")), messageId)
@@ -37,6 +40,9 @@ func SignHandle(update tgbotapi.Update) error {
 
 	// 获取绑定角色
 	res = repo.GetPlayersByUserId(userId).Scan(&players)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected == 0 {
 		msg, err := config.Arknights.SendText(chatId, "您还未绑定任何角色！")
 		messagecleaner.AddDelQueue(chatId, messageId, 5)
@@ -139,6 +145,9 @@ func autoSign(update tgbotapi.Update) {
 	messageId := message.MessageID
 	var userSign UserSign
 	res := repo.GetAutoSignByUserId(userId).Scan(&userSign)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return
+	}
 	if res.RowsAffected > 0 {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "已开启自动签到！")
 		if err != nil {
@@ -155,7 +164,9 @@ func autoSign(update tgbotapi.Update) {
 		NotifyMode: 0,
 	}
 
-	config.DBEngine.Table("user_sign").Create(&userSign)
+	if err := repo.CheckDB(config.DBEngine.Table("user_sign").Create(&userSign), chatId); err != nil {
+		return
+	}
 
 	msg, err := config.Arknights.ReplyText(chatId, messageId, "开启自动签到成功！")
 	if err != nil {
@@ -171,7 +182,9 @@ func stopSign(update tgbotapi.Update) {
 	chatId := message.Chat.ID
 	messageId := message.MessageID
 
-	config.DBEngine.Exec("delete from user_sign where user_number = ?", userId)
+	if err := repo.CheckDB(config.DBEngine.Exec("delete from user_sign where user_number = ?", userId), chatId); err != nil {
+		return
+	}
 
 	msg, err := config.Arknights.ReplyText(chatId, messageId, "已关闭自动签到！")
 	if err != nil {
@@ -189,6 +202,9 @@ func setNotifyMode(update tgbotapi.Update, mode int) {
 
 	var userSign UserSign
 	res := repo.GetAutoSignByUserId(userId).Scan(&userSign)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return
+	}
 	if res.RowsAffected == 0 {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "请先开启自动签到！(/sign auto)")
 		if err != nil {
@@ -198,7 +214,9 @@ func setNotifyMode(update tgbotapi.Update, mode int) {
 		return
 	}
 
-	config.DBEngine.Exec("update user_sign set notify_mode = ? where user_number = ?", mode, userId)
+	if err := repo.CheckDB(config.DBEngine.Exec("update user_sign set notify_mode = ? where user_number = ?", mode, userId), chatId); err != nil {
+		return
+	}
 
 	var modeText string
 	switch mode {

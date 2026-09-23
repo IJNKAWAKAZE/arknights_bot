@@ -4,13 +4,15 @@ import (
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
+	"net/http"
+	"time"
 )
 
 var Arknights *tgbotapi.Bot
 
 func Bot() error {
 	token := viper.GetString("bot.token")
-	bot, err := tgbotapi.NewBotAPI(token)
+	bot, err := tgbotapi.NewBotAPIWithClient(token, tgbotapi.APIEndpoint, &http.Client{Timeout: 75 * time.Second})
 	if err != nil {
 		log.Println(err)
 		return err

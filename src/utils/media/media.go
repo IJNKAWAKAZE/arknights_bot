@@ -1,6 +1,7 @@
 package media
 
 import (
+	"arknights_bot/utils/httpx"
 	"arknights_bot/utils/localassets"
 	"bytes"
 	"fmt"
@@ -21,9 +22,10 @@ import (
 )
 
 var (
-	browser     playwright.Browser
-	contexts    = make(map[float64]playwright.BrowserContext)
-	browserLock sync.Mutex
+	playwrightDriver *playwright.Playwright
+	browser          playwright.Browser
+	contexts         = make(map[float64]playwright.BrowserContext)
+	browserLock      sync.Mutex
 )
 
 // browserContext 返回可复用的浏览器上下文。
@@ -33,6 +35,10 @@ func browserContext(scale float64) (playwright.BrowserContext, error) {
 	browserLock.Lock()
 	defer browserLock.Unlock()
 	if browser != nil && !browser.IsConnected() {
+		if playwrightDriver != nil {
+			playwrightDriver.Stop()
+			playwrightDriver = nil
+		}
 		browser = nil
 		contexts = make(map[float64]playwright.BrowserContext)
 	}
@@ -48,9 +54,12 @@ func browserContext(scale float64) (playwright.BrowserContext, error) {
 				return nil, fmt.Errorf("playwright启动失败: %w", err)
 			}
 		}
+		playwrightDriver = pw
 		browser, err = pw.Chromium.Launch()
 		if err != nil {
 			browser = nil
+			pw.Stop()
+			playwrightDriver = nil
 			log.Println(err)
 			return nil, fmt.Errorf("playwright启动失败: %w", err)
 		}
@@ -326,12 +335,11 @@ func ImgConvert(url string) []byte {
 	dx := bounds.Dx()
 	dy := bounds.Dy()
 	newRgba := image.NewRGBA(bounds)
-	f := true
-	go overtime(&f)
+	deadline := time.Now().Add(10 * time.Second)
 o:
 	for i := 0; i < dx; i++ {
 		for j := 0; j < dy; j++ {
-			if !f {
+			if time.Now().After(deadline) {
 				log.Println("图片转换超时")
 				break o
 			}
@@ -351,7 +359,7 @@ o:
 			newRgba.SetRGBA(i, j, color.RGBA{R: r_uint8, G: g_uint8, B: b_uint8, A: a_uint8})
 		}
 	}
-	if !f {
+	if time.Now().After(deadline) {
 		return nil
 	}
 	buf := new(bytes.Buffer)
@@ -396,7 +404,7 @@ func imageSource(url string) (io.ReadCloser, string, error) {
 	if data, contentType, ok := localassets.Read(url); ok {
 		return io.NopCloser(bytes.NewReader(data)), contentType, nil
 	}
-	resp, err := http.Get(url)
+	resp, err := httpx.Open(url)
 	if err != nil {
 		return nil, "", err
 	}
@@ -405,11 +413,6 @@ func imageSource(url string) (io.ReadCloser, string, error) {
 		return nil, "", fmt.Errorf("状态码 %d", resp.StatusCode)
 	}
 	return resp.Body, resp.Header.Get("Content-Type"), nil
-}
-
-func overtime(f *bool) {
-	time.Sleep(time.Second * 10)
-	*f = false
 }
 
 // OCR OCR识别
@@ -421,7 +424,9 @@ func OCR(file io.Reader, lang, engine, sep string) ([]string, error) {
 		log.Println("创建文件失败")
 		return nil, err
 	}
-	io.Copy(part, file)
+	if _, err := io.Copy(part, file); err != nil {
+		return nil, err
+	}
 	writer.WriteField("language", lang)
 	writer.WriteField("FileType", ".Auto")
 	writer.WriteField("OCREngine", engine)
@@ -433,37 +438,61 @@ func OCR(file io.Reader, lang, engine, sep string) ([]string, error) {
 	}
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 	request.Header.Add("Apikey", "helloworld")
-	client := http.DefaultClient
-	client.Timeout = time.Second * 10
+	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(request)
 	if err != nil {
 		log.Println("ocr失败")
 		return nil, err
 	}
-	read, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("OCR状态码 %d", resp.StatusCode)
+	}
+	read, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if !gjson.ValidBytes(read) {
+		return nil, fmt.Errorf("OCR响应不是有效JSON")
+	}
 	result := gjson.ParseBytes(read)
+	if result.Get("IsErroredOnProcessing").Bool() {
+		return nil, fmt.Errorf("OCR识别失败: %s", result.Get("ErrorMessage").String())
+	}
 	log.Println("识别结果：", result.String())
 	return strings.Split(result.Get("ParsedResults.0.ParsedText").String(), sep), nil
 }
 
-// CreateTelegraphPage 创建telegraph页面
-func CreateTelegraphPage(content, title string) string {
-	api := viper.GetString("api.telegraph")
-	request, _ := http.NewRequest("GET", api, nil)
-	params := request.URL.Query()
-	params.Add("access_token", viper.GetString("telegraph.token"))
-	params.Add("title", title)
-	params.Add("content", content)
-	request.URL.RawQuery = params.Encode()
-	response, _ := http.DefaultClient.Do(request)
-	readAll, err := io.ReadAll(response.Body)
+// CreateTelegraphPage 仅在 API 响应成功且包含页面地址时返回该地址。
+func CreateTelegraphPage(content, title string) (string, error) {
+	request, err := http.NewRequest(http.MethodGet, viper.GetString("api.telegraph"), nil)
 	if err != nil {
-		log.Println(err)
-		return ""
+		return "", err
 	}
-	jsonStr := string(readAll)
-	log.Println(jsonStr)
-	url := gjson.Get(jsonStr, "result.url").String()
-	return url
+	params := request.URL.Query()
+	params.Set("access_token", viper.GetString("telegraph.token"))
+	params.Set("title", title)
+	params.Set("content", content)
+	request.URL.RawQuery = params.Encode()
+	response, err := httpx.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+	if !gjson.ValidBytes(body) {
+		return "", fmt.Errorf("Telegraph响应不是有效JSON")
+	}
+	result := gjson.ParseBytes(body)
+	if !result.Get("ok").Bool() {
+		return "", fmt.Errorf("Telegraph创建失败: %s", result.Get("error").String())
+	}
+	url := result.Get("result.url").String()
+	if url == "" {
+		return "", fmt.Errorf("Telegraph未返回页面地址")
+	}
+	return url, nil
 }

@@ -5,70 +5,113 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils/repo"
-	"crypto/rand"
+	"context"
+	"errors"
 	"fmt"
 	"log"
-	"math/big"
-	"strconv"
+	"math/rand"
+	"sync"
 	"time"
 )
 
-// AutoSign 森空岛自动签到
+var (
+	bulkMu                  sync.Mutex
+	bulkContext, cancelBulk = context.WithCancel(context.Background())
+	ErrAlreadyRunning       = errors.New("已有批量签到任务正在执行")
+)
+
+// AutoSign 同步执行签到，便于定时任务调度器跟踪执行状态并等待结束。
 func AutoSign() {
+	if err := RunAutoSign(); err != nil {
+		log.Println("自动签到:", err)
+	}
+}
+func Stop() { cancelBulk() }
+
+func RunAutoSign() error {
+	if !bulkMu.TryLock() {
+		return ErrAlreadyRunning
+	}
+	defer bulkMu.Unlock()
+	if err := bulkContext.Err(); err != nil {
+		return err
+	}
 	var users []UserSign
-	res := repo.GetAutoSign().Scan(&users)
-	if res.RowsAffected > 0 {
-		go func() {
-			log.Println("开始执行自动签到...")
-			// 遍历所有自动签到用户
-			for _, user := range users {
-				r, _ := rand.Int(rand.Reader, big.NewInt(60))
-				random, _ := strconv.Atoi(r.String())
-				time.Sleep(time.Second * time.Duration(random))
-				sign(user)
+	if err := repo.GetAutoSign().Scan(&users).Error; err != nil {
+		return err
+	}
+	log.Println("开始执行自动签到...")
+	for _, user := range users {
+		if err := waitSignDelay(bulkContext, time.Duration(rand.Intn(60))*time.Second); err != nil {
+			return err
+		}
+		if err := signUser(bulkContext, user, skland.SignGamePlayer, func(id int64, text string) {
+			if _, err := config.Arknights.SendText(id, text); err != nil {
+				log.Println("签到通知失败:", err)
 			}
-			log.Println("自动签到执行完毕...")
-		}()
+		}); err != nil {
+			if bulkContext.Err() != nil {
+				return bulkContext.Err()
+			}
+			log.Printf("用户 %d 签到失败: %v", user.UserNumber, err)
+		}
+	}
+	log.Println("自动签到执行完毕...")
+	return nil
+}
+
+func waitSignDelay(ctx context.Context, delay time.Duration) error {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return ctx.Err()
 	}
 }
 
-func sign(user UserSign) {
+func signUser(ctx context.Context, user UserSign,
+	signPlayer func(string, skland.Account, string) (string, bool, error),
+	notify func(int64, string)) error {
 	var players []account.UserPlayer
-	res := repo.GetPlayersByUserId(user.UserNumber).Scan(&players)
-	if res.RowsAffected > 0 {
-		// 对所有绑定角色执行签到
-		for _, player := range players {
-			var skAccount skland.Account
-			var userAccount account.UserAccount
-			// 获取用户账号信息
-			res := repo.GetAccountByUid(user.UserNumber, player.Uid).Scan(&userAccount)
-			if res.RowsAffected > 0 {
-				skAccount.Hypergryph.Token = userAccount.HypergryphToken
-				skAccount.Skland.Token = userAccount.SklandToken
-				skAccount.Skland.Cred = userAccount.SklandCred
-
-				// 执行签到
-				award, hasSigned, err := skland.SignGamePlayer(player.Uid, skAccount, userAccount.ServerName)
-				if err != nil {
-					// 签到失败 - notify_mode: 0(全部通知) 或 1(仅失败通知) 时发送
-					if user.NotifyMode == 0 || user.NotifyMode == 1 {
-						config.Arknights.SendText(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err.Error()))
-					}
-					log.Println(player.PlayerName, err)
-					return
-				}
-				// 今日已完成签到 - notify_mode: 0(全部通知) 时发送
-				if hasSigned {
-					if user.NotifyMode == 0 {
-						config.Arknights.SendText(user.UserNumber, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
-					}
-					return
-				}
-				// 签到成功 - notify_mode: 0(全部通知) 或 2(仅成功通知) 时发送
-				if user.NotifyMode == 0 || user.NotifyMode == 2 {
-					config.Arknights.SendText(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, award))
-				}
+	if err := repo.GetPlayersByUserId(user.UserNumber).Scan(&players).Error; err != nil {
+		return err
+	}
+	for _, player := range players {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		var ua account.UserAccount
+		res := repo.GetAccountByUid(user.UserNumber, player.Uid).Scan(&ua)
+		if res.Error != nil {
+			log.Println("查询签到账号失败:", res.Error)
+			continue
+		}
+		if res.RowsAffected == 0 {
+			continue
+		}
+		var ska skland.Account
+		ska.Hypergryph.Token = ua.HypergryphToken
+		ska.Skland.Token = ua.SklandToken
+		ska.Skland.Cred = ua.SklandCred
+		award, alreadySigned, err := signPlayer(player.Uid, ska, ua.ServerName)
+		if err != nil {
+			if user.NotifyMode == 0 || user.NotifyMode == 1 {
+				notify(user.UserNumber, fmt.Sprintf("角色 %s 签到失败!\n失败原因:%s", player.PlayerName, err))
 			}
+			log.Println(player.PlayerName, err)
+			continue
+		}
+		if alreadySigned {
+			if user.NotifyMode == 0 {
+				notify(user.UserNumber, fmt.Sprintf("角色 %s 今天已经签到过了", player.PlayerName))
+			}
+			continue
+		}
+		if user.NotifyMode == 0 || user.NotifyMode == 2 {
+			notify(user.UserNumber, fmt.Sprintf("角色 %s 签到成功!\n今日奖励：%s", player.PlayerName, award))
 		}
 	}
+	return nil
 }

@@ -22,9 +22,13 @@ func RegulationHandle(update tgbotapi.Update) error {
 		if replyToMessage != nil {
 			replyMessageId := replyToMessage.MessageID
 			var joined model.GroupJoined
-			repo.GetJoinedByChatId(chatId).Scan(&joined)
+			if err := repo.CheckDB(repo.GetJoinedByChatId(chatId).Scan(&joined), chatId); err != nil {
+				return err
+			}
 			joined.Reg = replyMessageId
-			config.DBEngine.Table("group_joined").Save(&joined)
+			if err := repo.CheckDB(config.DBEngine.Table("group_joined").Save(&joined), chatId); err != nil {
+				return err
+			}
 			var sendMessage tgbotapi.MessageConfig
 			if replyToMessage.Chat.UserName != "" {
 				sendMessage = tgbotapi.NewMessage(chatId, fmt.Sprintf("消息[%d](https://t.me/%s/%d)已设置为群规！", replyMessageId, replyToMessage.Chat.UserName, replyMessageId))

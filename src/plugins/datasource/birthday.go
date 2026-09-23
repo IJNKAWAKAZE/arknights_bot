@@ -2,6 +2,7 @@ package datasource
 
 import (
 	"arknights_bot/utils/cache"
+	"arknights_bot/utils/httpx"
 	"arknights_bot/utils/model"
 	"io"
 	"log"
@@ -94,7 +95,7 @@ func rawWikiText(api, name string, hops int) ([]byte, bool) {
 }
 
 func getRawWikiText(api, name string) ([]byte, bool) {
-	response, err := http.Get(api + name + "?action=raw")
+	response, err := httpx.Open(api + name + "?action=raw")
 	if err != nil {
 		log.Println("获取干员页面失败:", name, err)
 		return nil, false

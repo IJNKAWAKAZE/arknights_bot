@@ -49,7 +49,7 @@ func NewMemberHandle(update tgbotapi.Update) error {
 				verifySet.checkExistAndRemove(userId, chatId)
 				return nil
 			}
-			go VerifyMember(message)
+			VerifyMember(message)
 			continue
 		}
 		// 机器人被邀请加群

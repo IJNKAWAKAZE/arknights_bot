@@ -23,6 +23,9 @@ func ApHandle(update tgbotapi.Update) error {
 	var userAccount account.UserAccount
 
 	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		msg, err := config.Arknights.SendMarkdownV2(chatId, fmt.Sprintf("未查询到绑定账号，请先进行[绑定](https://t.me/%s)。", viper.GetString("bot.name")), messageId)
@@ -84,6 +87,9 @@ func apRemindOn(update tgbotapi.Update) {
 
 	var userApRemind UserApRemind
 	res := repo.GetApRemindByUserId(userId).Scan(&userApRemind)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return
+	}
 	if res.RowsAffected > 0 {
 		displayThreshold := userApRemind.ApThreshold
 		if displayThreshold == 0 {
@@ -106,7 +112,9 @@ func apRemindOn(update tgbotapi.Update) {
 		ApNotified:  0,
 	}
 
-	config.DBEngine.Table("user_ap_remind").Create(&userApRemind)
+	if err := repo.CheckDB(config.DBEngine.Table("user_ap_remind").Create(&userApRemind), chatId); err != nil {
+		return
+	}
 
 	ScheduleNextApCheck(userId)
 
@@ -124,8 +132,10 @@ func apRemindOff(update tgbotapi.Update) {
 	chatId := message.Chat.ID
 	messageId := message.MessageID
 
+	if err := repo.CheckDB(config.DBEngine.Exec("delete from user_ap_remind where user_number = ?", userId), chatId); err != nil {
+		return
+	}
 	CancelApCheck(userId)
-	config.DBEngine.Exec("delete from user_ap_remind where user_number = ?", userId)
 
 	msg, err := config.Arknights.ReplyText(chatId, messageId, "理智提醒已关闭！")
 	if err != nil {
@@ -143,6 +153,9 @@ func apSetThreshold(update tgbotapi.Update, threshold int) {
 
 	var userApRemind UserApRemind
 	res := repo.GetApRemindByUserId(userId).Scan(&userApRemind)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return
+	}
 	if res.RowsAffected == 0 {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "请先开启理智提醒！(/ap on)")
 		if err != nil {
@@ -152,7 +165,9 @@ func apSetThreshold(update tgbotapi.Update, threshold int) {
 		return
 	}
 
-	config.DBEngine.Exec("update user_ap_remind set ap_threshold = ?, ap_notified = 0 where user_number = ?", threshold, userId)
+	if err := repo.CheckDB(config.DBEngine.Exec("update user_ap_remind set ap_threshold = ?, ap_notified = 0 where user_number = ?", threshold, userId), chatId); err != nil {
+		return
+	}
 
 	// Reschedule so the new threshold is used for the next check.
 	ScheduleNextApCheck(userId)

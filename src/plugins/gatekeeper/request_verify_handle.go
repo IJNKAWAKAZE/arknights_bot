@@ -109,11 +109,11 @@ func VerifyRequestMember(update tgbotapi.Update) {
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
-	go requestVerify(chatId, userId, photo.MessageID, name)
+	verificationTasks.schedule(time.Minute, func() { requestVerify(chatId, userId, photo.MessageID, name) })
 }
 
 func requestVerify(chatId int64, userId int64, messageId int64, name string) {
-	time.Sleep(time.Minute)
+
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}

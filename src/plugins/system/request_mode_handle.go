@@ -16,9 +16,13 @@ func RequestModeHandle(update tgbotapi.Update) error {
 
 	if config.Arknights.IsAdmin(chatId, userId) {
 		var joined model.GroupJoined
-		repo.GetJoinedByChatId(chatId).Scan(&joined)
+		if err := repo.CheckDB(repo.GetJoinedByChatId(chatId).Scan(&joined), chatId); err != nil {
+			return err
+		}
 		joined.RequestMode = joined.RequestMode ^ 1
-		config.DBEngine.Table("group_joined").Save(&joined)
+		if err := repo.CheckDB(config.DBEngine.Table("group_joined").Save(&joined), chatId); err != nil {
+			return err
+		}
 		text := "请求模式开启！"
 		if joined.RequestMode == 0 {
 			text = "请求模式关闭！"

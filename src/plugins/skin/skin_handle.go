@@ -59,7 +59,11 @@ func SkinHandle(update tgbotapi.Update) error {
 		attrs, _ := sjson.Set(src, "tag", "img")
 		content, _ = sjson.SetRaw(content, "-1", attrs)
 	}
-	skinUrl := media.CreateTelegraphPage(content, name+"的皮肤")
+	skinUrl, err := media.CreateTelegraphPage(content, name+"的皮肤")
+	if err != nil {
+		config.Arknights.ReplyText(chatId, messageId, "生成皮肤页面失败，请稍后重试。")
+		return err
+	}
 	config.Arknights.SendMarkdownV2(chatId, fmt.Sprintf("[%s的皮肤](%s)", name, skinUrl), messageId)
 	return nil
 }

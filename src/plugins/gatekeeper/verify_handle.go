@@ -109,16 +109,16 @@ func VerifyMember(message *tgbotapi.Message) {
 		verifySet.checkExistAndRemove(userId, chatId)
 		return
 	}
-	go verify(chatId, userId, photo.MessageID, messageId, name)
+	verificationTasks.schedule(time.Minute, func() { verify(chatId, userId, photo.MessageID, messageId, name) })
 }
 
 func unban(chatId, userId int64) {
-	time.Sleep(time.Minute)
-	config.Arknights.UnbanChatMember(chatId, userId)
+
+	verificationTasks.schedule(time.Minute, func() { config.Arknights.UnbanChatMember(chatId, userId) })
 }
 
 func verify(chatId int64, userId int64, messageId int64, joinMessageId int64, name string) {
-	time.Sleep(time.Minute)
+
 	if has, _ := verifySet.checkExistAndRemove(userId, chatId); !has {
 		return
 	}
@@ -132,7 +132,7 @@ func verify(chatId int64, userId int64, messageId int64, joinMessageId int64, na
 	// 删除入群验证消息
 	delMsg := tgbotapi.NewDeleteMessage(chatId, messageId)
 	config.Arknights.Send(delMsg)
-	time.Sleep(time.Minute)
+
 	// 解除用户封禁
-	config.Arknights.UnbanChatMember(chatId, userId)
+	verificationTasks.schedule(time.Minute, func() { config.Arknights.UnbanChatMember(chatId, userId) })
 }

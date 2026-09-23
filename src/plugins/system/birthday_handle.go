@@ -16,9 +16,13 @@ func BirthdayHandle(update tgbotapi.Update) error {
 
 	if config.Arknights.IsAdmin(chatId, userId) {
 		var joined model.GroupJoined
-		repo.GetJoinedByChatId(chatId).Scan(&joined)
+		if err := repo.CheckDB(repo.GetJoinedByChatId(chatId).Scan(&joined), chatId); err != nil {
+			return err
+		}
 		joined.Birthday = joined.Birthday ^ 1
-		config.DBEngine.Table("group_joined").Save(&joined)
+		if err := repo.CheckDB(config.DBEngine.Table("group_joined").Save(&joined), chatId); err != nil {
+			return err
+		}
 		text := "生日推送已开启！"
 		if joined.Birthday == 0 {
 			text = "生日推送已关闭！"

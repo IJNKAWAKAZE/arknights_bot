@@ -18,9 +18,13 @@ func WelcomeHandle(update tgbotapi.Update) error {
 		text := update.Message.CommandArguments()
 		if text != "" {
 			var joined model.GroupJoined
-			repo.GetJoinedByChatId(chatId).Scan(&joined)
+			if err := repo.CheckDB(repo.GetJoinedByChatId(chatId).Scan(&joined), chatId); err != nil {
+				return err
+			}
 			joined.Welcome = text
-			config.DBEngine.Table("group_joined").Save(&joined)
+			if err := repo.CheckDB(config.DBEngine.Table("group_joined").Save(&joined), chatId); err != nil {
+				return err
+			}
 			msg, err := config.Arknights.SendText(chatId, "设置入群欢迎信息成功")
 			if err != nil {
 				return err

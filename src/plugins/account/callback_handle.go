@@ -108,8 +108,13 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 
 	var userAccount UserAccount
 	var userPlayer UserPlayer
-	repo.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount)
+	if err := repo.CheckDB(repo.GetAccountByUserIdAndSklandId(userId, sklandId).Scan(&userAccount), chatId); err != nil {
+		return err
+	}
 	res := repo.GetPlayerByUserId(userId, uid).Scan(&userPlayer)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected == 0 {
 		id, _ := gonanoid.New(32)
 		userPlayer = UserPlayer{
@@ -121,11 +126,15 @@ func ChoosePlayer(callBack tgbotapi.Update) error {
 			ServerName: serverName,
 			PlayerName: playerName,
 		}
-		config.DBEngine.Table("user_player").Create(&userPlayer)
+		if err := repo.CheckDB(config.DBEngine.Table("user_player").Create(&userPlayer), chatId); err != nil {
+			return err
+		}
 	} else {
 		userPlayer.PlayerName = playerName
 		userPlayer.ServerName = serverName
-		config.DBEngine.Table("user_player").Save(&userPlayer)
+		if err := repo.CheckDB(config.DBEngine.Table("user_player").Save(&userPlayer), chatId); err != nil {
+			return err
+		}
 		config.Arknights.SendText(chatId, "此角色已绑定，更新角色信息。")
 		return nil
 	}
@@ -149,7 +158,9 @@ func UnbindPlayer(callBack tgbotapi.Update) error {
 	chatId := callbackQuery.Message.Chat.ID
 
 	uid := d[1]
-	config.DBEngine.Exec("delete from user_player where user_number = ? and uid = ?", userId, uid)
+	if err := repo.CheckDB(config.DBEngine.Exec("delete from user_player where user_number = ? and uid = ?", userId, uid), chatId); err != nil {
+		return err
+	}
 	config.Arknights.SendText(chatId, "角色解绑成功！")
 	callbackQuery.Message.Delete()
 	return nil

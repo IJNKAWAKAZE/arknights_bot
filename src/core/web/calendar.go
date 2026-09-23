@@ -1,6 +1,7 @@
 package web
 
 import (
+	"arknights_bot/utils/httpx"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
@@ -24,12 +25,13 @@ func Calendar(r *gin.Engine) {
 	r.GET("/calendar", func(c *gin.Context) {
 		r.LoadHTMLFiles("./template/Calendar.tmpl")
 		var calendarMap = make(map[string]template.HTML)
-		resp, err := http.Get(viper.GetString("api.calendar"))
+		resp, err := httpx.Open(viper.GetString("api.calendar"))
 		if err != nil {
 			log.Println(err)
 			renderError(c, err)
 			return
 		}
+		defer resp.Body.Close()
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			log.Println(err)
@@ -39,6 +41,10 @@ func Calendar(r *gin.Engine) {
 		text := doc.Text()
 		begin := strings.Index(text, "{") + 1
 		end := strings.Index(text, "}")
+		if begin == 0 || end < begin {
+			renderError(c, fmt.Errorf("活动日历响应格式错误"))
+			return
+		}
 		reg := regexp.MustCompile("(\\[).*?(])")
 		aaa := reg.FindAllStringSubmatch(text[begin:end], -1)
 		var calendarInfo []CalendarInfo
@@ -53,7 +59,7 @@ func Calendar(r *gin.Engine) {
 			}
 			calendarInfo = append(calendarInfo, c)
 		}
-		defer resp.Body.Close()
+
 		for _, c := range calendarInfo {
 			//beginTime, _ := time.ParseInLocation("2006-01-02", c.Begin, time.Local)
 			//endTime, _ := time.ParseInLocation("2006-01-02", c.End, time.Local)

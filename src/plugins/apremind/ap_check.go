@@ -2,8 +2,10 @@ package apremind
 
 import (
 	"container/heap"
+	"context"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"arknights_bot/config"
@@ -83,10 +85,13 @@ type apCommand struct {
 // apScheduler manages the AP check priority queue with CSP architecture.
 // All queue and cache mutations happen exclusively in the consumer goroutine.
 type apScheduler struct {
-	queue   ApCheckHeap
-	userSet map[int64]*ApCheckItem // tracks which users are currently in the queue
-	cache   map[int64]*apUserCache // in-memory user data cache
-	cmdCh   chan apCommand         // command channel
+	stop     chan struct{}
+	done     chan struct{}
+	stopOnce sync.Once
+	queue    ApCheckHeap
+	userSet  map[int64]*ApCheckItem // 记录当前队列中的用户
+	cache    map[int64]*apUserCache // 用户数据的内存缓存
+	cmdCh    chan apCommand         // 调度指令通道
 }
 
 var scheduler *apScheduler
@@ -99,6 +104,7 @@ var scheduler *apScheduler
 // Called once at startup.
 func InitApRemind() {
 	scheduler = &apScheduler{
+		stop: make(chan struct{}), done: make(chan struct{}),
 		queue:   make(ApCheckHeap, 0),
 		userSet: make(map[int64]*ApCheckItem),
 		cache:   make(map[int64]*apUserCache),
@@ -132,7 +138,7 @@ func ScheduleNextApCheck(userNumber int64) {
 	if scheduler == nil {
 		return
 	}
-	scheduler.cmdCh <- apCommand{typ: cmdSchedule, userNumber: userNumber}
+	scheduler.submit(apCommand{typ: cmdSchedule, userNumber: userNumber})
 }
 
 // CancelApCheck cancels a user's AP check and removes them from the scheduler.
@@ -140,7 +146,7 @@ func CancelApCheck(userNumber int64) {
 	if scheduler == nil {
 		return
 	}
-	scheduler.cmdCh <- apCommand{typ: cmdCancel, userNumber: userNumber}
+	scheduler.submit(apCommand{typ: cmdCancel, userNumber: userNumber})
 }
 
 // RefreshApUserCache refreshes the in-memory cache for a user.
@@ -148,7 +154,7 @@ func RefreshApUserCache(userNumber int64) {
 	if scheduler == nil {
 		return
 	}
-	scheduler.cmdCh <- apCommand{typ: cmdRefresh, userNumber: userNumber}
+	scheduler.submit(apCommand{typ: cmdRefresh, userNumber: userNumber})
 }
 
 // DailyApCheck re-queues all users not currently in the queue so the consumer
@@ -157,7 +163,7 @@ func DailyApCheck() {
 	if scheduler == nil {
 		return
 	}
-	scheduler.cmdCh <- apCommand{typ: cmdDailyCheck}
+	scheduler.submit(apCommand{typ: cmdDailyCheck})
 }
 
 // ---------------------------------------------------------------------------
@@ -207,6 +213,7 @@ func (s *apScheduler) loadUserCache(userNumber int64) {
 // ---------------------------------------------------------------------------
 
 func (s *apScheduler) run() {
+	defer close(s.done)
 	for {
 		var timerCh <-chan time.Time
 		var timer *time.Timer
@@ -224,6 +231,11 @@ func (s *apScheduler) run() {
 		// timerCh is nil when queue is empty → that case blocks forever,
 		// so we only wake on a command.
 		select {
+		case <-s.stop:
+			if timer != nil {
+				timer.Stop()
+			}
+			return
 		case <-timerCh:
 			s.processNext()
 		case cmd := <-s.cmdCh:
@@ -303,7 +315,13 @@ func (s *apScheduler) processNext() {
 	// Beta-distributed random delay to avoid API rate-limiting.
 	delay := betaDelay()
 	log.Printf("理智提醒：用户 %d API请求延迟 %.1f秒", item.UserNumber, delay.Seconds())
-	time.Sleep(delay)
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-s.stop:
+		return
+	case <-timer.C:
+	}
 
 	s.checkUserAp(uc)
 }
@@ -316,6 +334,11 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 	threshold := uc.Threshold
 
 	for _, player := range uc.Players {
+		select {
+		case <-s.stop:
+			return
+		default:
+		}
 		var ska skland.Account
 		ska.Hypergryph.Token = player.HypergryphToken
 		ska.Skland.Token = player.SklandToken
@@ -343,12 +366,21 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 		if currentAp >= thresholdAp {
 			// ── AP at or above threshold ──
 			if uc.ApNotified == 0 {
-				config.Arknights.SendText(uc.UserNumber, fmt.Sprintf(
+				_, sendErr := config.Arknights.SendText(uc.UserNumber, fmt.Sprintf(
 					"⚡ 理智提醒\n角色 %s 当前理智：%d/%d (%d%%)\n已达到设定阈值 %d%%",
 					player.PlayerName, currentAp, maxAp, apPercent, threshold,
 				))
+				if sendErr != nil {
+					log.Println("发送理智通知失败:", sendErr)
+					s.scheduleUser(uc.UserNumber, time.Now().Add(time.Minute))
+					return
+				}
+				if err := config.DBEngine.Exec("update user_ap_remind set ap_notified = 1 where user_number = ?", uc.UserNumber).Error; err != nil {
+					log.Println("保存理智通知状态失败:", err)
+					s.scheduleUser(uc.UserNumber, time.Now().Add(time.Minute))
+					return
+				}
 				uc.ApNotified = 1
-				config.DBEngine.Exec("update user_ap_remind set ap_notified = 1 where user_number = ?", uc.UserNumber)
 				log.Printf("理智提醒：用户 %d 角色 %s 理智已达阈值，已通知", uc.UserNumber, player.PlayerName)
 			}
 			// Notified – remove from queue; daily check will re-add when AP drops.
@@ -357,8 +389,12 @@ func (s *apScheduler) checkUserAp(uc *apUserCache) {
 
 		// ── AP below threshold ──
 		if uc.ApNotified == 1 {
+			if err := config.DBEngine.Exec("update user_ap_remind set ap_notified = 0 where user_number = ?", uc.UserNumber).Error; err != nil {
+				log.Println("保存理智通知状态失败:", err)
+				s.scheduleUser(uc.UserNumber, time.Now().Add(time.Minute))
+				return
+			}
 			uc.ApNotified = 0
-			config.DBEngine.Exec("update user_ap_remind set ap_notified = 0 where user_number = ?", uc.UserNumber)
 		}
 
 		// Edge case: ap.Current (from API, without elapsed-time adjustment) may already
@@ -399,4 +435,32 @@ func (s *apScheduler) dailyCheck() {
 		s.scheduleUser(uid, time.Now())
 	}
 	log.Printf("理智提醒：每日检查添加了 %d 个用户到队列", len(toCheck))
+}
+
+// StopApRemind 取消尚未完成的延迟等待，并等待当前 API 调用结束。
+func StopApRemind(ctx context.Context) error {
+	if scheduler == nil {
+		return nil
+	}
+	return scheduler.shutdown(ctx)
+}
+func (s *apScheduler) shutdown(ctx context.Context) error {
+	s.stopOnce.Do(func() { close(s.stop) })
+	select {
+	case <-s.done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+func (s *apScheduler) submit(cmd apCommand) {
+	select {
+	case <-s.stop:
+		return
+	default:
+	}
+	select {
+	case <-s.stop:
+	case s.cmdCh <- cmd:
+	}
 }

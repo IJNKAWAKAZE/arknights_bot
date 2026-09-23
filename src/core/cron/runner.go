@@ -9,6 +9,7 @@ import (
 	"arknights_bot/plugins/messagecleaner"
 	"arknights_bot/plugins/sign"
 	"arknights_bot/plugins/system"
+	"context"
 	"github.com/robfig/cron/v3"
 	"log"
 )
@@ -16,7 +17,7 @@ import (
 var crontab *cron.Cron
 
 func StartCron() error {
-	crontab = cron.New(cron.WithSeconds())
+	crontab = cron.New(cron.WithSeconds(), cron.WithChain(cron.Recover(cron.DefaultLogger), cron.SkipIfStillRunning(cron.DefaultLogger)))
 
 	//明日方舟bilibili动态 0/30 * * * * ?
 	_, err := crontab.AddFunc("0/30 * * * * ?", arknightsnews.BilibiliNews)
@@ -76,9 +77,22 @@ func StartCron() error {
 	return nil
 }
 
-// Stop 停止定时任务
-func Stop() {
+// Stop 停止调度，取消批量签到和理智提醒的延迟等待，并等待运行中的任务结束。
+func Stop(ctx context.Context) error {
+	sign.Stop()
+	var done context.Context
 	if crontab != nil {
-		crontab.Stop()
+		done = crontab.Stop()
 	}
+	if err := apremind.StopApRemind(ctx); err != nil {
+		return err
+	}
+	if done != nil {
+		select {
+		case <-done.Done():
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	return nil
 }

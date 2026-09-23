@@ -18,7 +18,7 @@ func KillHandle(update tgbotapi.Update) error {
 
 	if owner == userId {
 		log.Println("关闭机器人")
-		shutdown.All()
+		go shutdown.All()
 		return nil
 	}
 

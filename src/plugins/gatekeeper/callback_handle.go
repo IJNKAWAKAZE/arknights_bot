@@ -54,7 +54,7 @@ func CallBackData(callBack tgbotapi.Update) error {
 			callbackQuery.Answer(true, "验证未通过，请一分钟后再试！")
 			auditJoin(chatId, userId, callbackQuery.From.FullName(), "拒绝", "人工模式验证答错")
 			ban(chatId, userId, callbackQuery, joinMessageId)
-			go unban(chatId, userId)
+			unban(chatId, userId)
 			return nil
 		}
 

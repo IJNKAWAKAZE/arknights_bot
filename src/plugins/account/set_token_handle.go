@@ -17,6 +17,9 @@ func SetTokenHandle(update tgbotapi.Update) error {
 	var userAccount UserAccount
 
 	res := repo.GetAccountByUserId(userId).Scan(&userAccount)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected == 0 {
 		// 未绑定账号
 		config.Arknights.SendText(chatId, "未查询到绑定账号，请先进行绑定。")
@@ -58,12 +61,17 @@ func ResetToken(update tgbotapi.Update) error {
 	// 查查询账户信息
 	var userAccount UserAccount
 	res := repo.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected > 0 {
 		// 更新账户信息
 		userAccount.HypergryphToken = token
 		userAccount.SklandToken = account.Skland.Token
 		userAccount.SklandCred = account.Skland.Cred
-		config.DBEngine.Table("user_account").Save(&userAccount)
+		if err := repo.CheckDB(config.DBEngine.Table("user_account").Save(&userAccount), chatId); err != nil {
+			return err
+		}
 		config.Arknights.SendText(chatId, "重设token成功！")
 	}
 	config.Arknights.ClearWaitMessage(userId)

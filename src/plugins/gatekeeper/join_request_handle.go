@@ -12,6 +12,6 @@ func JoinRequestHandle(update tgbotapi.Update) error {
 	if joined.RequestMode == 0 { // 不使用此验证
 		return nil
 	}
-	go VerifyRequestMember(update)
+	VerifyRequestMember(update)
 	return nil
 }

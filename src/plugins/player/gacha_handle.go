@@ -53,7 +53,9 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 
 	// 获取上次更新时间
 	var lastUpdate int64
-	config.DBEngine.Raw("select ts from user_gacha where user_number = ? and uid = ? order by ts desc limit 1", userAccount.UserNumber, uid).Scan(&lastUpdate)
+	if err := repo.CheckDB(config.DBEngine.Raw("select ts from user_gacha where user_number = ? and uid = ? order by ts desc limit 1", userAccount.UserNumber, uid).Scan(&lastUpdate), chatId); err != nil {
+		return err
+	}
 
 	// 同步抽卡数据
 	for _, c := range chars {
@@ -71,12 +73,17 @@ func (_ PlayerOperationGacha) Run(uid string, userAccount account.UserAccount, c
 				Rarity:     c.Rarity,
 				Ts:         c.Ts,
 			}
-			config.DBEngine.Table("user_gacha").Create(&userGacha)
+			if err := repo.CheckDB(config.DBEngine.Table("user_gacha").Create(&userGacha), chatId); err != nil {
+				return err
+			}
 		}
 	}
 
 	var userGacha []UserGacha
 	res := repo.GetUserGacha(userAccount.UserNumber, uid).Scan(&userGacha)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	if res.RowsAffected == 0 {
 		config.Arknights.ReplyText(chatId, messageId, "不存在抽卡记录。")
 		return nil

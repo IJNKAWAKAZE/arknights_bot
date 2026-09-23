@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/starudream/go-lib/resty/v2"
 	"log"
+	"time"
 )
 
 const (
@@ -68,7 +69,7 @@ func (t *HBaseResp[T]) String() string {
 
 // SKR 创建森空岛请求
 func SKR() *resty.Request {
-	r := resty.New()
+	r := resty.New().SetTimeout(30 * time.Second)
 	if proxy := viper.GetString("proxy"); proxy != "" {
 		r.SetProxy(proxy)
 	}
@@ -81,7 +82,7 @@ func SKR() *resty.Request {
 
 // HR 创建 Hypergryph 请求
 func HR() *resty.Request {
-	return resty.R().
+	return resty.New().SetTimeout(30*time.Second).R().
 		SetHeader("User-Agent", viper.GetString("api.user_agent")).
 		SetHeader("Accept-Encoding", "gzip")
 }
@@ -99,6 +100,9 @@ func skRequest[T any](r *resty.Request, method, path string, isGlobal bool, vs .
 		}
 	}
 	resp, respErr := r.SetError(&SKBaseResp[any]{}).SetResult(&SKBaseResp[T]{}).Execute(method, addr+path)
+	if respErr != nil {
+		return t, fmt.Errorf("[%s] %w", name, respErr)
+	}
 	if resp.StatusCode() == 405 {
 		log.Println(string(resp.Body()))
 		return t, fmt.Errorf("服务器被墙了！")

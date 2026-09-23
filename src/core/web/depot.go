@@ -4,6 +4,7 @@ import (
 	"arknights_bot/plugins/account"
 	"arknights_bot/plugins/skland"
 	"arknights_bot/utils/hashutil"
+	"arknights_bot/utils/httpx"
 	"arknights_bot/utils/repo"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -31,11 +32,12 @@ type ItemTable struct {
 var itemMap = make(map[string]ItemTable)
 
 func init() {
-	resp, err := http.Get(viper.GetString("api.item_table"))
+	resp, err := httpx.Open(viper.GetString("api.item_table"))
 	if err != nil || resp == nil {
 		log.Println("Failed to fetch item_table:", err)
 		return
 	}
+	defer resp.Body.Close()
 	r, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("Failed to read item_table response:", err)

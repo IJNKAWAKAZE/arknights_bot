@@ -22,13 +22,13 @@ func Serve() {
 	b := config.Arknights
 	b.Debug = viper.GetBool("bot.debug")
 	b.IgnoreChannelCMD = true
-	b.JoinRequestProcessor(async(gatekeeper.JoinRequestHandle))
-	b.NewMemberProcessor(async(gatekeeper.NewMemberHandle))
-	b.LeftMemberProcessor(async(gatekeeper.LeftMemberHandle))
+	b.JoinRequestProcessor(asyncControl(gatekeeper.JoinRequestHandle))
+	b.NewMemberProcessor(asyncControl(gatekeeper.NewMemberHandle))
+	b.LeftMemberProcessor(asyncControl(gatekeeper.LeftMemberHandle))
 
 	// callback
-	b.NewCallBackProcessor("verify", async(gatekeeper.CallBackData))
-	b.NewCallBackProcessor("request", async(gatekeeper.RequestCallBackData))
+	b.NewCallBackProcessor("verify", asyncControl(gatekeeper.CallBackData))
+	b.NewCallBackProcessor("request", asyncControl(gatekeeper.RequestCallBackData))
 	b.NewCallBackProcessor("chooseServer", async(account.ChooseServer))
 	b.NewCallBackProcessor("bind", async(account.ChoosePlayer))
 	b.NewCallBackProcessor("unbind", async(account.UnbindPlayer))
@@ -87,11 +87,11 @@ func Serve() {
 	b.NewReplyMessageProcessor("/recruit", async(system.ReplyRecruitHandle))
 
 	// 管理员
-	b.NewAdminCommandProcessor("news", async(system.NewsHandle))
-	b.NewAdminCommandProcessor("birthday", async(system.BirthdayHandle))
-	b.NewAdminCommandProcessor("request_mode", async(system.RequestModeHandle))
-	b.NewAdminCommandProcessor("reg", async(system.RegulationHandle))
-	b.NewAdminCommandProcessor("welcome", async(system.WelcomeHandle))
+	b.NewAdminCommandProcessor("news", asyncControl(system.NewsHandle))
+	b.NewAdminCommandProcessor("birthday", asyncControl(system.BirthdayHandle))
+	b.NewAdminCommandProcessor("request_mode", asyncControl(system.RequestModeHandle))
+	b.NewAdminCommandProcessor("reg", asyncControl(system.RegulationHandle))
+	b.NewAdminCommandProcessor("welcome", asyncControl(system.WelcomeHandle))
 	b.NewAdminCommandProcessor("start_lottery", async(lottery.StartLotteryHandle))
 	b.NewAdminCommandProcessor("stop_lottery", async(lottery.StopLotteryHandle))
 	b.NewAdminCommandProcessor("end_lottery", async(lottery.EndLotteryHandle))
@@ -101,6 +101,6 @@ func Serve() {
 	b.NewOwnerCommandProcessor("update", async(system.UpdateHandle))
 	b.NewOwnerCommandProcessor("sign_all", async(sign.SignAllHandle))
 	b.NewOwnerCommandProcessor("clear", async(system.ClearHandle))
-	b.NewOwnerCommandProcessor("kill", async(system.KillHandle))
+	b.NewOwnerCommandProcessor("kill", asyncControl(system.KillHandle))
 	b.Run()
 }

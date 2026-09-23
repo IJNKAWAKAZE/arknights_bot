@@ -7,10 +7,12 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"net/http"
-	"time"
+	"sync"
 )
 
 var httpServer *http.Server
+var serverMu sync.Mutex
+var stopping bool
 
 func Start() {
 	gin.SetMode(gin.ReleaseMode)
@@ -40,21 +42,32 @@ func Start() {
 		host = "127.0.0.1"
 	}
 	addr := host + ":" + viper.GetString("http.port")
+	serverMu.Lock()
+	if stopping {
+		serverMu.Unlock()
+		return
+	}
 	httpServer = &http.Server{Addr: addr, Handler: r}
-	err := httpServer.ListenAndServe()
+	server := httpServer
+	serverMu.Unlock()
+	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(err)
 	}
 }
 
 // Shutdown 优雅关闭 Web 服务
-func Shutdown() {
-	if httpServer == nil {
-		return
+func Shutdown(ctx context.Context) error {
+	serverMu.Lock()
+	stopping = true
+	server := httpServer
+	serverMu.Unlock()
+	if server == nil {
+		return nil
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := httpServer.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(ctx); err != nil {
 		log.Println("Web服务关闭失败:", err)
+		return err
 	}
+	return nil
 }

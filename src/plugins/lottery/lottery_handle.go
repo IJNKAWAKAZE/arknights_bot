@@ -55,7 +55,9 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 	}
 	// 检查是否存在已开启的抽奖
 	var lottery model.GroupLottery
-	repo.GetGroupLottery(chatId).Scan(&lottery)
+	if err := repo.CheckDB(repo.GetGroupLottery(chatId).Scan(&lottery), chatId); err != nil {
+		return err
+	}
 	if lottery.Id != "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "已有正在进行的抽奖活动，请先结束当前抽奖！")
 		if err != nil {
@@ -75,7 +77,9 @@ func StartLotteryHandle(update tgbotapi.Update) error {
 		EndTime:     endTime,
 	}
 	res := config.DBEngine.Table("group_lottery").Create(&groupLottery)
-	log.Println(res.Error)
+	if err := repo.CheckDB(res, chatId); err != nil {
+		return err
+	}
 	config.Arknights.SendMarkdownV2(chatId, tgbotapi.EscapeText(tgbotapi.ModeMarkdownV2, fmt.Sprintf("🎉 *抽奖活动已开启*\n\n📅 *报名截止时间*：%s\n\n📝 *指令说明*：\n🔹 参与选号：`/join_lottery [1-100]`\n🔹 查看详情：`/lottery_detail`\n\n⚙️ *管理指令*：\n🔸 停止报名：`/stop_lottery`\n🔸 进行抽奖：`/lottery`\n🔸 结束抽奖：`/end_lottery`", endTime.Format("2006-01-02 15:04:05"))), messageId)
 	return nil
 }
@@ -95,7 +99,9 @@ func StopLotteryHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	var lottery model.GroupLottery
-	repo.GetGroupLottery(chatId).Scan(&lottery)
+	if err := repo.CheckDB(repo.GetGroupLottery(chatId).Scan(&lottery), chatId); err != nil {
+		return err
+	}
 	if lottery.Id == "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
@@ -113,7 +119,9 @@ func StopLotteryHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	lottery.Status = 2
-	config.DBEngine.Table("group_lottery").Save(&lottery)
+	if err := repo.CheckDB(config.DBEngine.Table("group_lottery").Save(&lottery), chatId); err != nil {
+		return err
+	}
 	msg, err := config.Arknights.ReplyText(chatId, messageId, "抽奖活动已停止报名！")
 	if err != nil {
 		return err
@@ -137,7 +145,9 @@ func EndLotteryHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	var lottery model.GroupLottery
-	repo.GetGroupLottery(chatId).Scan(&lottery)
+	if err := repo.CheckDB(repo.GetGroupLottery(chatId).Scan(&lottery), chatId); err != nil {
+		return err
+	}
 	if lottery.Id == "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无抽奖活动！")
 		if err != nil {
@@ -147,7 +157,9 @@ func EndLotteryHandle(update tgbotapi.Update) error {
 		return nil
 	}
 	lottery.Status = 0
-	config.DBEngine.Table("group_lottery").Save(&lottery)
+	if err := repo.CheckDB(config.DBEngine.Table("group_lottery").Save(&lottery), chatId); err != nil {
+		return err
+	}
 	msg, err := config.Arknights.ReplyText(chatId, messageId, "抽奖活动已结束！")
 	if err != nil {
 		return err
@@ -166,7 +178,9 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 
 	// 检查当前群组是否存在已开启的抽奖
 	var lottery model.GroupLottery
-	repo.GetGroupLottery(chatId).Scan(&lottery)
+	if err := repo.CheckDB(repo.GetGroupLottery(chatId).Scan(&lottery), chatId); err != nil {
+		return err
+	}
 	if lottery.Id == "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
@@ -198,7 +212,9 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 
 	// 检查用户是否已经参与过本次抽奖
 	var detail model.GroupLotteryDetail
-	config.DBEngine.Raw("select * from group_lottery_detail where lottery_id = ? and user_number = ?", lottery.Id, userId).Scan(&detail)
+	if err := repo.CheckDB(config.DBEngine.Raw("select * from group_lottery_detail where lottery_id = ? and user_number = ?", lottery.Id, userId).Scan(&detail), chatId); err != nil {
+		return err
+	}
 	if detail.Id != "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("您已参加过本次抽奖，选择的数字是：%d", detail.LotteryNumber))
 		if err != nil {
@@ -210,7 +226,9 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 
 	// 检查数字是否已被其他用户选中
 	var otherDetail model.GroupLotteryDetail
-	repo.GetLotteryDetail(lottery.Id, lotteryNum).Scan(&otherDetail)
+	if err := repo.CheckDB(repo.GetLotteryDetail(lottery.Id, lotteryNum).Scan(&otherDetail), chatId); err != nil {
+		return err
+	}
 	if otherDetail.Id != "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("数字 %d 已被其他用户选择，请尝试其他数字！", lotteryNum))
 		if err != nil {
@@ -230,7 +248,9 @@ func JoinLotteryHandle(update tgbotapi.Update) error {
 		LotteryNumber: int64(lotteryNum),
 		Status:        0,
 	}
-	config.DBEngine.Table("group_lottery_detail").Create(&groupLotteryDetail)
+	if err := repo.CheckDB(config.DBEngine.Table("group_lottery_detail").Create(&groupLotteryDetail), chatId); err != nil {
+		return err
+	}
 
 	msg, err := config.Arknights.ReplyText(chatId, messageId, fmt.Sprintf("参与成功！您选择的数字是：%d", lotteryNum))
 	if err != nil {
@@ -248,7 +268,9 @@ func LotteryDetailHandle(update tgbotapi.Update) error {
 
 	// 检查是否存在已开启的抽奖
 	var lottery model.GroupLottery
-	repo.GetGroupLottery(chatId).Scan(&lottery)
+	if err := repo.CheckDB(repo.GetGroupLottery(chatId).Scan(&lottery), chatId); err != nil {
+		return err
+	}
 	if lottery.Id == "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
@@ -300,7 +322,9 @@ func LotteryHandle(update tgbotapi.Update) error {
 
 	// 检查当前群组是否存在已开启的抽奖
 	var lottery model.GroupLottery
-	repo.GetGroupLottery(chatId).Scan(&lottery)
+	if err := repo.CheckDB(repo.GetGroupLottery(chatId).Scan(&lottery), chatId); err != nil {
+		return err
+	}
 	if lottery.Id == "" {
 		msg, err := config.Arknights.ReplyText(chatId, messageId, "当前群组暂无正在进行的抽奖活动！")
 		if err != nil {
@@ -318,12 +342,16 @@ func LotteryHandle(update tgbotapi.Update) error {
 	for i := 1; i <= 5; i++ {
 		luckyNum := r.Intn(100) + 1 // 1-100
 		var winner model.GroupLotteryDetail
-		repo.GetLotteryDetail(lottery.Id, luckyNum).Scan(&winner)
+		if err := repo.CheckDB(repo.GetLotteryDetail(lottery.Id, luckyNum).Scan(&winner), chatId); err != nil {
+			return err
+		}
 
 		if winner.Id != "" && winner.Status == 0 && winningWinner == nil {
 			// 找到第一个未中奖用户，设为本轮唯一中奖者
 			winner.Status = 1
-			config.DBEngine.Table("group_lottery_detail").Save(&winner)
+			if err := repo.CheckDB(config.DBEngine.Table("group_lottery_detail").Save(&winner), chatId); err != nil {
+				return err
+			}
 			winningWinner = &winner
 			results = append(results, fmt.Sprintf("第 %d 个号码：%d — 中奖", i, luckyNum))
 		} else if winner.Id != "" {
@@ -354,11 +382,17 @@ func LotteryHandle(update tgbotapi.Update) error {
 // CheckStopLottery 检查抽奖是否停止报名
 func CheckStopLottery() {
 	var lotteryList []model.GroupLottery
-	repo.GetAllGroupLottery().Scan(&lotteryList)
+	if err := repo.GetAllGroupLottery().Scan(&lotteryList).Error; err != nil {
+		log.Println("查询抽奖失败:", err)
+		return
+	}
 	for _, lottery := range lotteryList {
-		if lottery.EndTime.Before(time.Now()) {
+		if lottery.Status == 1 && lottery.EndTime.Before(time.Now()) {
 			lottery.Status = 2
-			config.DBEngine.Table("group_lottery").Save(&lottery)
+			if err := config.DBEngine.Table("group_lottery").Where("id = ? AND status = ?", lottery.Id, 1).Update("status", 2).Error; err != nil {
+				log.Println("停止抽奖报名失败:", err)
+				continue
+			}
 			log.Println("抽奖报名截止时间到达，报名已结束")
 		}
 	}

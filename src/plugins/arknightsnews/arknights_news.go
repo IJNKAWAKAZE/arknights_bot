@@ -3,6 +3,7 @@ package arknightsnews
 import (
 	"arknights_bot/config"
 	"arknights_bot/utils/cache"
+	"arknights_bot/utils/httpx"
 	mediautil "arknights_bot/utils/media"
 	"arknights_bot/utils/repo"
 	"bytes"
@@ -13,6 +14,7 @@ import (
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -104,23 +106,42 @@ func BilibiliNews() {
 }
 
 func convert2Video(url string, i int) []byte {
-	outPut := fmt.Sprintf("./temp%d.mp4", i)
-	res, _ := http.Get(url)
-	tempFile, _ := os.CreateTemp("./", "temp-*.gif")
-	io.Copy(tempFile, res.Body)
-	tempFile.Close()
+	res, err := httpx.Open(url)
+	if err != nil {
+		log.Println("下载动态视频失败:", err)
+		return nil
+	}
 	defer res.Body.Close()
-	ffmpeg.Input(tempFile.Name()).
-		Output(outPut, ffmpeg.KwArgs{"c:v": "libx264", "pix_fmt": "yuv420p", "vf": "scale=trunc(iw/2)*2:trunc(ih/2)*2"}).
-		OverWriteOutput().Run()
-	os.Remove(tempFile.Name())
-	f, _ := os.Open(outPut)
-	b, _ := io.ReadAll(f)
-	f.Close()
-	os.Remove(f.Name())
-	return b
+	input, err := os.CreateTemp("", "arkbot-*.gif")
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	defer os.Remove(input.Name())
+	_, copyErr := io.Copy(input, res.Body)
+	closeErr := input.Close()
+	if copyErr != nil || closeErr != nil {
+		log.Println("保存动态视频失败:", copyErr, closeErr)
+		return nil
+	}
+	output, err := os.CreateTemp("", "arkbot-*.mp4")
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	output.Close()
+	defer os.Remove(output.Name())
+	if err := ffmpeg.Input(input.Name()).Output(output.Name(), ffmpeg.KwArgs{"c:v": "libx264", "pix_fmt": "yuv420p", "vf": "scale=trunc(iw/2)*2:trunc(ih/2)*2"}).OverWriteOutput().Run(); err != nil {
+		log.Println("转换动态视频失败:", err)
+		return nil
+	}
+	data, err := os.ReadFile(output.Name())
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return data
 }
-
 func ParseBilibiliDynamic() (string, []Pic) {
 	var text string
 	var pics []Pic
@@ -238,11 +259,10 @@ func requestBili(method, cookie, url string, body io.Reader) ([]byte, error) {
 	if cookie != "" {
 		req.Header.Add("Cookie", cookie)
 	}
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpx.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	resBody, _ := io.ReadAll(res.Body)
 	defer res.Body.Close()
-	return resBody, nil
+	return io.ReadAll(res.Body)
 }

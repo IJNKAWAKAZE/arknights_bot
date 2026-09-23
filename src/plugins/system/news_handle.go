@@ -16,9 +16,13 @@ func NewsHandle(update tgbotapi.Update) error {
 
 	if config.Arknights.IsAdmin(chatId, userId) {
 		var joined model.GroupJoined
-		repo.GetJoinedByChatId(chatId).Scan(&joined)
+		if err := repo.CheckDB(repo.GetJoinedByChatId(chatId).Scan(&joined), chatId); err != nil {
+			return err
+		}
 		joined.News = joined.News ^ 1
-		config.DBEngine.Table("group_joined").Save(&joined)
+		if err := repo.CheckDB(config.DBEngine.Table("group_joined").Save(&joined), chatId); err != nil {
+			return err
+		}
 		text := "动态推送已开启！"
 		if joined.News == 0 {
 			text = "动态推送已关闭！"

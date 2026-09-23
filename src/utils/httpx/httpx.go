@@ -1,5 +1,4 @@
-// Package httpx 提供带兜底的 HTTP 抓取：请求出错或状态码异常时返回错误并记录日志，
-// 不会像以前那样忽略 error 后在 nil response 上取 Body，直接把 goroutine 打成空指针崩溃。
+// Package httpx 提供带超时限制和状态码校验的 HTTP 请求。
 package httpx
 
 import (
@@ -8,32 +7,43 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
-// Get 抓取 URL 正文并校验状态码
-func Get(rawURL string) ([]byte, error) {
-	response, err := http.Get(rawURL)
+// Client 独立于 http.DefaultClient，仅在启动阶段配置，避免并发修改。
+var Client = &http.Client{Timeout: 30 * time.Second}
+
+// Do 返回状态码校验通过的响应，调用方负责关闭响应体。
+func Do(request *http.Request) (*http.Response, error) {
+	response, err := Client.Do(request)
 	if err != nil {
-		log.Println("请求失败:", rawURL, err)
+		return nil, err
+	}
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		response.Body.Close()
+		return nil, fmt.Errorf("HTTP状态码 %d", response.StatusCode)
+	}
+	return response, nil
+}
+func Open(rawURL string) (*http.Response, error) {
+	request, err := http.NewRequest(http.MethodGet, rawURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	return Do(request)
+}
+func Get(rawURL string) ([]byte, error) {
+	response, err := Open(rawURL)
+	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		log.Printf("请求失败，状态码：%d，地址：%s", response.StatusCode, rawURL)
-		return nil, fmt.Errorf("状态码 %d：%s", response.StatusCode, rawURL)
-	}
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		log.Println("读取正文失败:", rawURL, err)
-		return nil, err
-	}
-	return body, nil
+	return io.ReadAll(response.Body)
 }
-
-// Body 返回正文读取器，抓取失败时返回空正文（调用方解析到空内容而不是 panic）
 func Body(rawURL string) io.Reader {
 	body, err := Get(rawURL)
 	if err != nil {
+		log.Println("抓取正文失败:", err)
 		return bytes.NewReader(nil)
 	}
 	return bytes.NewReader(body)

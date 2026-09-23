@@ -4,6 +4,7 @@ import (
 	"arknights_bot/config"
 	"arknights_bot/utils/cache"
 	"arknights_bot/utils/hashutil"
+	"arknights_bot/utils/httpx"
 	"arknights_bot/utils/localassets"
 	"arknights_bot/utils/model"
 	"arknights_bot/utils/search"
@@ -38,11 +39,9 @@ func init() {
 
 // UpdateDataSource 更新数据源
 func UpdateDataSource() {
-	go func() {
-		if err := UpdateDataSourceRunner(); err != nil {
-			log.Println("数据源更新失败:", err)
-		}
-	}()
+	if err := UpdateDataSourceRunner(); err != nil {
+		log.Println("数据源更新失败:", err)
+	}
 }
 
 // UpdateDataSourceRunner 更新数据源。
@@ -273,7 +272,7 @@ func skinAssetURLs() []string {
 	if api == "" {
 		return nil
 	}
-	response, err := http.Get(api)
+	response, err := httpx.Open(api)
 	if err != nil {
 		log.Println("获取皮肤数据失败:", err)
 		return nil
@@ -313,7 +312,7 @@ const minOperators = 50
 // 以前这里忽略 error 直接在 response.Body 上取内容，网络不通时 response 为 nil，
 // 就会以「nil pointer dereference」的形式把整个 /update 崩掉。
 func fetchDocument(url string) (*goquery.Document, bool) {
-	response, err := http.Get(url)
+	response, err := httpx.Open(url)
 	if err != nil {
 		log.Println("获取页面失败:", url, err)
 		return nil, false

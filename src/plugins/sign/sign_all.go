@@ -20,7 +20,13 @@ func SignAllHandle(update tgbotapi.Update) error {
 			return err
 		}
 		messagecleaner.AddDelQueue(msg.Chat.ID, msg.MessageID, config.MsgDelDelay)
-		AutoSign()
+		if err := RunAutoSign(); err != nil {
+			_, sendErr := config.Arknights.SendText(chatId, "批量签到未完成："+err.Error())
+			if sendErr != nil {
+				return sendErr
+			}
+			return err
+		}
 		msg, err = config.Arknights.SendText(chatId, "签到全部账号结束")
 		if err != nil {
 			return err
