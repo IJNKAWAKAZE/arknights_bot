@@ -338,11 +338,12 @@ func ImgConvert(url string) []byte {
 	deadline := time.Now().Add(10 * time.Second)
 o:
 	for i := 0; i < dx; i++ {
+		// 超时检查放在行循环上，避免每个像素都调一次 time.Now()。
+		if time.Now().After(deadline) {
+			log.Println("图片转换超时")
+			break o
+		}
 		for j := 0; j < dy; j++ {
-			if time.Now().After(deadline) {
-				log.Println("图片转换超时")
-				break o
-			}
 			colorRgb := m.At(i, j)
 			r, g, b, a := colorRgb.RGBA()
 			r_uint8 := uint8(r >> 8)

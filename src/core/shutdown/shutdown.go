@@ -2,11 +2,19 @@ package shutdown
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"sync"
 	"time"
+)
+
+const (
+	// shutdownTimeout 是清理步骤的总预算。
+	shutdownTimeout = 30 * time.Second
+	// shutdownGrace 是超时之后额外留给资源释放的时间，避免浏览器、数据库连接被跳过。
+	shutdownGrace = 10 * time.Second
 )
 
 type hook func(context.Context) error
@@ -21,24 +29,24 @@ var (
 // 最后关闭任务使用的资源。
 func Register(f func(context.Context) error) { mu.Lock(); defer mu.Unlock(); hooks = append(hooks, f) }
 
+// run 依次执行清理步骤，任何一步失败或超时都不会中断后续步骤：
+// 前面的步骤出错时如果直接返回，浏览器、数据库这些资源就会被跳过。
 func run(ctx context.Context, steps []hook) error {
+	var errs []error
 	for i, step := range steps {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
 		if err := step(ctx); err != nil {
-			return fmt.Errorf("关闭步骤 %d: %w", i+1, err)
+			errs = append(errs, fmt.Errorf("关闭步骤 %d: %w", i+1, err))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // All 必须在受管理的任务之外调用，例如 /kill 使用 go All()，避免等待自身结束。
-// 等待超时时直接退出进程，避免提前关闭运行中任务仍在使用的存储连接。
+// 总预算用完后还会多等一小段时间，让最后几步的资源释放有机会跑完。
 func All() {
 	once.Do(func() {
 		log.Println("正在关闭...")
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 		mu.Lock()
 		steps := append([]hook(nil), hooks...)
@@ -49,7 +57,11 @@ func All() {
 		select {
 		case err = <-result:
 		case <-ctx.Done():
-			err = ctx.Err()
+			select {
+			case err = <-result:
+			case <-time.After(shutdownGrace):
+				err = ctx.Err()
+			}
 		}
 		if err != nil {
 			log.Println("关闭未完成:", err)

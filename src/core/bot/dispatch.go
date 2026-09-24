@@ -15,9 +15,13 @@ var (
 	errQueueFull         = errors.New("消息处理队列已满，请稍后重试")
 	errDispatcherStopped = errors.New("机器人正在关闭")
 	commands             = newDispatcher(6, 32, 256)
-	moderation           = newDispatcher(2, 32, 128)
+	moderation           = newUnboundedDispatcher(2)
 	notices              = newDispatcher(1, 1, 16)
 )
+
+// moderationWarnLimit 是验证类队列的告警线：入群申请、成员变更这类更新丢失后无法补救，
+// 所以队列不做容量拒绝，只限制并发执行数，积压超过这条线时记录日志。
+const moderationWarnLimit = 256
 
 type chatQueue struct {
 	tasks       []func()
@@ -31,6 +35,7 @@ type dispatcher struct {
 	queues                           map[int64]*chatQueue
 	sem                              chan struct{}
 	perChat, totalLimit, outstanding int
+	warnLimit                        int
 	stopped                          bool
 	stopCh                           chan struct{}
 	wg                               sync.WaitGroup
@@ -42,6 +47,14 @@ func newDispatcher(workers, perChat, total int) *dispatcher {
 		perChat: perChat, totalLimit: total, stopCh: make(chan struct{}), done: make(chan struct{})}
 }
 
+// newUnboundedDispatcher 用于丢失后无法补救的更新：并发执行数仍然受限，
+// 但队列不做容量拒绝，积压到告警线时只记录日志。
+func newUnboundedDispatcher(workers int) *dispatcher {
+	d := newDispatcher(workers, 0, 0)
+	d.warnLimit = moderationWarnLimit
+	return d
+}
+
 func (d *dispatcher) enqueue(id int64, task func()) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -49,8 +62,12 @@ func (d *dispatcher) enqueue(id int64, task func()) error {
 		return errDispatcherStopped
 	}
 	q := d.queues[id]
-	if d.outstanding >= d.totalLimit || (q != nil && q.outstanding >= d.perChat) {
-		return errQueueFull
+	if d.totalLimit > 0 {
+		if d.outstanding >= d.totalLimit || (q != nil && q.outstanding >= d.perChat) {
+			return errQueueFull
+		}
+	} else if d.outstanding == d.warnLimit {
+		log.Printf("消息处理队列积压 %d 条，验证类更新仍在排队", d.outstanding)
 	}
 	start := q == nil
 	if start {
@@ -194,6 +211,8 @@ func (d *dispatcher) wrap(handler func(tgbotapi.Update) error) func(tgbotapi.Upd
 				}
 			})
 		}
-		return err
+		// 被拒绝的更新不再往上抛错误：繁忙提示已经发过，关停时进程也即将退出，
+		// 抛错只会让消息循环为每个丢弃的更新记一条 Plugin Error。
+		return nil
 	}
 }

@@ -22,6 +22,9 @@ const (
 	dueKey        = "msgObjects:due"
 	batchSize     = 100
 	leaseDuration = 5 * time.Minute
+	// abandonAfter 是放弃期限：到期这么久还没删掉的消息不再重试
+	//（Telegram 早已不允许删除），避免永久失败的任务被无限重试。
+	abandonAfter = 24 * time.Hour
 )
 
 var cleanerMu sync.Mutex
@@ -106,12 +109,20 @@ func retryDelay(err error) time.Duration {
 	}
 	return 30 * time.Second
 }
+
+// deletionComplete 判断任务是否已经没有重试的必要：消息已删除，或 Telegram 明确
+// 表示这条消息不能再删（不存在、超过 48 小时、频道限制等）。
 func deletionComplete(err error) bool {
 	if err == nil {
 		return true
 	}
 	var apiErr *tgbotapi.Error
-	return errors.As(err, &apiErr) && apiErr.Code == 400 && strings.Contains(strings.ToLower(apiErr.Message), "message to delete not found")
+	if !errors.As(err, &apiErr) || apiErr.Code != 400 {
+		return false
+	}
+	message := strings.ToLower(apiErr.Message)
+	return strings.Contains(message, "message to delete not found") ||
+		strings.Contains(message, "message can't be deleted")
 }
 
 // process 每次只领取一条消息并设置处理期限，避免 Telegram 请求过慢导致
@@ -133,6 +144,17 @@ func (q deletionQueue) process(ctx context.Context, send func(MsgObject) error, 
 			log.Println("丢弃无效删消息任务:", err)
 			if err := q.finish(ctx, payload, lease, time.Time{}); err != nil {
 				return err
+			}
+			continue
+		}
+		if time.Since(time.UnixMilli(deadline(msg))) > abandonAfter {
+			// 超期任务不再重试，但要顺手清掉回调缓存，避免留下永久垃圾。
+			log.Printf("删除消息任务已超期，放弃 %d/%d", msg.ChatId, msg.MessageId)
+			if err := q.finish(ctx, payload, lease, time.Time{}); err != nil {
+				return err
+			}
+			if msg.FunctionHash != "" && msg.FunctionHash != "None" {
+				cleanup(msg.FunctionHash)
 			}
 			continue
 		}
