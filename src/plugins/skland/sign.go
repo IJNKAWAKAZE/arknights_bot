@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const did = "BxNSLqMsbCK3pOg7ozScnIy5FoewPt6dajvXcQFeJIeZ3C/6dFZowEU/MtQUsRniMmuTvcrv47raDYwTLJ1pa3w=="
+const did = "Bj66AcV2oNTRLsjETDYHFlkU+z3hmjyq4HYuyvrda9FQlVFYSzw5N7HuNvjgZ2TjfA7MUSCNQwGmllbarpuAHrQ=="
 
 type signHeaders struct {
 	Platform  string `json:"platform"`
