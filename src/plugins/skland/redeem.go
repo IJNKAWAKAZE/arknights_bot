@@ -28,7 +28,7 @@ func GetPlayerRedeem(token, cdk, uid string) (string, error) {
 
 // getPlayerRedeem 发送兑换请求
 func getPlayerRedeem(token, cdk, uid string) (string, error) {
-	u8Token, err := loginHypergryph(token, uid)
+	u8Token, err, akCookie := loginHypergryph(token, uid)
 	if err != nil {
 		return "", fmt.Errorf("登录失败")
 	}
@@ -36,6 +36,7 @@ func getPlayerRedeem(token, cdk, uid string) (string, error) {
 		"Accept":          "application/json",
 		"X-Account-Token": token,
 		"X-Role-Token":    u8Token,
+		"Cookie":          akCookie,
 	}).SetBody(gh.M{"giftCode": cdk})
 	res, err := hgRawRequest(req, "POST", "/user/api/gift/exchange", hypergryphAKAddr)
 	if err != nil {

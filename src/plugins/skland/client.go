@@ -166,3 +166,12 @@ func hgRawRequest(r *resty.Request, method, path, addr string) (string, error) {
 	}
 	return string(res.Body()), nil
 }
+
+// hgAllRequest Hypergryph 请求，返回原始响应
+func hgAllRequest(r *resty.Request, method, path, addr string) (string, error, *resty.Response) {
+	res, err := r.Execute(method, addr+path)
+	if err != nil {
+		return "", fmt.Errorf("[hypergryph] %w", err), nil
+	}
+	return string(res.Body()), nil, res
+}

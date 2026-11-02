@@ -16,14 +16,14 @@ func GetPlayerGacha(token, uid string) ([]Char, error) {
 		return chars, err
 	}
 
-	u8Token, err := loginHypergryph(token, uid)
+	u8Token, err, akCookie := loginHypergryph(token, uid)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("登录失败")
 	}
 
 	// 获取卡池信息
-	pools, err := getPoolList(token, u8Token, uid)
+	pools, err := getPoolList(token, u8Token, uid, akCookie)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func GetPlayerGacha(token, uid string) ([]Char, error) {
 		lastTs, lastPos := "0", "0"
 		for {
 			// 获取卡池抽卡记录
-			res, err := getPlayerGacha(token, u8Token, uid, pool.PoolId, lastTs, lastPos)
+			res, err := getPlayerGacha(token, u8Token, uid, pool.PoolId, lastTs, lastPos, akCookie)
 			if err != nil {
 				log.Println(err)
 				return chars, err
@@ -61,10 +61,11 @@ func GetPlayerGacha(token, uid string) ([]Char, error) {
 }
 
 // getPoolList 获取卡池信息
-func getPoolList(token, u8Token, uid string) ([]PoolInfo, error) {
+func getPoolList(token, u8Token, uid, akCookie string) ([]PoolInfo, error) {
 	var pools []PoolInfo
 	req := HR().SetQueryParams(gh.MS{"uid": uid})
 	req.SetHeader("X-Account-Token", token).SetHeader("X-Role-Token", u8Token)
+	req.SetHeader("Cookie", akCookie)
 	res, err := hgRawRequest(req, "GET", "/user/api/inquiry/gacha/cate", hypergryphAKAddr)
 	if err != nil {
 		log.Println(err)
@@ -80,9 +81,9 @@ func getPoolList(token, u8Token, uid string) ([]PoolInfo, error) {
 }
 
 // getPlayerGacha 获取卡池抽卡记录
-func getPlayerGacha(token, u8Token, uid, category, lastTs, pos string) (gjson.Result, error) {
+func getPlayerGacha(token, u8Token, uid, category, lastTs, pos, akCookie string) (gjson.Result, error) {
 	req := HR().SetQueryParams(gh.MS{"uid": uid, "category": category, "size": "199", "gachaTs": lastTs, "pos": pos})
-	req.SetHeader("X-Account-Token", token).SetHeader("X-Role-Token", u8Token)
+	req.SetHeader("X-Account-Token", token).SetHeader("X-Role-Token", u8Token).SetHeader("Cookie", akCookie)
 	res, err := hgRawRequest(req, "GET", "/user/api/inquiry/gacha/history", hypergryphAKAddr)
 	if err != nil {
 		return gjson.Result{}, err
