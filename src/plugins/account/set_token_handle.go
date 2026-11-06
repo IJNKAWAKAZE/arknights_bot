@@ -30,6 +30,10 @@ func SetTokenHandle(update tgbotapi.Update) error {
 		tgbotapi.NewInlineKeyboardButtonData("国服", fmt.Sprintf("%s,%s,%s", "chooseServer", "国服", "resetToken")),
 		tgbotapi.NewInlineKeyboardButtonData("国际服", fmt.Sprintf("%s,%s, %s", "chooseServer", "国际服", "resetToken")),
 	))
+	// 扫码重置：不用再复制 token（仅国服）
+	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("📷 国服扫码重置", "qrLogin,reset"),
+	))
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
 	)
@@ -49,8 +53,7 @@ func ResetToken(update tgbotapi.Update) error {
 	_, _ = config.Arknights.SendChatAction(chatId, "typing")
 
 	var userToken UserToken
-	err := json.Unmarshal([]byte(token), &userToken)
-	if err == nil {
+	if err := json.Unmarshal([]byte(token), &userToken); err == nil {
 		token = userToken.Data.Content
 	}
 	account, err := skland.Login(token, getServerName(chatId))
@@ -58,22 +61,5 @@ func ResetToken(update tgbotapi.Update) error {
 		config.Arknights.SendText(chatId, "登录失败！请检查token是否正确。")
 		return err
 	}
-	// 查查询账户信息
-	var userAccount UserAccount
-	res := repo.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
-	if err := repo.CheckDB(res, chatId); err != nil {
-		return err
-	}
-	if res.RowsAffected > 0 {
-		// 更新账户信息
-		userAccount.HypergryphToken = token
-		userAccount.SklandToken = account.Skland.Token
-		userAccount.SklandCred = account.Skland.Cred
-		if err := repo.CheckDB(config.DBEngine.Table("user_account").Save(&userAccount), chatId); err != nil {
-			return err
-		}
-		config.Arknights.SendText(chatId, "重设token成功！")
-	}
-	config.Arknights.ClearWaitMessage(userId)
-	return nil
+	return finishReset(chatId, userId, token, account)
 }

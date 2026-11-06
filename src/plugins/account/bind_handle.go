@@ -3,11 +3,9 @@ package account
 import (
 	"arknights_bot/config"
 	"arknights_bot/plugins/skland"
-	"arknights_bot/utils/repo"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/ijnkawakaze/telegram-bot-api"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 // BindHandle 绑定角色
@@ -17,6 +15,10 @@ func BindHandle(update tgbotapi.Update) error {
 	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("国服", fmt.Sprintf("%s,%s,%s", "chooseServer", "国服", "setToken")),
 		tgbotapi.NewInlineKeyboardButtonData("国际服", fmt.Sprintf("%s,%s,%s", "chooseServer", "国际服", "setToken")),
+	))
+	// 扫码绑定：少一步复制 token（仅国服，国际服仍走 Token）
+	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("📷 国服扫码登录", "qrLogin"),
 	))
 	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
 		buttons...,
@@ -37,8 +39,7 @@ func SetToken(update tgbotapi.Update) error {
 	_, _ = config.Arknights.SendChatAction(chatId, "typing")
 
 	var userToken UserToken
-	err := json.Unmarshal([]byte(token), &userToken)
-	if err == nil {
+	if err := json.Unmarshal([]byte(token), &userToken); err == nil {
 		token = userToken.Data.Content
 	}
 	account, err := skland.Login(token, getServerName(chatId))
@@ -46,59 +47,7 @@ func SetToken(update tgbotapi.Update) error {
 		config.Arknights.SendText(chatId, "登录失败！请检查token是否正确。")
 		return err
 	}
-	// 查询账户是否存在
-	var userAccount UserAccount
-	res := repo.GetAccountByUserIdAndSklandId(userId, account.UserId).Scan(&userAccount)
-	if err := repo.CheckDB(res, chatId); err != nil {
-		return err
-	}
-	if res.RowsAffected > 0 {
-		// 更新账户信息
-		userAccount.HypergryphToken = token
-		userAccount.SklandToken = account.Skland.Token
-		userAccount.SklandCred = account.Skland.Cred
-		if err := repo.CheckDB(config.DBEngine.Table("user_account").Save(&userAccount), chatId); err != nil {
-			return err
-		}
-	} else {
-		// 不存在 新增账户
-		id, _ := gonanoid.New(32)
-		userAccount = UserAccount{
-			Id:              id,
-			UserName:        message.From.FullName(),
-			UserNumber:      userId,
-			HypergryphToken: token,
-			SklandToken:     account.Skland.Token,
-			SklandCred:      account.Skland.Cred,
-			SklandId:        account.UserId,
-			ServerName:      getServerName(chatId),
-		}
-		if err := repo.CheckDB(config.DBEngine.Table("user_account").Create(&userAccount), chatId); err != nil {
-			return err
-		}
-	}
-	config.Arknights.ClearWaitMessage(userId)
-	// 获取角色列表
-	players, err := skland.ArknightsPlayers(account.Skland, userAccount.ServerName)
-	if err != nil || len(players) == 0 {
-		config.Arknights.SendText(chatId, "未查询到绑定角色！")
-		return err
-	}
-
-	setSklandId(chatId, account.UserId)
-	var buttons [][]tgbotapi.InlineKeyboardButton
-	for _, player := range players {
-		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%s(%s)", player.NickName, player.ChannelName), fmt.Sprintf("%s,%s,%s,%s", "bind", player.Uid, player.ChannelName, player.NickName)),
-		))
-	}
-	inlineKeyboardMarkup := tgbotapi.NewInlineKeyboardMarkup(
-		buttons...,
-	)
-	sendMessage := tgbotapi.NewMessage(chatId, "请选择要绑定的角色")
-	sendMessage.ReplyMarkup = inlineKeyboardMarkup
-	config.Arknights.Send(sendMessage)
-	return nil
+	return finishBind(chatId, userId, message.From.FullName(), token, account)
 }
 
 // CancelHandle 取消操作

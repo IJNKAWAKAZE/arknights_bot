@@ -12,6 +12,7 @@ require (
 	github.com/mozillazg/go-pinyin v0.20.0
 	github.com/mxschmitt/playwright-go v0.6201.0
 	github.com/robfig/cron/v3 v3.0.0
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/viper v1.14.0
 	github.com/starudream/go-lib/core/v2 v2.0.15
 	github.com/starudream/go-lib/resty/v2 v2.0.8

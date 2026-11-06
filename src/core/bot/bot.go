@@ -31,6 +31,7 @@ func Serve() {
 	b.NewCallBackProcessor("request", asyncControl(gatekeeper.RequestCallBackData))
 	b.NewCallBackProcessor("chooseServer", async(account.ChooseServer))
 	b.NewCallBackProcessor("bind", async(account.ChoosePlayer))
+	b.NewCallBackProcessor("qrLogin", async(account.QRLoginHandle))
 	b.NewCallBackProcessor("unbind", async(account.UnbindPlayer))
 	b.NewCallBackProcessor("sign", async(sign.SignPlayer))
 	b.NewCallBackProcessor("player", async(player.PlayerData))
